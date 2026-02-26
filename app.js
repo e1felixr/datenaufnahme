@@ -24,7 +24,7 @@ const CONFIG = {
   dnVentil: ['DN10', 'DN15', 'DN20', 'DN25'],
   ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck li.', 'Winkeleck re.'],
   artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde'],
-  einbausituation: ['normal', 'freistehend', 'hinter Verkleidung', 'unter Brüstung', 'sonstige']
+  einbausituation: ['normal', 'freistehend', 'hinter Verkleidung', 'unter Brüstung', 'zugestellt', 'sonstige']
 };
 
 let currentProjektId = null;
