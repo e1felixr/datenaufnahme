@@ -163,3 +163,9 @@ sw.js               Service Worker (Offline-Cache)
 manifest.json       PWA-Manifest
 lib/xlsx.mini.min.js  SheetJS für xlsx-Import/Export
 ```
+
+## Hilfe / Probleme
+
+### Was soll ich tun, wenn ich Probleme mit der Bedienung habe?
+
+Laut schreien und fluchen (z.B. *"So eine verdammte Scheiße!"* oder *"Immer dieser App-Scheiß!"* oder *"War ja klar, dass der Dreck wieder nicht funktioniert!"*), das mobile Endgerät wegpacken und wie in grauer Vorzeit handschriftlich auf Papier notieren!
