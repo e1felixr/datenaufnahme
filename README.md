@@ -4,10 +4,9 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörperdaten bei Gebäud
 
 ## Installation auf dem Smartphone
 
-1. Seite im Browser öffnen (Chrome/Safari empfohlen)
+1. Seite im Browser öffnen (Chrome, Edge oder Firefox)
 2. **Android (Chrome):** Menü (drei Punkte) > "Zum Startbildschirm hinzufügen"
-3. **iPhone (Safari):** Teilen-Button > "Zum Home-Bildschirm"
-4. Die App erscheint als Icon auf dem Startbildschirm
+3. Die App erscheint als Icon auf dem Startbildschirm
 
 ## Updates & Versionierung
 
@@ -32,12 +31,9 @@ Im Normalfall **nie** - das Update-System erledigt alles automatisch. Nur in die
 | App startet nicht oder zeigt eine leere Seite | Cache löschen und neu installieren |
 | Nach einem fehlgeschlagenen Update hängt die App | Cache löschen |
 
-**Cache löschen auf Android (Chrome):**
-- Chrome > Einstellungen > Datenschutz > Browserdaten löschen > "Bilder und Dateien im Cache" auswählen
-- Oder: Lange auf das App-Icon drücken > App-Info > Speicher > Cache leeren
-
-**Cache löschen auf iPhone (Safari):**
-- Einstellungen > Safari > Verlauf und Websitedaten löschen
+**Cache löschen (Chrome/Edge/Firefox):**
+- Browser > Einstellungen > Datenschutz > Browserdaten löschen > "Bilder und Dateien im Cache" auswählen
+- Oder (Android): Lange auf das App-Icon drücken > App-Info > Speicher > Cache leeren
 
 **Wichtig:** Beim Cache-Löschen gehen **keine Projektdaten verloren!** Projekte und Heizkörper werden in der IndexedDB gespeichert, die vom Cache-Löschen nicht betroffen ist.
 
@@ -149,11 +145,14 @@ Die Datei muss folgende Spaltenstruktur haben (Zeile 1 = Überschrift, wird übe
 
 - Projekte anlegen und verwalten
 - Heizkörper mit Standort, Typ, Maßen, Ventil- und Einbaudaten erfassen
+- Raumweise Übersicht: HK-Liste gruppiert nach Raum, mehrere HK pro Raum nebeneinander
+- Typabhängige Felder (Kompakt, Röhren, Glieder, Konvektoren, Stahlplatte)
 - Fotos direkt über die Kamera aufnehmen
 - Gebäudedaten aus xlsx-Datei importieren (Autovervollständigung für Gebäude, Etagen, Räume)
-- Export als xlsx oder CSV
+- Export als xlsx oder CSV (ZIP mit Fotos)
+- Daten versenden per Web Share API (ZIP als echter Anhang)
 - Offline-fähig
-- Hoch- und Querformat
+- Optimiert für Chrome, Edge und Firefox
 
 ## Technischer Aufbau
 
