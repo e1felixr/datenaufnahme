@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v1.7';
-const APP_BUILD_DATE = '26.02.2026 14:45';
+const APP_BUILD_DATE = '26.02.2026 15:00';
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -202,6 +202,19 @@ async function openHkForm(hkId) {
       geschoss: last.geschoss,
       raumnr: last.raumnr
     } : null);
+    // Typ und HK-Daten vom letzten Eintrag übernehmen
+    if (last) {
+      hk.typ = last.typ || '';
+      hk.subtyp = last.subtyp || '';
+      hk.baulaenge = last.baulaenge || '';
+      hk.bauhoehe = last.bauhoehe || '';
+      hk.anzahlRoehren = last.anzahlRoehren || '';
+      hk.anzahlGlieder = last.anzahlGlieder || '';
+      hk.nabenabstand = last.nabenabstand || '';
+      hk.dnVentil = last.dnVentil || '';
+      hk.ventilform = last.ventilform || '';
+      hk.einbausituation = last.einbausituation || '';
+    }
     // Nächste HK-Nr ermitteln
     const all = await getHeizkoerperByProjekt(currentProjektId);
     const maxNr = all.reduce((max, h) => Math.max(max, Number(h.hkNr) || 0), 0);
@@ -312,9 +325,7 @@ function getToggleValue(name) {
   return active ? active.dataset.value === 'true' : false;
 }
 
-async function saveForm() {
-  const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
-
+function readFormIntoHk(hk) {
   hk.gebaeude = document.getElementById('f-gebaeude').value.trim();
   hk.geschoss = document.getElementById('f-geschoss').value.trim();
   hk.raumnr = document.getElementById('f-raumnr').value.trim();
@@ -338,11 +349,50 @@ async function saveForm() {
   hk.bemerkung = document.getElementById('f-bemerkung').value.trim();
   hk.fotos = formPhotos.filter(Boolean);
   hk.erfasser = localStorage.getItem('erfasser-name') || '';
+  return hk;
+}
+
+async function saveForm() {
+  const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
+  readFormIntoHk(hk);
 
   await saveHeizkoerper(hk);
   await renderHkList();
   navigate('screen-hk-list');
   showToast('Heizkörper gespeichert');
+}
+
+async function saveAndNextHk() {
+  // Aktuellen HK speichern
+  const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
+  readFormIntoHk(hk);
+  await saveHeizkoerper(hk);
+  await renderHkList();
+
+  // Neuen HK im selben Raum anlegen mit gleichen Grunddaten
+  const nextHk = newHeizkoerper(currentProjektId);
+  nextHk.gebaeude = hk.gebaeude;
+  nextHk.geschoss = hk.geschoss;
+  nextHk.raumnr = hk.raumnr;
+  nextHk.raumbezeichnung = hk.raumbezeichnung;
+  nextHk.hkNr = (Number(hk.hkNr) || 0) + 1;
+  nextHk.typ = hk.typ;
+  nextHk.subtyp = hk.subtyp;
+  nextHk.baulaenge = hk.baulaenge;
+  nextHk.bauhoehe = hk.bauhoehe;
+  nextHk.anzahlRoehren = hk.anzahlRoehren;
+  nextHk.anzahlGlieder = hk.anzahlGlieder;
+  nextHk.nabenabstand = hk.nabenabstand;
+  nextHk.dnVentil = hk.dnVentil;
+  nextHk.ventilform = hk.ventilform;
+  nextHk.einbausituation = hk.einbausituation;
+
+  currentHkId = null;
+  document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
+  document.getElementById('btn-delete-hk').style.display = 'none';
+  fillForm(nextHk);
+  window.scrollTo(0, 0);
+  showToast(`HK ${hk.hkNr} gespeichert → HK ${nextHk.hkNr}`);
 }
 
 async function deleteCurrentHk() {
