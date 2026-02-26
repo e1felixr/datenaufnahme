@@ -2,6 +2,8 @@
 
 Progressive Web App (PWA) zur mobilen Erfassung von Heizkörperdaten bei Gebäudebegehungen. Läuft komplett im Browser, funktioniert offline und kann auf dem Smartphone wie eine native App installiert werden.
 
+**👉 App starten:** [https://e1felixr.github.io/heizkoerper/](https://e1felixr.github.io/heizkoerper/)
+
 ## Installation auf dem Smartphone
 
 1. Seite im Browser öffnen (Chrome, Edge oder Firefox)
