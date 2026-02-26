@@ -586,6 +586,23 @@ body {
   margin-left: auto;
 }
 
+/* ── Checkbox Row ── */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .85rem;
+  color: var(--text-sec);
+  cursor: pointer;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+
 /* ── Send Recipients ── */
 .send-recipients {
   display: flex;

@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v1.7';
-const APP_BUILD_DATE = '26.02.2026 15:00';
+const APP_BUILD_DATE = '26.02.2026 15:15';
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -195,25 +195,20 @@ async function openHkForm(hkId) {
     document.getElementById('header-form-title').textContent = 'HK bearbeiten';
     document.getElementById('btn-delete-hk').style.display = 'inline-flex';
   } else {
-    // Neu: Smart-Defaults vom letzten Eintrag
+    // Neu: Smart-Defaults aus Standard oder letztem Eintrag
+    const std = getHkStandard();
     const last = await getLastHeizkoerper(currentProjektId);
-    hk = newHeizkoerper(currentProjektId, last ? {
-      gebaeude: last.gebaeude,
-      geschoss: last.geschoss,
-      raumnr: last.raumnr
+    const defaults = std || last;
+    hk = newHeizkoerper(currentProjektId, defaults ? {
+      gebaeude: defaults.gebaeude,
+      geschoss: defaults.geschoss,
+      raumnr: last ? last.raumnr : ''
     } : null);
-    // Typ und HK-Daten vom letzten Eintrag übernehmen
-    if (last) {
-      hk.typ = last.typ || '';
-      hk.subtyp = last.subtyp || '';
-      hk.baulaenge = last.baulaenge || '';
-      hk.bauhoehe = last.bauhoehe || '';
-      hk.anzahlRoehren = last.anzahlRoehren || '';
-      hk.anzahlGlieder = last.anzahlGlieder || '';
-      hk.nabenabstand = last.nabenabstand || '';
-      hk.dnVentil = last.dnVentil || '';
-      hk.ventilform = last.ventilform || '';
-      hk.einbausituation = last.einbausituation || '';
+    // HK-Typ und technische Daten übernehmen
+    if (defaults) {
+      for (const f of STANDARD_FIELDS) {
+        hk[f] = defaults[f] || '';
+      }
     }
     // Nächste HK-Nr ermitteln
     const all = await getHeizkoerperByProjekt(currentProjektId);
@@ -325,6 +320,12 @@ function getToggleValue(name) {
   return active ? active.dataset.value === 'true' : false;
 }
 
+// Felder, die als Standard übernommen werden (ohne Standort/HK-Nr/Bemerkung/Fotos)
+const STANDARD_FIELDS = [
+  'typ', 'subtyp', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
+  'nabenabstand', 'dnVentil', 'ventilform', 'einbausituation'
+];
+
 function readFormIntoHk(hk) {
   hk.gebaeude = document.getElementById('f-gebaeude').value.trim();
   hk.geschoss = document.getElementById('f-geschoss').value.trim();
@@ -352,9 +353,28 @@ function readFormIntoHk(hk) {
   return hk;
 }
 
+function checkAndSaveStandard(hk) {
+  const cb = document.getElementById('f-setStandard');
+  if (cb && cb.checked) {
+    const std = {};
+    for (const f of STANDARD_FIELDS) std[f] = hk[f] || '';
+    std.gebaeude = hk.gebaeude || '';
+    std.geschoss = hk.geschoss || '';
+    localStorage.setItem('hk-standard', JSON.stringify(std));
+    cb.checked = false;
+    showToast('Standard gespeichert');
+  }
+}
+
+function getHkStandard() {
+  const stored = localStorage.getItem('hk-standard');
+  return stored ? JSON.parse(stored) : null;
+}
+
 async function saveForm() {
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
+  checkAndSaveStandard(hk);
 
   await saveHeizkoerper(hk);
   await renderHkList();
@@ -366,6 +386,7 @@ async function saveAndNextHk() {
   // Aktuellen HK speichern
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
+  checkAndSaveStandard(hk);
   await saveHeizkoerper(hk);
   await renderHkList();
 
