@@ -65,12 +65,25 @@ Unter **Einstellungen > Gefahrenzone > "Alle Daten zurücksetzen"** können säm
 
 ## Gebäudedaten importieren
 
-Über den Button **"Gebäudedaten"** in der Heizkörper-Liste können vordefinierte Vorschlagslisten für Gebäude, Etagen und Räume aus einer xlsx-Datei importiert werden. Beim Ausfüllen des Formulars erscheinen diese dann als Autovervollständigung.
+Beim Ausfüllen des HK-Formulars werden Vorschlagslisten für Gebäude, Etagen und Räume als Autovervollständigung angeboten. Die Daten stammen aus der Datei `gebaeudedaten.xlsx` im Repository.
+
+### Zentrale Datei im Repository (empfohlen)
+
+Die Datei **`gebaeudedaten.xlsx`** liegt direkt im Repo-Stammverzeichnis. Alle Geräte laden diese Datei beim App-Start automatisch vom Server - es muss nichts manuell auf die einzelnen Geräte kopiert werden.
+
+**Gebäudedaten aktualisieren:**
+1. Die Datei `gebaeudedaten.xlsx` im Repository bearbeiten
+2. Änderung committen und pushen
+3. Beim nächsten Öffnen der App laden alle Geräte automatisch die aktualisierten Daten
+
+### Manueller Import (Fallback)
+
+Über den Button **"Gebäudedaten"** in der Heizkörper-Liste kann alternativ eine xlsx-Datei vom Gerät importiert werden. Dies überschreibt die zentrale Datei lokal.
 
 ### Datei-Anforderungen
 
 - **Format:** `.xlsx` (Excel)
-- **Speicherort:** Die Datei muss auf dem Gerät erreichbar sein (z.B. lokaler Speicher, Downloads-Ordner, OneDrive, Google Drive). Beim Antippen des Buttons öffnet sich der Datei-Picker des Geräts.
+- **Dateiname im Repo:** `gebaeudedaten.xlsx` (ohne Umlaute)
 
 ### Aufbau der xlsx-Datei
 
@@ -91,8 +104,10 @@ Die Datei muss folgende Spaltenstruktur haben (Zeile 1 = Überschrift, wird übe
 
 ### Hinweise
 
-- Die Gebäudedaten werden **pro Projekt** gespeichert - verschiedene Projekte können unterschiedliche Gebäudedaten haben
-- Ein erneuter Import überschreibt die bisherigen Gebäudedaten des Projekts
+- Die Gebäudedaten gelten **für alle Projekte** gleichermaßen
+- Online: Die App holt sich bei jedem Start die aktuelle Version vom Server
+- Offline: Die zuletzt geladene Version wird aus dem lokalen Speicher verwendet
+- Ein manueller Import über den Button überschreibt die zentrale Datei lokal
 - Nach erfolgreichem Import erscheint ein Toast mit der Anzahl der importierten Einträge
 
 ## Features

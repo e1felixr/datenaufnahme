@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v1.6';
-const APP_BUILD_DATE = '26.02.2026 10:46';
+const APP_BUILD_DATE = '26.02.2026 10:59';
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -110,7 +110,6 @@ async function openProjekt(id) {
   currentProjektId = id;
   const p = await getProjekt(id);
   document.getElementById('header-projekt-name').textContent = p.name;
-  loadGebaeudedaten();
   await renderHkList();
   navigate('screen-hk-list');
 }
@@ -373,50 +372,69 @@ function removePhoto(index) {
 
 // ── Gebäudedaten-Import ──
 
+function parseGebaeudedatenXlsx(arrayBuffer) {
+  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+  const gebaeude = new Set();
+  const geschoss = new Set();
+  const raum = new Set();
+
+  // Ab Zeile 1 (Index 1) = Header übersprungen
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
+    if (row[2] != null && String(row[2]).trim()) geschoss.add(String(row[2]).trim());
+    if (row[4] != null && String(row[4]).trim()) raum.add(String(row[4]).trim());
+  }
+
+  return {
+    gebaeude: [...gebaeude],
+    geschoss: [...geschoss],
+    raum: [...raum]
+  };
+}
+
 function importGebaeudedaten(file) {
-  if (!file || !currentProjektId) return;
+  if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    const wb = XLSX.read(e.target.result, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-
-    const gebaeude = new Set();
-    const geschoss = new Set();
-    const raum = new Set();
-
-    // Ab Zeile 1 (Index 1) = Header übersprungen
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
-      if (row[2] != null && String(row[2]).trim()) geschoss.add(String(row[2]).trim());
-      if (row[4] != null && String(row[4]).trim()) raum.add(String(row[4]).trim());
-    }
-
-    gebaeudeDaten = {
-      gebaeude: [...gebaeude],
-      geschoss: [...geschoss],
-      raum: [...raum]
-    };
-
-    localStorage.setItem('gebaeudedaten-' + currentProjektId, JSON.stringify(gebaeudeDaten));
+    gebaeudeDaten = parseGebaeudedatenXlsx(e.target.result);
+    localStorage.setItem('gebaeudedaten', JSON.stringify(gebaeudeDaten));
     renderDatalists();
     showToast(`${gebaeudeDaten.gebaeude.length} Gebäude, ${gebaeudeDaten.geschoss.length} Etagen, ${gebaeudeDaten.raum.length} Räume importiert`);
   };
   reader.readAsArrayBuffer(file);
-  // Reset file input so same file can be re-imported
   document.getElementById('file-gebaeudedaten').value = '';
 }
 
+async function fetchGebaeudedatenFromServer() {
+  try {
+    const resp = await fetch('gebaeudedaten.xlsx', { cache: 'no-cache' });
+    if (!resp.ok) return false;
+    const buf = await resp.arrayBuffer();
+    gebaeudeDaten = parseGebaeudedatenXlsx(buf);
+    localStorage.setItem('gebaeudedaten', JSON.stringify(gebaeudeDaten));
+    renderDatalists();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function loadGebaeudedaten() {
-  if (!currentProjektId) return;
-  const stored = localStorage.getItem('gebaeudedaten-' + currentProjektId);
+  // Zuerst aus localStorage laden (sofort verfügbar, auch offline)
+  const stored = localStorage.getItem('gebaeudedaten');
   if (stored) {
     gebaeudeDaten = JSON.parse(stored);
   } else {
     gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [] };
   }
   renderDatalists();
+
+  // Im Hintergrund aktuelle Version vom Server holen
+  fetchGebaeudedatenFromServer();
 }
 
 function renderDatalists() {
@@ -531,10 +549,9 @@ async function resetAllData() {
   // IndexedDB löschen
   const projekte = await getAllProjekte();
   for (const p of projekte) {
-    // Gebäudedaten aus localStorage entfernen
-    localStorage.removeItem('gebaeudedaten-' + p.id);
     await deleteProjekt(p.id);
   }
+  localStorage.removeItem('gebaeudedaten');
 
   currentProjektId = null;
   gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [] };
@@ -570,6 +587,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await openDB();
   populateDropdowns();
+  loadGebaeudedaten();
   await renderProjekte();
 
   // Event-Listener für Typ-Dropdown
