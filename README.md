@@ -63,6 +63,41 @@ Alle Nutzerdaten bleiben lokal auf dem Gerät. Es werden keine Daten an einen Se
 
 Unter **Einstellungen > Gefahrenzone > "Alle Daten zurücksetzen"** können sämtliche Projekte, Heizkörper und importierte Gebäudedaten unwiderruflich gelöscht werden. Vor dem endgültigen Löschen erfolgt eine doppelte Sicherheitsabfrage.
 
+## Neue Erfassung vorbereiten
+
+Bevor ein neues Gebäude / eine neue Liegenschaft erfasst wird, sind folgende Schritte nötig:
+
+### 1. Gebäudedaten-Datei anlegen
+
+Die Datei `gebaeudedaten.xlsx` im Repository enthält die Vorschlagslisten für das Formular. Vor einer neuen Erfassung muss sie mit den passenden Daten des Objekts befüllt werden:
+
+1. `gebaeudedaten.xlsx` öffnen (direkt im Repo oder lokal bearbeiten)
+2. Spalte A: alle **Gebäude** eintragen (z.B. "Haus 1", "Haus Norbert")
+3. Spalte C: alle **Etagen** eintragen (z.B. "UG", "EG", "OG 1")
+4. Spalte E: alle **Räume** eintragen (z.B. "Raum 1", "Raum 12")
+5. Zeile 1 ist die Überschrift und wird übersprungen
+6. Datei speichern, committen und pushen
+
+### 2. Erfasser-Name eintragen
+
+Beim ersten Start der App wird der **Erfasser-Name** abgefragt (Pflichtfeld). Dieser wird automatisch bei jedem erfassten Heizkörper gespeichert. Der Name kann jederzeit unter Einstellungen geändert werden.
+
+### 3. Projekt anlegen
+
+In der App auf **"+"** tippen und einen Projektnamen vergeben (z.B. "Musterstraße 12" oder "Liegenschaft Nord"). Die Gebäudedaten aus der zentralen xlsx-Datei stehen danach automatisch als Autovervollständigung zur Verfügung.
+
+### 4. Erfassung starten
+
+Im Projekt auf **"+"** tippen, um den ersten Heizkörper anzulegen. Die Felder Gebäude, Geschoss und Raum-Nr. bieten Autovervollständigung aus den Gebäudedaten.
+
+### Checkliste vor der Begehung
+
+- [ ] `gebaeudedaten.xlsx` mit den Gebäude-/Etagen-/Raumdaten des Objekts befüllt und gepusht
+- [ ] App auf allen beteiligten Geräten installiert (siehe [Installation](#installation-auf-dem-smartphone))
+- [ ] App einmal online öffnen, damit die aktuellen Gebäudedaten geladen werden
+- [ ] Erfasser-Name auf jedem Gerät eingetragen
+- [ ] Projekt in der App angelegt
+
 ## Gebäudedaten importieren
 
 Beim Ausfüllen des HK-Formulars werden Vorschlagslisten für Gebäude, Etagen und Räume als Autovervollständigung angeboten. Die Daten stammen aus der Datei `gebaeudedaten.xlsx` im Repository.
