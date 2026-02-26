@@ -21,6 +21,7 @@
     <span class="header-main">Heizkörper-Erfassung <span id="header-version"></span></span>
     <span class="header-sub" id="header-timestamp"></span>
   </div>
+  <button class="btn-help" id="btn-help" onclick="openHelp()" title="Hilfe / Anleitung">&#9432;</button>
   <button class="btn-settings" id="btn-settings" onclick="openSettings()" title="Einstellungen">&#9881;</button>
 </div>
 
@@ -207,6 +208,17 @@
   </div>
 </div>
 
+<!-- ════════ SCREEN: Hilfe / README ════════ -->
+<div class="screen" id="screen-help">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <h2>Hilfe & Anleitung</h2>
+    <button class="btn btn-outline btn-sm" onclick="fetchReadme(true)">&#8635; Aktualisieren</button>
+  </div>
+  <div id="help-content" class="help-content">
+    <p style="color:var(--text-sec)">Lade Anleitung…</p>
+  </div>
+</div>
+
 <!-- ════════ SCREEN: Einstellungen ════════ -->
 <div class="screen" id="screen-settings">
   <h2 style="margin-bottom:16px">Einstellungen</h2>
@@ -301,7 +313,8 @@
     'screen-projekte': { title: 'Heizkörper-Erfassung', back: false },
     'screen-hk-list': { title: null, back: true },
     'screen-form': { title: null, back: true },
-    'screen-settings': { title: 'Einstellungen', back: true }
+    'screen-settings': { title: 'Einstellungen', back: true },
+    'screen-help': { title: 'Hilfe & Anleitung', back: true }
   };
 
   const defaultHeaderHTML = document.getElementById('header-title').innerHTML;

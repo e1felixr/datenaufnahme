@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v1.9';
-const APP_BUILD_DATE = '26.02.2026 15:15';
+const APP_VERSION = 'v2.0';
+const APP_BUILD_DATE = '26.02.2026 15:31';
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -732,6 +732,87 @@ function esc(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ── Hilfe / README ──
+
+const README_URL = 'https://raw.githubusercontent.com/e1felixr/heizkoerper/main/README.md';
+
+function openHelp() {
+  navigate('screen-help');
+  const cached = localStorage.getItem('readme-cache');
+  if (cached) {
+    renderReadme(cached);
+  }
+  fetchReadme(false);
+}
+
+async function fetchReadme(showToastOnSuccess) {
+  try {
+    const resp = await fetch(README_URL, { cache: 'no-cache' });
+    if (!resp.ok) throw new Error('Fetch failed');
+    const md = await resp.text();
+    localStorage.setItem('readme-cache', md);
+    renderReadme(md);
+    if (showToastOnSuccess) showToast('Anleitung aktualisiert');
+  } catch {
+    if (!localStorage.getItem('readme-cache')) {
+      document.getElementById('help-content').innerHTML =
+        '<p style="color:var(--text-sec)">Anleitung konnte nicht geladen werden. Bitte online gehen und erneut versuchen.</p>';
+    }
+  }
+}
+
+function renderReadme(md) {
+  // Minimaler Markdown → HTML Konverter
+  let html = esc_md(md)
+    // Code-Blöcke (```…```)
+    .replace(/```[\w]*\n([\s\S]*?)```/g, (_, c) => `<pre><code>${c.trimEnd()}</code></pre>`)
+    // Tabellen (einfach, Header + Rows)
+    .replace(/(\|.+\|\n\|[-| :]+\|\n(?:\|.+\|\n?)*)/g, mdTable)
+    // Überschriften
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // Checkbox-Listenpunkte
+    .replace(/^- \[ \] (.+)$/gm, '<li class="cb-open">&#9744; $1</li>')
+    .replace(/^- \[x\] (.+)$/gm, '<li class="cb-done">&#9745; $1</li>')
+    // Ungeordnete Listen
+    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+    // Aufeinanderfolgende <li> in <ul> wrappen
+    .replace(/(<li>[\s\S]*?<\/li>)(\n<li>[\s\S]*?<\/li>)*/g, m => `<ul>${m}</ul>`)
+    // Fett
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Kursiv
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Inline-Code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    // Horizontale Linie
+    .replace(/^---+$/gm, '<hr>')
+    // Leerzeilen → Absätze (nur zwischen nicht-Block-Elementen)
+    .replace(/\n{2,}/g, '\n<br>\n');
+
+  document.getElementById('help-content').innerHTML = html;
+}
+
+function esc_md(str) {
+  // Nur HTML-Sonderzeichen escapen, die nicht Teil von Markdown-Syntax sind
+  // Wir escapen < und > außerhalb von bereits verarbeiteten Tags
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function mdTable(match) {
+  const lines = match.trim().split('\n').filter(l => !l.match(/^[\|:\- ]+$/));
+  let html = '<table class="md-table">';
+  lines.forEach((line, i) => {
+    const cells = line.split('|').filter((_, ci) => ci > 0 && ci < line.split('|').length - 1);
+    const tag = i === 0 ? 'th' : 'td';
+    html += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+  });
+  return html + '</table>';
 }
 
 // ── Einstellungen ──
