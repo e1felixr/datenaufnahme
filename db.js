@@ -97,10 +97,13 @@ function newHeizkoerper(projektId, defaults) {
     rlVerschraubung: false,
     entlueftung: false,
     entleerung: false,
+    ventilVoreinstellbar: false,
+    ventilVoreinstellbarWert: '',
     artThermostatkopf: '',
     einbausituation: '',
     bemerkung: '',
     erfasser: '',
+    erstelltAm: new Date().toISOString(),
     fotos: []
   };
 }

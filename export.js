@@ -4,8 +4,9 @@ const EXPORT_HEADERS = [
   'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'HK-Nr.',
   'Typ', 'Subtyp', 'Baulänge [mm]', 'Bauhöhe [mm]', 'Anz. Röhren', 'Anz. Glieder',
   'Nabenabstand [mm]', 'DN Ventil', 'Ventilform',
-  'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Entleerung', 'Art Thermostatkopf',
-  'Einbausituation', 'Bemerkung', 'Erfasser',
+  'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Entleerung',
+  'Ventil voreinstellbar', 'Voreinstellwert', 'Art Thermostatkopf',
+  'Einbausituation', 'Bemerkung', 'Erfasser', 'Erfasst am',
   'Foto 1', 'Foto 2', 'Foto 3'
 ];
 
@@ -13,8 +14,9 @@ const EXPORT_FIELDS = [
   'gebaeude', 'geschoss', 'raumnr', 'raumbezeichnung', 'hkNr',
   'typ', 'subtyp', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
   'nabenabstand', 'dnVentil', 'ventilform',
-  'hahnblock', 'rlVerschraubung', 'entlueftung', 'entleerung', 'artThermostatkopf',
-  'einbausituation', 'bemerkung', 'erfasser'
+  'hahnblock', 'rlVerschraubung', 'entlueftung', 'entleerung',
+  'ventilVoreinstellbar', 'ventilVoreinstellbarWert', 'artThermostatkopf',
+  'einbausituation', 'bemerkung', 'erfasser', 'erstelltAm'
 ];
 
 function fotoFilename(hk, index) {
@@ -239,5 +241,7 @@ function downloadBlob(blob, filename) {
 }
 
 function sanitizeFilename(name) {
-  return name.replace(/[^a-zA-Z0-9äöüÄÖÜß _-]/g, '').replace(/\s+/g, '_');
+  // Punkt und Bindestrich erlauben (für Raumnummern wie "1.54" oder "1-003")
+  // Nur echte Pfad-Trennzeichen und Sonderzeichen entfernen
+  return name.replace(/[\/\\:*?"<>|]/g, '').replace(/\s+/g, '_');
 }

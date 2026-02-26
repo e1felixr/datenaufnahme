@@ -104,11 +104,11 @@
   <div class="form-row" id="group-baumasseRow">
     <div class="form-group" id="group-baulaenge">
       <label>Baulänge [mm]</label>
-      <select id="f-baulaenge"></select>
+      <input type="text" id="f-baulaenge" inputmode="numeric" autocomplete="off" list="dl-baulaenge" placeholder="z.B. 1000">
     </div>
     <div class="form-group" id="group-bauhoehe">
       <label>Bauhöhe [mm]</label>
-      <select id="f-bauhoehe"></select>
+      <input type="text" id="f-bauhoehe" inputmode="numeric" autocomplete="off" list="dl-bauhoehe" placeholder="z.B. 600" onchange="onBauhoeheChange()">
     </div>
   </div>
 
@@ -117,54 +117,51 @@
   <div class="form-row">
     <div class="form-group">
       <label>Nabenabstand [mm]</label>
-      <select id="f-nabenabstand"></select>
+      <input type="text" id="f-nabenabstand" inputmode="numeric" autocomplete="off" list="dl-nabenabstand" placeholder="z.B. 500" onchange="onNabenabstandChange()">
     </div>
     <div class="form-group">
       <label>DN Ventil</label>
       <select id="f-dnVentil"></select>
     </div>
   </div>
-  <div class="form-group">
-    <label>Ventilform</label>
-    <select id="f-ventilform"></select>
-  </div>
-
   <div class="form-row">
     <div class="form-group">
-      <label>Hahnblock</label>
-      <div class="toggle-group">
-        <button type="button" class="toggle-btn" data-toggle="f-hahnblock" data-value="true" onclick="handleToggle('f-hahnblock', true)">J</button>
-        <button type="button" class="toggle-btn active" data-toggle="f-hahnblock" data-value="false" onclick="handleToggle('f-hahnblock', false)">N</button>
-      </div>
+      <label>Ventilform</label>
+      <select id="f-ventilform"></select>
     </div>
     <div class="form-group">
-      <label>RL-Verschraubung</label>
-      <div class="toggle-group">
-        <button type="button" class="toggle-btn" data-toggle="f-rlVerschraubung" data-value="true" onclick="handleToggle('f-rlVerschraubung', true)">J</button>
-        <button type="button" class="toggle-btn active" data-toggle="f-rlVerschraubung" data-value="false" onclick="handleToggle('f-rlVerschraubung', false)">N</button>
-      </div>
+      <label>Art Thermostatkopf</label>
+      <select id="f-artThermostatkopf"></select>
     </div>
   </div>
 
-  <div class="form-row" style="margin-top:14px">
-    <div class="form-group">
-      <label>Entlüftung</label>
-      <div class="toggle-group">
-        <button type="button" class="toggle-btn" data-toggle="f-entlueftung" data-value="true" onclick="handleToggle('f-entlueftung', true)">J</button>
-        <button type="button" class="toggle-btn active" data-toggle="f-entlueftung" data-value="false" onclick="handleToggle('f-entlueftung', false)">N</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Entleerung</label>
-      <div class="toggle-group">
-        <button type="button" class="toggle-btn" data-toggle="f-entleerung" data-value="true" onclick="handleToggle('f-entleerung', true)">J</button>
-        <button type="button" class="toggle-btn active" data-toggle="f-entleerung" data-value="false" onclick="handleToggle('f-entleerung', false)">N</button>
-      </div>
-    </div>
+  <div class="checkbox-grid">
+    <label class="checkbox-row">
+      <input type="checkbox" id="f-hahnblock">
+      <span>Hahnblock vorhanden?</span>
+    </label>
+    <label class="checkbox-row">
+      <input type="checkbox" id="f-rlVerschraubung">
+      <span>RL-Verschraubung vorhanden?</span>
+    </label>
+    <label class="checkbox-row">
+      <input type="checkbox" id="f-entlueftung">
+      <span>Entlüftung vorhanden?</span>
+    </label>
+    <label class="checkbox-row">
+      <input type="checkbox" id="f-entleerung">
+      <span>Entleerung vorhanden?</span>
+    </label>
+    <label class="checkbox-row">
+      <input type="checkbox" id="f-ventilVoreinstellbar" onchange="document.getElementById('group-ventilWert').style.display=this.checked?'block':'none'">
+      <span>Ventil voreinstellbar?</span>
+    </label>
   </div>
-  <div class="form-group" style="margin-top:14px">
-    <label>Art Thermostatkopf</label>
-    <select id="f-artThermostatkopf"></select>
+  <div id="group-ventilWert" style="display:none;margin-top:6px">
+    <div class="form-group">
+      <label>Voreinstellwert</label>
+      <input type="text" id="f-ventilVoreinstellbarWert" placeholder="z.B. 3.5" inputmode="decimal">
+    </div>
   </div>
 
   <!-- Einbau -->
@@ -203,6 +200,7 @@
   <div class="form-actions">
     <button class="btn btn-primary" onclick="saveForm()">Speichern</button>
     <button class="btn btn-accent" onclick="saveAndNextHk()">+ HK im Raum</button>
+    <button class="btn btn-accent" onclick="saveAndNextRoom()">+ Raum</button>
     <button class="btn btn-outline" onclick="history.back()">Abbrechen</button>
     <button class="btn btn-danger btn-sm" id="btn-delete-hk" onclick="deleteCurrentHk()" style="display:none">Löschen</button>
   </div>
@@ -293,10 +291,13 @@
   </div>
 </div>
 
-<!-- ════════ Datalists für Gebäudedaten ════════ -->
+<!-- ════════ Datalists ════════ -->
 <datalist id="dl-gebaeude"></datalist>
 <datalist id="dl-geschoss"></datalist>
 <datalist id="dl-raumnr"></datalist>
+<datalist id="dl-bauhoehe"></datalist>
+<datalist id="dl-baulaenge"></datalist>
+<datalist id="dl-nabenabstand"></datalist>
 
 <!-- ════════ Toast ════════ -->
 <div class="toast" id="toast"></div>

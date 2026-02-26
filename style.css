@@ -700,15 +700,24 @@ body {
   align-items: center;
   gap: 8px;
   font-size: .85rem;
-  color: var(--text-sec);
+  color: var(--text);
   cursor: pointer;
+  padding: 4px 0;
 }
 
 .checkbox-row input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   accent-color: var(--primary);
+}
+
+/* ── Checkbox Grid (2 Spalten) ── */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  margin: 10px 0;
 }
 
 /* ── Send Recipients ── */

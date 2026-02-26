@@ -10,9 +10,17 @@ const CONFIG = {
   subtypKonvektoren: ['21', '22', '32', '43', '54'],
   subtypStahlplatte: ['ER', 'EK', 'DR', 'C', 'DK', 'T', 'TK1', 'TK2', 'TK3'],
   anzahlRoehren: [2, 3, 4, 5, 6],
-  baulaenge: [400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1800,2000,2200,2400,2600,2800,3000],
-  bauhoehe: [350, 500, 600, 900],
-  nabenabstand: [100, 200],
+  baulaengeOpts: [400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1800,2000,2200,2400,2600,2800,3000],
+  bauhoeheKompakt: [200,300,400,500,600,700,800,900,1000],
+  bauhoeheRoehren: [190,300,350,400,450,500,550,600,750,900,1000,1100,1200,1500,1800,2000,2500,2800],
+  bauhoeheGuss:    [280,430,580,680,980],
+  bauhoeheStahl:   [300,400,600,1000],
+  // Nabenabstand↔Bauhöhe Mapping für Gussglieder und Stahlglieder
+  gussNaBA: { 280:200, 430:350, 580:500, 680:600, 980:900 },
+  gussBANA: { 200:280, 350:430, 500:580, 600:680, 900:980 },
+  stahlNaBA: { 300:200, 400:350, 600:500, 1000:900 },
+  stahlBANA: { 200:300, 350:400, 500:600, 900:1000 },
+  nabenabstandOpts: [100,150,200,300,350,500,600,900],
   dnVentil: ['DN10', 'DN15', 'DN20', 'DN25'],
   ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck li.', 'Winkeleck re.'],
   artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde'],
@@ -180,16 +188,20 @@ async function renderHkList() {
 
   let html = '';
   for (const room of rooms) {
-    const info = [room.gebaeude, room.geschoss, room.raumnr ? 'R' + room.raumnr : ''].filter(Boolean).join(' / ');
+    const info = [room.gebaeude, room.geschoss, room.raumnr ? 'Raum ' + room.raumnr : ''].filter(Boolean).join(' / ');
     const label = room.raumbezeichnung ? ' · ' + esc(room.raumbezeichnung) : '';
+    // Typ einmal auf Raumebene zeigen, falls alle HK denselben Typ haben
+    const typen = [...new Set(room.hks.map(h => h.typ).filter(Boolean))];
+    const roomTyp = typen.length === 1 ? typen[0] : '';
     html += `<div class="card room-card">
-      <div class="room-header">${esc(info)}${label}</div>
+      <div class="room-header">${esc(info)}${label}${roomTyp ? ` <span class="badge">${esc(roomTyp)}</span>` : ''}</div>
       <div class="room-hks">`;
     for (const hk of room.hks) {
+      const chipTyp = typen.length > 1 && hk.typ ? `<span class="badge">${esc(hk.typ)}</span>` : '';
       html += `
         <div class="room-hk-chip" onclick="openHkForm('${hk.id}')">
           <span class="room-hk-nr">HK ${esc(String(hk.hkNr || '-'))}</span>
-          ${hk.typ ? `<span class="badge">${esc(hk.typ)}</span>` : ''}
+          ${chipTyp}
           <button class="room-hk-del" onclick="event.stopPropagation();confirmDeleteHk('${hk.id}')" title="Löschen">&times;</button>
         </div>`;
     }
@@ -269,8 +281,11 @@ function fillForm(hk) {
   setToggle('f-rlVerschraubung', hk.rlVerschraubung);
   setToggle('f-entlueftung', hk.entlueftung);
   setToggle('f-entleerung', hk.entleerung);
+  setToggle('f-ventilVoreinstellbar', hk.ventilVoreinstellbar);
+  document.getElementById('f-ventilVoreinstellbarWert').value = hk.ventilVoreinstellbarWert || '';
+  document.getElementById('group-ventilWert').style.display = hk.ventilVoreinstellbar ? 'block' : 'none';
 
-  // Typabhängige Felder
+  // Typabhängige Felder (inkl. Bauhöhen-Datalist)
   updateTypFields();
 
   // Fotos
@@ -318,27 +333,68 @@ function updateTypFields() {
   const hasBaulaenge = !hasRoehren;
   groupBaulaenge.style.display = hasBaulaenge ? 'block' : 'none';
   if (!hasBaulaenge) document.getElementById('f-baulaenge').value = '';
+
+  // Bauhöhen-Datalist je nach Typ
+  let bauhoeheOpts;
+  if (typ === 'Kompakt-HK' || typ === 'Konvektoren' || typ === 'Stahlplatte') bauhoeheOpts = CONFIG.bauhoeheKompakt;
+  else if (typ === 'Stahlröhren-HK') bauhoeheOpts = CONFIG.bauhoeheRoehren;
+  else if (typ === 'Gussglieder-HK') bauhoeheOpts = CONFIG.bauhoeheGuss;
+  else if (typ === 'Stahlglieder-HK') bauhoeheOpts = CONFIG.bauhoeheStahl;
+  else bauhoeheOpts = [...CONFIG.bauhoeheKompakt, ...CONFIG.bauhoeheRoehren];
+  fillDatalist('dl-bauhoehe', bauhoeheOpts);
+
+  // Baulängen-Datalist
+  fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
+
+  // Nabenabstand-Datalist
+  fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
+}
+
+function fillDatalist(id, opts) {
+  const dl = document.getElementById(id);
+  if (!dl) return;
+  dl.innerHTML = opts.map(v => `<option value="${v}">`).join('');
+}
+
+function onBauhoeheChange() {
+  const typ = document.getElementById('f-typ').value;
+  const bh = parseInt(document.getElementById('f-bauhoehe').value);
+  if (!bh) return;
+  let map = null;
+  if (typ === 'Gussglieder-HK') map = CONFIG.gussBANA;
+  else if (typ === 'Stahlglieder-HK') map = CONFIG.stahlBANA;
+  if (map && map[bh] !== undefined) {
+    document.getElementById('f-nabenabstand').value = map[bh];
+  }
+}
+
+function onNabenabstandChange() {
+  const typ = document.getElementById('f-typ').value;
+  const na = parseInt(document.getElementById('f-nabenabstand').value);
+  if (!na) return;
+  let map = null;
+  if (typ === 'Gussglieder-HK') map = CONFIG.gussNaBA;
+  else if (typ === 'Stahlglieder-HK') map = CONFIG.stahlNaBA;
+  if (map && map[na] !== undefined) {
+    document.getElementById('f-bauhoehe').value = map[na];
+  }
 }
 
 function setToggle(name, value) {
-  document.querySelectorAll(`[data-toggle="${name}"]`).forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.value === String(value));
-  });
-}
-
-function handleToggle(name, value) {
-  setToggle(name, value);
+  const el = document.getElementById(name);
+  if (el) el.checked = !!value;
 }
 
 function getToggleValue(name) {
-  const active = document.querySelector(`[data-toggle="${name}"].active`);
-  return active ? active.dataset.value === 'true' : false;
+  const el = document.getElementById(name);
+  return el ? el.checked : false;
 }
 
 // Felder, die als Standard übernommen werden (ohne Standort/HK-Nr/Bemerkung/Fotos)
 const STANDARD_FIELDS = [
   'typ', 'subtyp', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
-  'nabenabstand', 'dnVentil', 'ventilform', 'einbausituation'
+  'nabenabstand', 'dnVentil', 'ventilform', 'einbausituation',
+  'artThermostatkopf', 'ventilVoreinstellbar', 'ventilVoreinstellbarWert'
 ];
 
 function readFormIntoHk(hk) {
@@ -360,6 +416,8 @@ function readFormIntoHk(hk) {
   hk.rlVerschraubung = getToggleValue('f-rlVerschraubung');
   hk.entlueftung = getToggleValue('f-entlueftung');
   hk.entleerung = getToggleValue('f-entleerung');
+  hk.ventilVoreinstellbar = getToggleValue('f-ventilVoreinstellbar');
+  hk.ventilVoreinstellbarWert = document.getElementById('f-ventilVoreinstellbarWert').value.trim();
   hk.artThermostatkopf = document.getElementById('f-artThermostatkopf').value;
   hk.einbausituation = document.getElementById('f-einbausituation').value;
   hk.bemerkung = document.getElementById('f-bemerkung').value.trim();
@@ -395,6 +453,43 @@ async function saveForm() {
   await renderHkList();
   navigate('screen-hk-list');
   showToast('Heizkörper gespeichert');
+}
+
+async function saveAndNextRoom() {
+  // Aktuellen HK speichern
+  const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
+  readFormIntoHk(hk);
+  checkAndSaveStandard(hk);
+  await saveHeizkoerper(hk);
+  await renderHkList();
+
+  // Neuer HK in neuem Raum: Standortdaten zurücksetzen, Typ/Daten behalten
+  const nextHk = newHeizkoerper(currentProjektId);
+  nextHk.gebaeude = hk.gebaeude;
+  nextHk.geschoss = hk.geschoss;
+  nextHk.raumnr = '';
+  nextHk.raumbezeichnung = '';
+  nextHk.hkNr = 1;
+  nextHk.typ = hk.typ;
+  nextHk.subtyp = hk.subtyp;
+  nextHk.baulaenge = hk.baulaenge;
+  nextHk.bauhoehe = hk.bauhoehe;
+  nextHk.anzahlRoehren = hk.anzahlRoehren;
+  nextHk.nabenabstand = hk.nabenabstand;
+  nextHk.dnVentil = hk.dnVentil;
+  nextHk.ventilform = hk.ventilform;
+  nextHk.einbausituation = hk.einbausituation;
+  nextHk.artThermostatkopf = hk.artThermostatkopf;
+  nextHk.ventilVoreinstellbar = hk.ventilVoreinstellbar;
+  nextHk.ventilVoreinstellbarWert = hk.ventilVoreinstellbarWert;
+
+  currentHkId = null;
+  document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
+  document.getElementById('btn-delete-hk').style.display = 'none';
+  fillForm(nextHk);
+  window.scrollTo(0, 0);
+  document.getElementById('f-raumnr').focus();
+  showToast(`HK ${hk.hkNr} gespeichert → neuer Raum`);
 }
 
 async function saveAndNextHk() {
@@ -489,12 +584,18 @@ function compressImage(file, callback) {
     img.onload = () => {
       const canvas = document.createElement('canvas');
       let w = img.width, h = img.height;
-      const maxW = 1920;
+      const maxW = 2560;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       canvas.width = w;
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      callback(canvas.toDataURL('image/jpeg', 0.8));
+      // Qualität 0.92; wenn Ergebnis < 0.5 MB und Original > 0.5 MB, Qualität erhöhen
+      let dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      const bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
+      if (bytes < 500_000 && file.size > 500_000) {
+        dataUrl = canvas.toDataURL('image/jpeg', 0.97);
+      }
+      callback(dataUrl);
     };
     img.src = e.target.result;
   };
@@ -709,13 +810,13 @@ async function exportData(format) {
 function populateDropdowns() {
   fillSelect('f-typ', CONFIG.typ);
   fillSelect('f-anzahlRoehren', CONFIG.anzahlRoehren.map(String));
-  fillSelect('f-baulaenge', CONFIG.baulaenge.map(String));
-  fillSelect('f-bauhoehe', CONFIG.bauhoehe.map(String));
-  fillSelect('f-nabenabstand', CONFIG.nabenabstand.map(String));
   fillSelect('f-dnVentil', CONFIG.dnVentil);
   fillSelect('f-ventilform', CONFIG.ventilform);
   fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf);
   fillSelect('f-einbausituation', CONFIG.einbausituation);
+  // Datalists werden in updateTypFields befüllt
+  fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
+  fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
 }
 
 function fillSelect(id, options) {
