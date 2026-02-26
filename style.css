@@ -411,6 +411,63 @@ body {
   color: var(--danger);
 }
 
+/* ── Room-based HK list ── */
+.room-card {
+  cursor: default;
+}
+
+.room-header {
+  font-weight: 600;
+  font-size: .9rem;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.room-hks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.room-hk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--primary-light);
+  cursor: pointer;
+  font-size: .82rem;
+  transition: border-color .15s;
+  position: relative;
+}
+
+.room-hk-chip:active {
+  border-color: var(--primary);
+}
+
+.room-hk-nr {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.room-hk-del {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: .6;
+}
+
+.room-hk-del:active {
+  opacity: 1;
+}
+
 /* ── HK Type Badge ── */
 .badge {
   display: inline-block;

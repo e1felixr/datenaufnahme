@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v1.8';
-const APP_BUILD_DATE = '26.02.2026 15:10';
+const APP_VERSION = 'v1.9';
+const APP_BUILD_DATE = '26.02.2026 15:15';
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -163,22 +163,37 @@ async function renderHkList() {
     return;
   }
 
-  let html = '';
+  // Nach Raum gruppieren
+  const rooms = [];
+  const roomMap = new Map();
   for (const hk of hks) {
-    const info = [hk.gebaeude, hk.geschoss, `R${hk.raumnr}`].filter(Boolean).join(' / ');
-    html += `
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="flex:1;cursor:pointer" onclick="openHkForm('${hk.id}')">
-            <div class="card-title">HK ${esc(String(hk.hkNr || '-'))} ${hk.typ ? `<span class="badge">${esc(hk.typ)}</span>` : ''}</div>
-            <div class="card-sub">${esc(info)}${hk.raumbezeichnung ? ' &middot; ' + esc(hk.raumbezeichnung) : ''}</div>
-          </div>
-          <div class="card-actions">
-            <button class="btn-icon" onclick="openHkForm('${hk.id}')" title="Bearbeiten">&#9998;</button>
-            <button class="btn-icon btn-icon-danger" onclick="confirmDeleteHk('${hk.id}')" title="Löschen">&#128465;</button>
-          </div>
-        </div>
-      </div>`;
+    const key = `${hk.gebaeude || ''}|${hk.geschoss || ''}|${hk.raumnr || ''}`;
+    if (!roomMap.has(key)) {
+      const room = { gebaeude: hk.gebaeude, geschoss: hk.geschoss, raumnr: hk.raumnr, raumbezeichnung: hk.raumbezeichnung, hks: [] };
+      roomMap.set(key, room);
+      rooms.push(room);
+    }
+    const room = roomMap.get(key);
+    room.hks.push(hk);
+    if (hk.raumbezeichnung && !room.raumbezeichnung) room.raumbezeichnung = hk.raumbezeichnung;
+  }
+
+  let html = '';
+  for (const room of rooms) {
+    const info = [room.gebaeude, room.geschoss, room.raumnr ? 'R' + room.raumnr : ''].filter(Boolean).join(' / ');
+    const label = room.raumbezeichnung ? ' · ' + esc(room.raumbezeichnung) : '';
+    html += `<div class="card room-card">
+      <div class="room-header">${esc(info)}${label}</div>
+      <div class="room-hks">`;
+    for (const hk of room.hks) {
+      html += `
+        <div class="room-hk-chip" onclick="openHkForm('${hk.id}')">
+          <span class="room-hk-nr">HK ${esc(String(hk.hkNr || '-'))}</span>
+          ${hk.typ ? `<span class="badge">${esc(hk.typ)}</span>` : ''}
+          <button class="room-hk-del" onclick="event.stopPropagation();confirmDeleteHk('${hk.id}')" title="Löschen">&times;</button>
+        </div>`;
+    }
+    html += `</div></div>`;
   }
   list.innerHTML = html;
 }
