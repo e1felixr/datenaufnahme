@@ -14,12 +14,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörperdaten bei Gebäud
 
 ### Wie bekomme ich die neueste Version?
 
-Die App nutzt eine **Network-first-Strategie**: Solange das Gerät online ist, werden bei jedem Öffnen automatisch die aktuellsten Dateien vom Server geladen. Ein Update läuft so ab:
-
-1. App öffnen (vom Startbildschirm oder Browser)
-2. Falls eine neue Version verfügbar ist, erscheint ein **gelbes Banner**: "Neue Version verfügbar!"
-3. Auf **"Jetzt aktualisieren"** tippen
-4. Die App lädt automatisch neu mit der aktuellen Version
+Die App nutzt eine **Network-first-Strategie**: Solange das Gerät online ist, werden bei jedem Öffnen automatisch die aktuellsten Dateien vom Server geladen. Updates werden **automatisch und sofort** angewendet – es ist kein manuelles Eingreifen nötig.
 
 Die aktuelle Version und das Datum der letzten Änderung werden im Header der App angezeigt.
 
