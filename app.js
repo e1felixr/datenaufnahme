@@ -1,17 +1,21 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v1.6';
-const APP_BUILD_DATE = '26.02.2026 10:59';
+const APP_VERSION = 'v1.7';
+const APP_BUILD_DATE = '26.02.2026 14:30';
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
-  typ: ['Flach-HK profiliert', 'Flach-HK glatt', 'Glieder', 'Konvektor', 'Bad'],
-  artFlach: ['10', '11', '20', '21', '22', '30', '33'],
+  typ: ['Kompakt-HK', 'Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Stahlplatte', 'Sonstige'],
+  subtypKompakt: ['10', '11', '21', '22', '33'],
+  subtypKonvektoren: ['21', '22', '32', '43', '54'],
+  subtypStahlplatte: ['ER', 'EK', 'DR', 'C', 'DK', 'T', 'TK1', 'TK2', 'TK3'],
+  anzahlRoehren: [2, 3, 4, 5, 6],
   baulaenge: [400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1800,2000,2200,2400,2600,2800,3000],
   bauhoehe: [350, 500, 600, 900],
   nabenabstand: [100, 200],
   dnVentil: ['DN10', 'DN15', 'DN20', 'DN25'],
   ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck li.', 'Winkeleck re.'],
+  artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde'],
   einbausituation: ['normal', 'freistehend', 'hinter Verkleidung', 'unter Brüstung', 'sonstige']
 };
 
@@ -19,7 +23,7 @@ let currentProjektId = null;
 let currentHkId = null;
 let formPhotos = [null, null, null];
 let settingsReady = false;
-let gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [] };
+let gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
 
 // ── Navigation ──
 
@@ -216,22 +220,35 @@ function fillForm(hk) {
   document.getElementById('f-raumnr').value = hk.raumnr || '';
   document.getElementById('f-raumbezeichnung').value = hk.raumbezeichnung || '';
   document.getElementById('f-hkNr').value = hk.hkNr || '';
-  document.getElementById('f-typ').value = hk.typ || '';
-  document.getElementById('f-artFlach').value = hk.artFlach || '';
+
+  // Typ: Alte Werte migrieren
+  let typ = hk.typ || '';
+  if (typ === 'Flach-HK profiliert' || typ === 'Flach-HK glatt') typ = 'Kompakt-HK';
+  else if (typ === 'Glieder') typ = 'Stahlglieder-HK';
+  else if (typ === 'Konvektor') typ = 'Konvektoren';
+  else if (typ === 'Bad') typ = 'Stahlröhren-HK';
+  document.getElementById('f-typ').value = typ;
+
+  // Subtyp: Alte artFlach-Werte übernehmen
+  document.getElementById('f-subtyp').value = hk.subtyp || hk.artFlach || '';
   document.getElementById('f-baulaenge').value = hk.baulaenge || '';
   document.getElementById('f-bauhoehe').value = hk.bauhoehe || '';
+  document.getElementById('f-anzahlRoehren').value = hk.anzahlRoehren || '';
+  document.getElementById('f-anzahlGlieder').value = hk.anzahlGlieder || '';
   document.getElementById('f-nabenabstand').value = hk.nabenabstand || '';
   document.getElementById('f-dnVentil').value = hk.dnVentil || '';
   document.getElementById('f-ventilform').value = hk.ventilform || '';
+  document.getElementById('f-artThermostatkopf').value = hk.artThermostatkopf || '';
   document.getElementById('f-einbausituation').value = hk.einbausituation || '';
   document.getElementById('f-bemerkung').value = hk.bemerkung || '';
 
   setToggle('f-hahnblock', hk.hahnblock);
   setToggle('f-rlVerschraubung', hk.rlVerschraubung);
   setToggle('f-entlueftung', hk.entlueftung);
+  setToggle('f-entleerung', hk.entleerung);
 
-  // Art-Dropdown Sichtbarkeit
-  updateArtVisibility();
+  // Typabhängige Felder
+  updateTypFields();
 
   // Fotos
   formPhotos = [null, null, null];
@@ -243,12 +260,41 @@ function fillForm(hk) {
   renderPhotoSlots();
 }
 
-function updateArtVisibility() {
+function updateTypFields() {
   const typ = document.getElementById('f-typ').value;
-  const artGroup = document.getElementById('group-artFlach');
-  const isFlach = typ.startsWith('Flach-HK');
-  artGroup.style.display = isFlach ? 'block' : 'none';
-  if (!isFlach) document.getElementById('f-artFlach').value = '';
+  const groupSubtyp = document.getElementById('group-subtyp');
+  const groupRoehrenGlieder = document.getElementById('group-roehrenGlieder');
+  const groupBaulaenge = document.getElementById('group-baulaenge');
+
+  // Subtyp-Optionen je nach Typ füllen
+  let subtypOptions = [];
+  if (typ === 'Kompakt-HK') subtypOptions = CONFIG.subtypKompakt;
+  else if (typ === 'Konvektoren') subtypOptions = CONFIG.subtypKonvektoren;
+  else if (typ === 'Stahlplatte') subtypOptions = CONFIG.subtypStahlplatte;
+
+  const subtypSel = document.getElementById('f-subtyp');
+  const curSubtyp = subtypSel.value;
+  if (subtypOptions.length > 0) {
+    fillSelect('f-subtyp', subtypOptions);
+    subtypSel.value = subtypOptions.includes(curSubtyp) ? curSubtyp : '';
+    groupSubtyp.style.display = 'block';
+  } else {
+    subtypSel.value = '';
+    groupSubtyp.style.display = 'none';
+  }
+
+  // Röhren/Glieder: nur für Stahlröhren, Stahlglieder, Gussglieder
+  const hasRoehren = ['Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK'].includes(typ);
+  groupRoehrenGlieder.style.display = hasRoehren ? 'grid' : 'none';
+  if (!hasRoehren) {
+    document.getElementById('f-anzahlRoehren').value = '';
+    document.getElementById('f-anzahlGlieder').value = '';
+  }
+
+  // Baulänge: ausblenden für Röhren-/Glieder-Typen (dort Gliederanzahl statt Länge)
+  const hasBaulaenge = !hasRoehren;
+  groupBaulaenge.style.display = hasBaulaenge ? 'block' : 'none';
+  if (!hasBaulaenge) document.getElementById('f-baulaenge').value = '';
 }
 
 function setToggle(name, value) {
@@ -275,15 +321,19 @@ async function saveForm() {
   hk.raumbezeichnung = document.getElementById('f-raumbezeichnung').value.trim();
   hk.hkNr = document.getElementById('f-hkNr').value.trim();
   hk.typ = document.getElementById('f-typ').value;
-  hk.artFlach = document.getElementById('f-artFlach').value;
+  hk.subtyp = document.getElementById('f-subtyp').value;
   hk.baulaenge = document.getElementById('f-baulaenge').value;
   hk.bauhoehe = document.getElementById('f-bauhoehe').value;
+  hk.anzahlRoehren = document.getElementById('f-anzahlRoehren').value;
+  hk.anzahlGlieder = document.getElementById('f-anzahlGlieder').value.trim();
   hk.nabenabstand = document.getElementById('f-nabenabstand').value;
   hk.dnVentil = document.getElementById('f-dnVentil').value;
   hk.ventilform = document.getElementById('f-ventilform').value;
   hk.hahnblock = getToggleValue('f-hahnblock');
   hk.rlVerschraubung = getToggleValue('f-rlVerschraubung');
   hk.entlueftung = getToggleValue('f-entlueftung');
+  hk.entleerung = getToggleValue('f-entleerung');
+  hk.artThermostatkopf = document.getElementById('f-artThermostatkopf').value;
   hk.einbausituation = document.getElementById('f-einbausituation').value;
   hk.bemerkung = document.getElementById('f-bemerkung').value.trim();
   hk.fotos = formPhotos.filter(Boolean);
@@ -380,19 +430,29 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
   const gebaeude = new Set();
   const geschoss = new Set();
   const raum = new Set();
+  const raumDetails = {}; // { raumnr: { flaeche, nutzung, barcode } }
 
   // Ab Zeile 1 (Index 1) = Header übersprungen
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
     if (row[2] != null && String(row[2]).trim()) geschoss.add(String(row[2]).trim());
-    if (row[4] != null && String(row[4]).trim()) raum.add(String(row[4]).trim());
+    if (row[4] != null && String(row[4]).trim()) {
+      const rNr = String(row[4]).trim();
+      raum.add(rNr);
+      raumDetails[rNr] = {
+        flaeche: row[5] != null ? String(row[5]).trim() : '',
+        nutzung: row[6] != null ? String(row[6]).trim() : '',
+        barcode: row[7] != null ? String(row[7]).trim() : ''
+      };
+    }
   }
 
   return {
     gebaeude: [...gebaeude],
     geschoss: [...geschoss],
-    raum: [...raum]
+    raum: [...raum],
+    raumDetails
   };
 }
 
@@ -429,7 +489,7 @@ function loadGebaeudedaten() {
   if (stored) {
     gebaeudeDaten = JSON.parse(stored);
   } else {
-    gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [] };
+    gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
   }
   renderDatalists();
 
@@ -444,6 +504,93 @@ function renderDatalists() {
   dlGeb.innerHTML = gebaeudeDaten.gebaeude.map(v => `<option value="${esc(v)}">`).join('');
   dlGes.innerHTML = gebaeudeDaten.geschoss.map(v => `<option value="${esc(v)}">`).join('');
   dlRaum.innerHTML = gebaeudeDaten.raum.map(v => `<option value="${esc(v)}">`).join('');
+}
+
+// ── Versand ──
+
+function showSendDialog() {
+  document.getElementById('modal-send').style.display = 'flex';
+}
+
+function closeSendDialog() {
+  document.getElementById('modal-send').style.display = 'none';
+}
+
+async function sendData() {
+  const hks = await getHeizkoerperByProjekt(currentProjektId);
+  const projekt = await getProjekt(currentProjektId);
+  if (hks.length === 0) {
+    showToast('Keine Heizkörper zum Versenden');
+    return;
+  }
+
+  hks.sort((a, b) =>
+    (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
+    (a.geschoss || '').localeCompare(b.geschoss || '') ||
+    (a.raumnr || '').localeCompare(b.raumnr || '') ||
+    (Number(a.hkNr) || 0) - (Number(b.hkNr) || 0)
+  );
+
+  const safeName = sanitizeFilename(projekt.name);
+  const subject = `HK-Aufnahme: ${projekt.name}`;
+
+  // Empfänger sammeln
+  const recipients = [];
+  if (document.getElementById('send-r1').checked) recipients.push(document.getElementById('send-r1').value);
+  if (document.getElementById('send-r2').checked) recipients.push(document.getElementById('send-r2').value);
+  const r3check = document.getElementById('send-r3-check');
+  const r3val = document.getElementById('send-r3').value.trim();
+  if (r3check && r3check.checked && r3val) recipients.push(r3val);
+
+  // ZIP erstellen
+  const zipBlob = buildExportZip(hks, safeName);
+
+  // Web Share API versuchen
+  if (navigator.canShare && navigator.canShare({ files: [new File([zipBlob], safeName + '_HK-Aufnahme.zip', { type: 'application/zip' })] })) {
+    try {
+      await navigator.share({
+        title: subject,
+        files: [new File([zipBlob], safeName + '_HK-Aufnahme.zip', { type: 'application/zip' })]
+      });
+      closeSendDialog();
+      showToast('Daten geteilt');
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return; // User abgebrochen
+    }
+  }
+
+  // Fallback: ZIP herunterladen + mailto
+  downloadBlob(zipBlob, safeName + '_HK-Aufnahme.zip');
+  if (recipients.length > 0) {
+    const mailto = `mailto:${recipients.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent('Anbei die HK-Aufnahme als ZIP-Datei.')}`;
+    window.open(mailto, '_blank');
+  }
+  closeSendDialog();
+  showToast('ZIP heruntergeladen' + (recipients.length > 0 ? ' + E-Mail geöffnet' : ''));
+}
+
+function buildExportZip(hks, safeName) {
+  const data = [EXPORT_HEADERS, ...hks.map(hkToRow)];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = EXPORT_HEADERS.map((h, i) => ({
+    wch: Math.max(h.length, ...hks.map(hk => String(hkToRow(hk)[i] || '').length), 10)
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'HK-Aufnahme');
+  const xlsxBytes = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+  const zipFiles = [{ name: safeName + '_HK-Aufnahme.xlsx', data: new Uint8Array(xlsxBytes) }];
+  for (const hk of hks) {
+    if (!hk.fotos) continue;
+    for (let i = 0; i < hk.fotos.length; i++) {
+      if (hk.fotos[i]) {
+        zipFiles.push({ name: fotoFilename(hk, i), data: base64ToBytes(hk.fotos[i]) });
+      }
+    }
+  }
+  const zipData = buildZip(zipFiles);
+  return new Blob([zipData], { type: 'application/zip' });
 }
 
 // ── Export ──
@@ -470,12 +617,13 @@ async function exportData(format) {
 
 function populateDropdowns() {
   fillSelect('f-typ', CONFIG.typ);
-  fillSelect('f-artFlach', CONFIG.artFlach);
+  fillSelect('f-anzahlRoehren', CONFIG.anzahlRoehren.map(String));
   fillSelect('f-baulaenge', CONFIG.baulaenge.map(String));
   fillSelect('f-bauhoehe', CONFIG.bauhoehe.map(String));
   fillSelect('f-nabenabstand', CONFIG.nabenabstand.map(String));
   fillSelect('f-dnVentil', CONFIG.dnVentil);
   fillSelect('f-ventilform', CONFIG.ventilform);
+  fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf);
   fillSelect('f-einbausituation', CONFIG.einbausituation);
 }
 
@@ -591,7 +739,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderProjekte();
 
   // Event-Listener für Typ-Dropdown
-  document.getElementById('f-typ').addEventListener('change', updateArtVisibility);
+  document.getElementById('f-typ').addEventListener('change', updateTypFields);
+
+  // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
+  document.getElementById('f-raumnr').addEventListener('change', () => {
+    const rNr = document.getElementById('f-raumnr').value.trim();
+    const details = gebaeudeDaten.raumDetails && gebaeudeDaten.raumDetails[rNr];
+    if (details && details.nutzung && !document.getElementById('f-raumbezeichnung').value.trim()) {
+      document.getElementById('f-raumbezeichnung').value = details.nutzung;
+    }
+  });
 
   // Filter
   document.getElementById('filter-text').addEventListener('input', renderHkList);

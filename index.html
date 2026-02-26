@@ -38,6 +38,7 @@
   <div class="action-bar">
     <button class="btn btn-outline btn-sm" onclick="exportData('xlsx')">Export xlsx</button>
     <button class="btn btn-outline btn-sm" onclick="exportData('csv')">Export CSV</button>
+    <button class="btn btn-accent btn-sm" onclick="showSendDialog()">Versenden</button>
     <button class="btn btn-outline btn-sm" onclick="document.getElementById('file-gebaeudedaten').click()">Gebäudedaten</button>
     <input type="file" id="file-gebaeudedaten" accept=".xlsx" style="display:none" onchange="importGebaeudedaten(this.files[0])">
     <span id="hk-count" class="count-badge" style="align-self:center">0</span>
@@ -85,16 +86,26 @@
       <select id="f-typ"></select>
     </div>
   </div>
-  <div class="form-group" id="group-artFlach">
-    <label>Art (Flachheizkörper)</label>
-    <select id="f-artFlach"></select>
+  <div class="form-group" id="group-subtyp" style="display:none">
+    <label>Subtyp</label>
+    <select id="f-subtyp"></select>
   </div>
-  <div class="form-row">
+  <div class="form-row" id="group-roehrenGlieder" style="display:none">
     <div class="form-group">
+      <label>Anzahl Röhren</label>
+      <select id="f-anzahlRoehren"></select>
+    </div>
+    <div class="form-group">
+      <label>Anzahl Glieder</label>
+      <input type="number" id="f-anzahlGlieder" inputmode="numeric" min="1">
+    </div>
+  </div>
+  <div class="form-row" id="group-baumasseRow">
+    <div class="form-group" id="group-baulaenge">
       <label>Baulänge [mm]</label>
       <select id="f-baulaenge"></select>
     </div>
-    <div class="form-group">
+    <div class="form-group" id="group-bauhoehe">
       <label>Bauhöhe [mm]</label>
       <select id="f-bauhoehe"></select>
     </div>
@@ -142,7 +153,17 @@
         <button type="button" class="toggle-btn active" data-toggle="f-entlueftung" data-value="false" onclick="handleToggle('f-entlueftung', false)">Nein</button>
       </div>
     </div>
-    <div class="form-group"></div>
+    <div class="form-group">
+      <label>Entleerung</label>
+      <div class="toggle-group">
+        <button type="button" class="toggle-btn" data-toggle="f-entleerung" data-value="true" onclick="handleToggle('f-entleerung', true)">Ja</button>
+        <button type="button" class="toggle-btn active" data-toggle="f-entleerung" data-value="false" onclick="handleToggle('f-entleerung', false)">Nein</button>
+      </div>
+    </div>
+  </div>
+  <div class="form-group" style="margin-top:14px">
+    <label>Art Thermostatkopf</label>
+    <select id="f-artThermostatkopf"></select>
   </div>
 
   <!-- Einbau -->
@@ -226,6 +247,30 @@
     </div>
     <button class="btn btn-primary" onclick="createNewProjekt()">Erstellen</button>
     <button class="btn btn-outline" onclick="closeNewProjektDialog()">Abbrechen</button>
+  </div>
+</div>
+
+<!-- ════════ Modal: Daten versenden ════════ -->
+<div class="modal-overlay" id="modal-send" style="display:none" onclick="if(event.target===this)closeSendDialog()">
+  <div class="modal">
+    <h2>Daten versenden</h2>
+    <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:12px">ZIP-Export per E-Mail versenden. Empfänger auswählen:</p>
+    <div class="send-recipients">
+      <label class="send-recipient-row">
+        <input type="checkbox" id="send-r1" value="felix.rundel@e1-energie.com">
+        <span>felix.rundel@e1-energie.com</span>
+      </label>
+      <label class="send-recipient-row">
+        <input type="checkbox" id="send-r2" value="patrick.dimler@e1-energie.com">
+        <span>patrick.dimler@e1-energie.com</span>
+      </label>
+      <label class="send-recipient-row">
+        <input type="checkbox" id="send-r3-check">
+        <input type="email" id="send-r3" placeholder="weitere E-Mail-Adresse" style="flex:1;padding:6px 8px;border:2px solid var(--border);border-radius:var(--radius);font-size:.85rem">
+      </label>
+    </div>
+    <button class="btn btn-primary" onclick="sendData()" style="margin-top:12px">Versenden</button>
+    <button class="btn btn-outline" onclick="closeSendDialog()" style="margin-top:8px">Abbrechen</button>
   </div>
 </div>
 

@@ -2,17 +2,19 @@
 
 const EXPORT_HEADERS = [
   'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'HK-Nr.',
-  'Typ', 'Art (Flach)', 'Baulänge [mm]', 'Bauhöhe [mm]',
+  'Typ', 'Subtyp', 'Baulänge [mm]', 'Bauhöhe [mm]', 'Anz. Röhren', 'Anz. Glieder',
   'Nabenabstand [mm]', 'DN Ventil', 'Ventilform',
-  'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Einbausituation', 'Bemerkung', 'Erfasser',
+  'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Entleerung', 'Art Thermostatkopf',
+  'Einbausituation', 'Bemerkung', 'Erfasser',
   'Foto 1', 'Foto 2', 'Foto 3'
 ];
 
 const EXPORT_FIELDS = [
   'gebaeude', 'geschoss', 'raumnr', 'raumbezeichnung', 'hkNr',
-  'typ', 'artFlach', 'baulaenge', 'bauhoehe',
+  'typ', 'subtyp', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
   'nabenabstand', 'dnVentil', 'ventilform',
-  'hahnblock', 'rlVerschraubung', 'entlueftung', 'einbausituation', 'bemerkung', 'erfasser'
+  'hahnblock', 'rlVerschraubung', 'entlueftung', 'entleerung', 'artThermostatkopf',
+  'einbausituation', 'bemerkung', 'erfasser'
 ];
 
 function fotoFilename(hk, index) {
@@ -21,7 +23,8 @@ function fotoFilename(hk, index) {
     hk.raumnr || 'X',
     'HK' + (hk.hkNr || 'X')
   ].map(s => sanitizeFilename(String(s)));
-  return `Fotos/${parts.join('_')}_${index + 1}.jpg`;
+  const suffix = index > 0 ? `_${index + 1}` : '';
+  return `Fotos/${parts.join('_')}${suffix}.jpg`;
 }
 
 function hkToRow(hk) {
