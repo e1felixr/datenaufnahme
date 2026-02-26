@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v1.7';
-const APP_BUILD_DATE = '26.02.2026 13:55';
+const APP_VERSION = 'v1.8';
+const APP_BUILD_DATE = '26.02.2026 15:10';
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -604,6 +604,7 @@ async function sendData() {
 
   const safeName = sanitizeFilename(projekt.name);
   const subject = `HK-Aufnahme: ${projekt.name}`;
+  const zipFileName = safeName + '_HK-Aufnahme.zip';
 
   // Empfänger sammeln
   const recipients = [];
@@ -615,30 +616,34 @@ async function sendData() {
 
   // ZIP erstellen
   const zipBlob = buildExportZip(hks, safeName);
+  const zipFile = new File([zipBlob], zipFileName, { type: 'application/zip' });
 
-  // Web Share API versuchen
-  if (navigator.canShare && navigator.canShare({ files: [new File([zipBlob], safeName + '_HK-Aufnahme.zip', { type: 'application/zip' })] })) {
+  // Web Share API: Datei wird tatsächlich als Anhang geteilt
+  if (navigator.canShare && navigator.canShare({ files: [zipFile] })) {
     try {
-      await navigator.share({
-        title: subject,
-        files: [new File([zipBlob], safeName + '_HK-Aufnahme.zip', { type: 'application/zip' })]
-      });
+      const shareData = { title: subject, files: [zipFile] };
+      // Empfänger-Info im Text mitgeben, falls vorhanden
+      if (recipients.length > 0) {
+        shareData.text = 'An: ' + recipients.join(', ') + '\n\nHK-Aufnahme als ZIP-Datei.';
+      }
+      await navigator.share(shareData);
       closeSendDialog();
-      showToast('Daten geteilt');
+      showToast('Daten versendet');
       return;
     } catch (e) {
-      if (e.name === 'AbortError') return; // User abgebrochen
+      if (e.name === 'AbortError') return;
     }
   }
 
-  // Fallback: ZIP herunterladen + mailto
-  downloadBlob(zipBlob, safeName + '_HK-Aufnahme.zip');
+  // Fallback: ZIP herunterladen, dann mailto mit Hinweis zum Anhängen
+  downloadBlob(zipBlob, zipFileName);
   if (recipients.length > 0) {
-    const mailto = `mailto:${recipients.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent('Anbei die HK-Aufnahme als ZIP-Datei.')}`;
+    const body = 'Bitte die heruntergeladene Datei "' + zipFileName + '" an diese E-Mail anhängen.';
+    const mailto = `mailto:${recipients.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailto, '_blank');
   }
   closeSendDialog();
-  showToast('ZIP heruntergeladen' + (recipients.length > 0 ? ' + E-Mail geöffnet' : ''));
+  showToast('ZIP heruntergeladen – bitte manuell an E-Mail anhängen');
 }
 
 function buildExportZip(hks, safeName) {
