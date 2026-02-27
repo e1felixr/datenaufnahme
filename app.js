@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.1';
-const APP_BUILD_DATE = '27.02.2026 08:14'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.2';
+const APP_BUILD_DATE = '27.02.2026 16:05'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -32,6 +32,8 @@ let currentHkId = null;
 let formPhotos = [null, null, null];
 let settingsReady = false;
 let gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
+let newHkBaseData = null; // Basisdaten für Mode-Toggle (neuer HK)
+const DATALIST_OPTS = {}; // Volle Optionslisten für Autocomplete-Filter
 
 // ── Navigation ──
 
@@ -221,6 +223,7 @@ async function openHkForm(hkId) {
     hk = await getHeizkoerper(hkId);
     document.getElementById('header-form-title').textContent = 'HK bearbeiten';
     document.getElementById('btn-delete-hk').style.display = 'inline-flex';
+    document.getElementById('new-hk-mode-toggle').style.display = 'none';
   } else {
     // Neu: Smart-Defaults aus Standard oder letztem Eintrag
     const std = getHkStandard();
@@ -243,10 +246,55 @@ async function openHkForm(hkId) {
     hk.hkNr = maxNr + 1;
     document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
     document.getElementById('btn-delete-hk').style.display = 'none';
+
+    // Mode-Toggle vorbereiten
+    newHkBaseData = {
+      lastRaumnr: last ? (last.raumnr || '') : '',
+      lastRaumbezeichnung: last ? (last.raumbezeichnung || '') : '',
+      nextHkNr: maxNr + 1
+    };
+    const toggle = document.getElementById('new-hk-mode-toggle');
+    toggle.style.display = last ? 'block' : 'none';
+    document.getElementById('btn-mode-same-room').classList.add('active');
+    document.getElementById('btn-mode-new-room').classList.remove('active');
   }
 
   fillForm(hk);
   navigate('screen-form');
+}
+
+function setNewHkMode(mode) {
+  document.getElementById('btn-mode-same-room').classList.toggle('active', mode === 'same-room');
+  document.getElementById('btn-mode-new-room').classList.toggle('active', mode === 'new-room');
+  if (!newHkBaseData) return;
+  if (mode === 'same-room') {
+    document.getElementById('f-raumnr').value = newHkBaseData.lastRaumnr;
+    document.getElementById('f-raumbezeichnung').value = newHkBaseData.lastRaumbezeichnung;
+    document.getElementById('f-hkNr').value = newHkBaseData.nextHkNr;
+  } else {
+    document.getElementById('f-raumnr').value = '';
+    document.getElementById('f-raumbezeichnung').value = '';
+    document.getElementById('f-hkNr').value = 1;
+  }
+}
+
+function setupDatalistFilters() {
+  const pairs = [
+    ['f-baulaenge', 'dl-baulaenge'],
+    ['f-bauhoehe', 'dl-bauhoehe'],
+    ['f-nabenabstand', 'dl-nabenabstand'],
+  ];
+  for (const [inputId, dlId] of pairs) {
+    const input = document.getElementById(inputId);
+    if (!input) continue;
+    input.addEventListener('input', () => {
+      const val = input.value;
+      const allOpts = DATALIST_OPTS[dlId] || [];
+      const filtered = val ? allOpts.filter(o => o.includes(val)) : allOpts;
+      const dl = document.getElementById(dlId);
+      if (dl) dl.innerHTML = filtered.map(v => `<option value="${v}">`).join('');
+    });
+  }
 }
 
 function fillForm(hk) {
@@ -353,6 +401,7 @@ function updateTypFields() {
 function fillDatalist(id, opts) {
   const dl = document.getElementById(id);
   if (!dl) return;
+  DATALIST_OPTS[id] = opts.map(String); // für Autocomplete-Filter speichern
   dl.innerHTML = opts.map(v => `<option value="${v}">`).join('');
 }
 
@@ -1008,6 +1057,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await openDB();
   populateDropdowns();
+  setupDatalistFilters();
   loadGebaeudedaten();
   await renderProjekte();
 

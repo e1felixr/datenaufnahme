@@ -720,6 +720,37 @@ body {
   margin: 10px 0;
 }
 
+/* ── Mode Toggle (HK im Raum / Neuer Raum) ── */
+.mode-toggle {
+  display: flex;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: #fff;
+  color: var(--primary);
+  font-size: .88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.mode-btn + .mode-btn {
+  border-left: 2px solid var(--primary);
+}
+
+.mode-btn.active {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
 /* ── Send Recipients ── */
 .send-recipients {
   display: flex;
