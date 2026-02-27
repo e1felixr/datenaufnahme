@@ -4,11 +4,6 @@ Offene Punkte
 
 * Schau dir gebaeudeplan.pdf an. Ich brauche für jeden Raum die Raumnr. (z.B. "1.54"), die Fläche (hier: 30,46m². Dezimaltrennzeichen Komma statt Punkt), die Nutzung (hier "Büro") und den Barcode (hier "TO9"). Lies alle Daten aus und füge sie in gebaeudedaten.xlsx als zusätzliche Spalten ein.
 
-* Wenn ein Raum gespeichert ist und man auf der Übersichtsseite dann "+" drückt, wird die Vorlage für einen zusätzlichen Raum angezeigt. FÜge oben einen Schalter ein: "neuer HK im Raum" <> "neuer Raum". Die vorausfüllung der Felder ändert sich entsprechend.
-
-* Das Autovervollständigen klappt nicht. wenn ich z.B. bei Baulänge "2" eintippe, will ich schon "2000" angezeigt bekommen, weil das in der liste steht.
-
-
 
 
 -------------------------------------------------------------------------------------------
@@ -18,6 +13,10 @@ IMMER:
 * Immer Zeitstempel "letzte Änderung" aktualisieren, damit ist das letzte änderungsdatum egal welcher datei gemeint.
 * Aktuellen Code immer in Github-Repo hochladen.
 * Alle erledigten Punkte als "erledigt" markieren, Version in der sie umgesetzt wurden, ergänzen und dann von oben in den folgenden Abschnitt verschieben, aber nicht löschen! Oberhalb der gestrichelten Linie dürften stets nur die offenen Aufgaben stehen.
+
+* ~~Wenn ein Raum gespeichert ist und man auf der Übersichtsseite dann "+" drückt, wird die Vorlage für einen zusätzlichen Raum angezeigt. FÜge oben einen Schalter ein: "neuer HK im Raum" <> "neuer Raum". Die vorausfüllung der Felder ändert sich entsprechend.~~ **erledigt v2.2** (setNewHkMode() in app.js, Mode-Toggle in index.html/style.css)
+
+* ~~Das Autovervollständigen klappt nicht. wenn ich z.B. bei Baulänge "2" eintippe, will ich schon "2000" angezeigt bekommen, weil das in der liste steht.~~ **erledigt v2.2** (setupDatalistFilters() in app.js: Substring-Filter auf Datalist bei Eingabe)
 
 * ~~die github-Readme soll auch in der App angezeigt werden. links neben dem einstellungen-rädchen~~ **erledigt v2.1** (openHelp()/fetchReadme()/renderReadme() in app.js, ℹ-Button im Header, Markdown-Renderer)
 
