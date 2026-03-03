@@ -6,7 +6,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörperdaten bei Gebäud
 
 ## Installation auf dem Smartphone
 
-1. Seite im Browser öffnen (Chrome, Edge oder Firefox)
+1. Seite im Browser öffnen (Chrome oder Edge empfohlen)
 2. **Android (Chrome):** Menü (drei Punkte) > "Zum Startbildschirm hinzufügen"
 3. Die App erscheint als Icon auf dem Startbildschirm
 
@@ -143,13 +143,14 @@ Die Datei muss folgende Spaltenstruktur haben (Zeile 1 = Überschrift, wird übe
 - Projekte anlegen und verwalten
 - Heizkörper mit Standort, Typ, Maßen, Ventil- und Einbaudaten erfassen
 - Raumweise Übersicht: HK-Liste gruppiert nach Raum, mehrere HK pro Raum nebeneinander
-- Typabhängige Felder (Kompakt, Röhren, Glieder, Konvektoren, Stahlplatte)
-- Fotos direkt über die Kamera aufnehmen
+- Typabhängige Felder (Kompakt, Röhren, Glieder, Konvektoren)
+- Fotos direkt über die Kamera aufnehmen (unbegrenzte Anzahl)
+- Hilfe-Bilder zu Heizkörpertypen und Ventiltypen direkt im Formular
 - Gebäudedaten aus xlsx-Datei importieren (Autovervollständigung für Gebäude, Etagen, Räume)
 - Export als xlsx oder CSV (ZIP mit Fotos)
 - Daten versenden per Web Share API (ZIP als echter Anhang)
 - Offline-fähig
-- Optimiert für Chrome, Edge und Firefox
+- Optimiert für Chrome und Edge (empfohlen)
 
 ## Technischer Aufbau
 
