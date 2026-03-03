@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.4';
-const APP_BUILD_DATE = '03.03.2026 13:59'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_BUILD_DATE = '03.03.2026 14:02'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -362,7 +362,7 @@ function updateTypFields() {
   const subtypSel = document.getElementById('f-subtyp');
   const curSubtyp = subtypSel.value;
   if (subtypOptions.length > 0) {
-    fillSelect('f-subtyp', subtypOptions);
+    fillSelect('f-subtyp', subtypOptions, 'Subtyp');
     subtypSel.value = subtypOptions.includes(curSubtyp) ? curSubtyp : '';
     groupSubtyp.style.display = 'block';
   } else {
@@ -954,20 +954,21 @@ async function exportData(format) {
 // ── Dropdown füllen ──
 
 function populateDropdowns() {
-  fillSelect('f-typ', CONFIG.typ);
-  fillSelect('f-anzahlRoehren', CONFIG.anzahlRoehren.map(String));
-  fillSelect('f-dnVentil', CONFIG.dnVentil);
-  fillSelect('f-ventilform', CONFIG.ventilform);
-  fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf);
-  fillSelect('f-einbausituation', CONFIG.einbausituation);
+  fillSelect('f-typ', CONFIG.typ, 'Typ');
+  fillSelect('f-anzahlRoehren', CONFIG.anzahlRoehren.map(String), 'Anz. Röhren');
+  fillSelect('f-dnVentil', CONFIG.dnVentil, 'DN Ventil');
+  fillSelect('f-ventilform', CONFIG.ventilform, 'Ventilform');
+  fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf, 'Thermostatkopf');
+  fillSelect('f-einbausituation', CONFIG.einbausituation, 'Einbausituation');
   // Datalists werden in updateTypFields befüllt
   fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
   fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
 }
 
-function fillSelect(id, options) {
+function fillSelect(id, options, label) {
   const sel = document.getElementById(id);
-  sel.innerHTML = '<option value="">-- Auswahl --</option>';
+  const placeholder = label ? `-- ${label} --` : '-- Auswahl --';
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
   for (const opt of options) {
     sel.innerHTML += `<option value="${esc(opt)}">${esc(opt)}</option>`;
   }
