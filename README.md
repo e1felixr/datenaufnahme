@@ -54,7 +54,7 @@ Alle Nutzerdaten bleiben lokal auf dem Gerät. Es werden keine Daten an einen Se
 
 ### Daten zurücksetzen
 
-Unter **Einstellungen > Gefahrenzone > "Alle Daten zurücksetzen"** können sämtliche Projekte, Heizkörper und importierte Gebäudedaten unwiderruflich gelöscht werden. Vor dem endgültigen Löschen erfolgt eine doppelte Sicherheitsabfrage.
+Unter **Einstellungen > "Alle Daten zurücksetzen"** können sämtliche Projekte, Heizkörper und importierte Gebäudedaten unwiderruflich gelöscht werden. Vor dem endgültigen Löschen erfolgt eine doppelte Sicherheitsabfrage.
 
 ## Neue Erfassung vorbereiten
 

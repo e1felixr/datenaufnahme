@@ -96,7 +96,7 @@
     </div>
   </div>
   <div class="form-group" id="group-subtyp" style="display:none">
-    <label>Subtyp <button class="btn-help-inline" onclick="openHelpImage('hilfe/hilfe_kompakt.jpg','Kompakthilfe')" title="Hilfe: Kompaktübersicht">?</button></label>
+    <label>Subtyp <button class="btn-help-inline" onclick="openHelpImage('hilfe/hilfe_kompakt.jpg','Typen Kompaktheizkörper')" title="Hilfe: Kompaktübersicht">?</button></label>
     <select id="f-subtyp"></select>
   </div>
   <div class="form-row" id="group-roehrenGlieder" style="display:none">
@@ -189,35 +189,21 @@
     <textarea id="f-bemerkung" rows="2"></textarea>
   </div>
 
+  <!-- Sonstige-Hinweis -->
+  <div id="sonstige-foto-hinweis" class="sonstige-hinweis" style="display:none">
+    Sonstiges &rarr; Foto!
+  </div>
+
   <!-- Fotos -->
   <div class="section-title">Fotos</div>
-  <div class="photo-slots">
-    <div class="photo-slot" id="photo-slot-0" onclick="triggerPhoto(0)">
-      <div class="placeholder">Foto 1</div>
-    </div>
-    <div class="photo-slot" id="photo-slot-1" onclick="triggerPhoto(1)">
-      <div class="placeholder">Foto 2</div>
-    </div>
-    <div class="photo-slot" id="photo-slot-2" onclick="triggerPhoto(2)">
-      <div class="placeholder">Foto 3</div>
-    </div>
-  </div>
+  <div class="photo-slots" id="photo-slots-container"></div>
   <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoInput(this)">
-
-  <!-- Kamera-Overlay für Rückkamera -->
-  <div id="camera-overlay" style="display:none">
-    <video id="camera-video" autoplay playsinline></video>
-    <div class="camera-controls">
-      <button class="btn btn-outline" onclick="closeCameraOverlay()">Abbrechen</button>
-      <button class="camera-shutter" onclick="capturePhoto()"></button>
-      <div style="width:48px"></div>
-    </div>
-  </div>
 
   <!-- Standard-Checkbox -->
   <label class="checkbox-row" style="margin-top:16px">
     <input type="checkbox" id="f-setStandard">
-    <span>Diesen Heizkörper zum Standard definieren</span>
+    <span>Diesen Heizkörper als Standard definieren</span>
+    <button class="btn-help-inline" onclick="event.preventDefault();alert('Wenn aktiviert, werden Typ, Maße, Ventildaten und Einbausituation dieses Heizkörpers als Vorlage für alle neuen Heizkörper übernommen.')" title="Was bedeutet Standard?">?</button>
   </label>
 
   <!-- Buttons -->
@@ -234,10 +220,41 @@
 <div class="screen" id="screen-help">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <h2>Hilfe & Anleitung</h2>
-    <button class="btn btn-outline btn-sm" onclick="fetchReadme(true)">&#8635; Aktualisieren</button>
   </div>
-  <div id="help-content" class="help-content">
-    <p style="color:var(--text-sec)">Lade Anleitung…</p>
+
+  <!-- Kurzanleitung (Default) -->
+  <div id="help-quick" class="help-content">
+    <h3>Kurzanleitung</h3>
+    <ul>
+      <li><strong>Projekt anlegen:</strong> Auf der Startseite "+" tippen und Projektname vergeben.</li>
+      <li><strong>Heizkörper erfassen:</strong> Im Projekt auf "+" tippen. Standort, Typ und Maße eintragen.</li>
+      <li><strong>Fotos:</strong> Auf die Foto-Slots tippen, um Fotos mit der Kamera aufzunehmen. Bei "Sonstige" unbedingt ein Foto machen!</li>
+      <li><strong>Speichern & Weiter:</strong>
+        <ul>
+          <li>"Speichern" &ndash; HK speichern, zurück zur Liste</li>
+          <li>"+ HK im Raum" &ndash; speichern, nächster HK im selben Raum</li>
+          <li>"+ Raum" &ndash; speichern, neuer Raum</li>
+        </ul>
+      </li>
+      <li><strong>Standard:</strong> Checkbox "Als Standard definieren" setzt Typ/Maße als Vorlage für neue HK.</li>
+      <li><strong>Daten versenden:</strong> In der Liste auf "Versenden" tippen. ZIP mit Excel + Fotos wird erstellt.</li>
+      <li><strong>Hilfe-Bilder:</strong> Die "?"-Buttons bei Heizkörper, Ventil und Subtyp zeigen Nachschlagebilder. Zum Vergrößern auf das Bild tippen.</li>
+    </ul>
+    <hr>
+    <button class="btn btn-outline btn-sm" onclick="toggleDetailHelp()" id="btn-toggle-help">Ausführliche Hilfe anzeigen</button>
+  </div>
+
+  <!-- Ausführliche Hilfe (README) -->
+  <div id="help-detail" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <h3>Ausführliche Hilfe</h3>
+      <button class="btn btn-outline btn-sm" onclick="fetchReadme(true)">&#8635; Aktualisieren</button>
+    </div>
+    <div id="help-content" class="help-content">
+      <p style="color:var(--text-sec)">Lade Anleitung…</p>
+    </div>
+    <hr>
+    <button class="btn btn-outline btn-sm" onclick="toggleDetailHelp()">Kurzanleitung anzeigen</button>
   </div>
 </div>
 
@@ -295,7 +312,7 @@
 <div class="modal-overlay" id="modal-send" style="display:none" onclick="if(event.target===this)closeSendDialog()">
   <div class="modal">
     <h2>Daten versenden</h2>
-    <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:12px">ZIP-Export per E-Mail versenden. Empfänger auswählen:</p>
+    <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:12px">ZIP-Datei (Excel + Fotos) wird erstellt und zum Teilen angeboten. Im Teilen-Dialog bitte <strong>E-Mail-App</strong> auswählen.</p>
     <div class="send-recipients">
       <label class="send-recipient-row">
         <input type="checkbox" id="send-r1" value="felix.rundel@e1-energie.com">
@@ -324,7 +341,7 @@
 <datalist id="dl-nabenabstand"></datalist>
 
 <!-- ════════ Modal: Hilfe-Bild ════════ -->
-<div class="modal-overlay" id="modal-help-image" style="display:none" onclick="closeHelpImage()">
+<div class="modal-overlay" id="modal-help-image" style="display:none" onclick="if(event.target===this)closeHelpImage()">
   <div class="help-image-modal">
     <div class="help-image-header">
       <span id="help-image-title"></span>

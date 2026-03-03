@@ -1,11 +1,11 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.4';
-const APP_BUILD_DATE = '03.03.2026 14:04'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.5';
+const APP_BUILD_DATE = '03.03.2026 19:00'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
-  typ: ['Kompakt-HK', 'Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Stahlplatte', 'Sonstige'],
+  typ: ['Kompakt-HK', 'Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Sonstige'],
   subtypKompakt: ['10', '11', '20', '21', '22', '30', '33'],
   subtypKonvektoren: ['21', '22', '32', '43', '54'],
   subtypStahlplatte: ['ER', 'EK', 'DR', 'C', 'DK', 'T', 'TK1', 'TK2', 'TK3'],
@@ -24,7 +24,7 @@ const CONFIG = {
   dnVentil: ['DN10', 'DN15', 'DN20', 'DN25'],
   ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck li.', 'Winkeleck re.'],
   artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde'],
-  einbausituation: ['normal', 'freistehend', 'hinter Verkleidung', 'unter Brüstung', 'zugestellt', 'sonstige']
+  einbausituation: ['normal', 'hinter Verkleidung', 'unter Brüstung', 'zugestellt', 'sonstige']
 };
 
 let currentProjektId = null;
@@ -337,14 +337,14 @@ function fillForm(hk) {
   // Typabhängige Felder (inkl. Bauhöhen-Datalist)
   updateTypFields();
 
-  // Fotos
+  // Fotos (dynamisch, min. 3 Slots)
   formPhotos = [null, null, null];
-  if (hk.fotos) {
-    for (let i = 0; i < 3; i++) {
-      formPhotos[i] = hk.fotos[i] || null;
-    }
+  if (hk.fotos && hk.fotos.length > 0) {
+    formPhotos = hk.fotos.map(f => f || null);
+    while (formPhotos.length < 3) formPhotos.push(null);
   }
   renderPhotoSlots();
+  checkSonstigeHinweis();
 }
 
 function updateTypFields() {
@@ -357,7 +357,6 @@ function updateTypFields() {
   let subtypOptions = [];
   if (typ === 'Kompakt-HK') subtypOptions = CONFIG.subtypKompakt;
   else if (typ === 'Konvektoren') subtypOptions = CONFIG.subtypKonvektoren;
-  else if (typ === 'Stahlplatte') subtypOptions = CONFIG.subtypStahlplatte;
 
   const subtypSel = document.getElementById('f-subtyp');
   const curSubtyp = subtypSel.value;
@@ -385,7 +384,7 @@ function updateTypFields() {
 
   // Bauhöhen-Datalist je nach Typ
   let bauhoeheOpts;
-  if (typ === 'Kompakt-HK' || typ === 'Konvektoren' || typ === 'Stahlplatte') bauhoeheOpts = CONFIG.bauhoeheKompakt;
+  if (typ === 'Kompakt-HK' || typ === 'Konvektoren') bauhoeheOpts = CONFIG.bauhoeheKompakt;
   else if (typ === 'Stahlröhren-HK') bauhoeheOpts = CONFIG.bauhoeheRoehren;
   else if (typ === 'Gussglieder-HK') bauhoeheOpts = CONFIG.bauhoeheGuss;
   else if (typ === 'Stahlglieder-HK') bauhoeheOpts = CONFIG.bauhoeheStahl;
@@ -601,77 +600,51 @@ async function confirmDeleteHk(id) {
 // ── Fotos ──
 
 function renderPhotoSlots() {
-  for (let i = 0; i < 3; i++) {
-    const slot = document.getElementById(`photo-slot-${i}`);
+  const container = document.getElementById('photo-slots-container');
+  let html = '';
+  for (let i = 0; i < formPhotos.length; i++) {
     if (formPhotos[i]) {
-      slot.innerHTML = `
+      html += `<div class="photo-slot" onclick="triggerPhoto(${i})">
         <img src="${formPhotos[i]}" alt="Foto ${i + 1}">
-        <button class="remove-photo" onclick="event.stopPropagation(); removePhoto(${i})">&times;</button>`;
+        <button class="remove-photo" onclick="event.stopPropagation(); removePhoto(${i})">&times;</button>
+      </div>`;
     } else {
-      slot.innerHTML = `<div class="placeholder">Foto ${i + 1}</div>`;
+      html += `<div class="photo-slot" onclick="triggerPhoto(${i})">
+        <div class="placeholder">Foto ${i + 1}</div>
+      </div>`;
     }
   }
+  // "+Foto"-Button
+  html += `<div class="photo-slot photo-slot-add" onclick="addPhotoSlot()">
+    <div class="placeholder" style="font-size:1.5rem">+</div>
+  </div>`;
+  container.innerHTML = html;
 }
 
-let cameraStream = null;
-let cameraPhotoIndex = 0;
+function addPhotoSlot() {
+  formPhotos.push(null);
+  const newIndex = formPhotos.length - 1;
+  renderPhotoSlots();
+  triggerPhoto(newIndex);
+}
+
+// ── Sonstige-Hinweis ──
+
+function checkSonstigeHinweis() {
+  const typ = document.getElementById('f-typ').value;
+  const einbau = document.getElementById('f-einbausituation').value;
+  const hinweis = document.getElementById('sonstige-foto-hinweis');
+  if (typ === 'Sonstige' || einbau === 'sonstige') {
+    hinweis.style.display = 'block';
+  } else {
+    hinweis.style.display = 'none';
+  }
+}
 
 function triggerPhoto(index) {
-  // Versuche getUserMedia mit Rückkamera, Fallback auf File-Input
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    cameraPhotoIndex = index;
-    openCameraOverlay();
-  } else {
-    const input = document.getElementById('photo-input');
-    input.dataset.index = index;
-    input.click();
-  }
-}
-
-async function openCameraOverlay() {
-  const overlay = document.getElementById('camera-overlay');
-  const video = document.getElementById('camera-video');
-  overlay.style.display = 'flex';
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 2560 }, height: { ideal: 1920 } },
-      audio: false
-    });
-    video.srcObject = cameraStream;
-  } catch {
-    // Kamera-Zugriff verweigert → Fallback auf File-Input
-    closeCameraOverlay();
-    const input = document.getElementById('photo-input');
-    input.dataset.index = cameraPhotoIndex;
-    input.click();
-  }
-}
-
-function closeCameraOverlay() {
-  const overlay = document.getElementById('camera-overlay');
-  const video = document.getElementById('camera-video');
-  overlay.style.display = 'none';
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = null;
-  }
-  video.srcObject = null;
-}
-
-function capturePhoto() {
-  const video = document.getElementById('camera-video');
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  closeCameraOverlay();
-
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  compressImage(null, (compressed) => {
-    formPhotos[cameraPhotoIndex] = compressed;
-    renderPhotoSlots();
-    savePhotoToDevice(compressed, cameraPhotoIndex);
-  }, dataUrl);
+  const input = document.getElementById('photo-input');
+  input.dataset.index = index;
+  input.click();
 }
 
 function handlePhotoInput(input) {
@@ -989,11 +962,15 @@ function openHelpImage(src, title) {
   const img = document.getElementById('help-image-img');
   img.src = src;
   img.alt = title || 'Hilfe';
+  img.classList.remove('zoomed');
   document.getElementById('modal-help-image').style.display = 'flex';
+  // Doppelklick/Doppeltipp zum Zoomen
+  img.onclick = () => img.classList.toggle('zoomed');
 }
 
 function closeHelpImage() {
   document.getElementById('modal-help-image').style.display = 'none';
+  document.getElementById('help-image-img').classList.remove('zoomed');
 }
 
 // ── Hilfe / README ──
@@ -1002,11 +979,25 @@ const README_URL = 'https://raw.githubusercontent.com/e1felixr/heizkoerper/main/
 
 function openHelp() {
   navigate('screen-help');
-  const cached = localStorage.getItem('readme-cache');
-  if (cached) {
-    renderReadme(cached);
+  // Default: Kurzanleitung zeigen
+  document.getElementById('help-quick').style.display = 'block';
+  document.getElementById('help-detail').style.display = 'none';
+}
+
+function toggleDetailHelp() {
+  const quick = document.getElementById('help-quick');
+  const detail = document.getElementById('help-detail');
+  if (detail.style.display === 'none') {
+    detail.style.display = 'block';
+    quick.style.display = 'none';
+    // README laden falls noch nicht geladen
+    const cached = localStorage.getItem('readme-cache');
+    if (cached) renderReadme(cached);
+    fetchReadme(false);
+  } else {
+    detail.style.display = 'none';
+    quick.style.display = 'block';
   }
-  fetchReadme(false);
 }
 
 async function fetchReadme(showToastOnSuccess) {
@@ -1174,7 +1165,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderProjekte();
 
   // Event-Listener für Typ-Dropdown
-  document.getElementById('f-typ').addEventListener('change', updateTypFields);
+  document.getElementById('f-typ').addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
+  document.getElementById('f-einbausituation').addEventListener('change', checkSonstigeHinweis);
 
   // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
   document.getElementById('f-raumnr').addEventListener('change', () => {

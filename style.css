@@ -772,6 +772,29 @@ body {
   accent-color: var(--primary);
 }
 
+/* ── Sonstige-Hinweis ── */
+.sonstige-hinweis {
+  background: #FFF3E0;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin: 10px 0;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  font-size: .95rem;
+}
+
+/* ── Photo Slot Add Button ── */
+.photo-slot-add {
+  border-style: dashed;
+  opacity: .6;
+}
+
+.photo-slot-add:active {
+  opacity: 1;
+}
+
 /* ── Inline Help Buttons ── */
 .btn-help-inline {
   display: inline-flex;
@@ -834,11 +857,21 @@ body {
   overflow: auto;
   padding: 8px;
   text-align: center;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pinch-zoom pan-x pan-y;
 }
 
 .help-image-body img {
   max-width: 100%;
   height: auto;
+  transition: transform .2s;
+  cursor: zoom-in;
+}
+
+.help-image-body img.zoomed {
+  max-width: none;
+  width: 200%;
+  cursor: zoom-out;
 }
 
 /* ── Camera Overlay ── */
