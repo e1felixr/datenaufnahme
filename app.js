@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.3';
-const APP_BUILD_DATE = '03.03.2026 11:51'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.4';
+const APP_BUILD_DATE = '03.03.2026 13:04'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -613,10 +613,65 @@ function renderPhotoSlots() {
   }
 }
 
+let cameraStream = null;
+let cameraPhotoIndex = 0;
+
 function triggerPhoto(index) {
-  const input = document.getElementById('photo-input');
-  input.dataset.index = index;
-  input.click();
+  // Versuche getUserMedia mit Rückkamera, Fallback auf File-Input
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    cameraPhotoIndex = index;
+    openCameraOverlay();
+  } else {
+    const input = document.getElementById('photo-input');
+    input.dataset.index = index;
+    input.click();
+  }
+}
+
+async function openCameraOverlay() {
+  const overlay = document.getElementById('camera-overlay');
+  const video = document.getElementById('camera-video');
+  overlay.style.display = 'flex';
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 2560 }, height: { ideal: 1920 } },
+      audio: false
+    });
+    video.srcObject = cameraStream;
+  } catch {
+    // Kamera-Zugriff verweigert → Fallback auf File-Input
+    closeCameraOverlay();
+    const input = document.getElementById('photo-input');
+    input.dataset.index = cameraPhotoIndex;
+    input.click();
+  }
+}
+
+function closeCameraOverlay() {
+  const overlay = document.getElementById('camera-overlay');
+  const video = document.getElementById('camera-video');
+  overlay.style.display = 'none';
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  video.srcObject = null;
+}
+
+function capturePhoto() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  closeCameraOverlay();
+
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  compressImage(null, (compressed) => {
+    formPhotos[cameraPhotoIndex] = compressed;
+    renderPhotoSlots();
+    savePhotoToDevice(compressed, cameraPhotoIndex);
+  }, dataUrl);
 }
 
 function handlePhotoInput(input) {
@@ -626,33 +681,71 @@ function handlePhotoInput(input) {
   compressImage(file, (dataUrl) => {
     formPhotos[index] = dataUrl;
     renderPhotoSlots();
+    savePhotoToDevice(dataUrl, index);
   });
   input.value = '';
 }
 
-function compressImage(file, callback) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
+function compressImage(file, callback, directDataUrl) {
+  const MAX_BYTES = 800_000;
+
+  function processImage(src) {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
       let w = img.width, h = img.height;
-      const maxW = 2560;
+      const maxW = 1920;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       canvas.width = w;
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      // Qualität 0.92; wenn Ergebnis < 0.5 MB und Original > 0.5 MB, Qualität erhöhen
-      let dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-      const bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
-      if (bytes < 500_000 && file.size > 500_000) {
-        dataUrl = canvas.toDataURL('image/jpeg', 0.97);
+
+      // Iterativ Qualität senken bis unter 800KB
+      let quality = 0.85;
+      let dataUrl = canvas.toDataURL('image/jpeg', quality);
+      let bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
+
+      while (bytes > MAX_BYTES && quality > 0.3) {
+        quality -= 0.1;
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+        bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
       }
       callback(dataUrl);
     };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+    img.src = src;
+  }
+
+  if (directDataUrl) {
+    processImage(directDataUrl);
+  } else {
+    const reader = new FileReader();
+    reader.onload = (e) => processImage(e.target.result);
+    reader.readAsDataURL(file);
+  }
+}
+
+function savePhotoToDevice(dataUrl, index) {
+  // Foto als Download auf dem Gerät speichern
+  const raum = document.getElementById('f-raumnr').value.trim() || 'X';
+  const geschoss = document.getElementById('f-geschoss').value.trim() || 'X';
+  const hkNr = document.getElementById('f-hkNr').value.trim() || 'X';
+  const suffix = index > 0 ? `_${index + 1}` : '';
+  const filename = `${sanitizeFilename(geschoss)}_${sanitizeFilename(raum)}_HK${hkNr}${suffix}.jpg`;
+
+  // Versuche "silent save" via <a download>
+  const byteString = atob(dataUrl.split(',')[1]);
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+  const blob = new Blob([ab], { type: 'image/jpeg' });
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
 }
 
 function removePhoto(index) {

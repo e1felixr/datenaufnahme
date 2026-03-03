@@ -6,7 +6,7 @@ const EXPORT_HEADERS = [
   'Nabenabstand [mm]', 'DN Ventil', 'Ventilform',
   'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Entleerung',
   'Ventil voreinstellbar', 'Voreinstellwert', 'Art Thermostatkopf',
-  'Einbausituation', 'Strang', 'Bemerkung', 'Erfasser', 'Erfasst am',
+  'Einbausituation', 'Strang-Nr.', 'Bemerkung', 'Erfasser', 'Erfasst am',
   'Foto 1', 'Foto 2', 'Foto 3'
 ];
 
