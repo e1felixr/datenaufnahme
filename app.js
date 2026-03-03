@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.5';
-const APP_BUILD_DATE = '03.03.2026 19:00'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_BUILD_DATE = '03.03.2026 19:05'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -601,6 +601,7 @@ async function confirmDeleteHk(id) {
 
 function renderPhotoSlots() {
   const container = document.getElementById('photo-slots-container');
+  if (!container) return;
   let html = '';
   for (let i = 0; i < formPhotos.length; i++) {
     if (formPhotos[i]) {
@@ -631,14 +632,11 @@ function addPhotoSlot() {
 // ── Sonstige-Hinweis ──
 
 function checkSonstigeHinweis() {
+  const hinweis = document.getElementById('sonstige-foto-hinweis');
+  if (!hinweis) return;
   const typ = document.getElementById('f-typ').value;
   const einbau = document.getElementById('f-einbausituation').value;
-  const hinweis = document.getElementById('sonstige-foto-hinweis');
-  if (typ === 'Sonstige' || einbau === 'sonstige') {
-    hinweis.style.display = 'block';
-  } else {
-    hinweis.style.display = 'none';
-  }
+  hinweis.style.display = (typ === 'Sonstige' || einbau === 'sonstige') ? 'block' : 'none';
 }
 
 function triggerPhoto(index) {
