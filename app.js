@@ -1,12 +1,12 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.4';
-const APP_BUILD_DATE = '03.03.2026 13:04'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_BUILD_DATE = '03.03.2026 13:06'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
   typ: ['Kompakt-HK', 'Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Stahlplatte', 'Sonstige'],
-  subtypKompakt: ['10', '11', '21', '22', '33'],
+  subtypKompakt: ['10', '11', '20', '21', '22', '33'],
   subtypKonvektoren: ['21', '22', '32', '43', '54'],
   subtypStahlplatte: ['ER', 'EK', 'DR', 'C', 'DK', 'T', 'TK1', 'TK2', 'TK3'],
   anzahlRoehren: [2, 3, 4, 5, 6],
