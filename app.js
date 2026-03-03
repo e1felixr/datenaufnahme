@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.5';
-const APP_BUILD_DATE = '03.03.2026 19:05'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_BUILD_DATE = '03.03.2026 19:08'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -1196,48 +1196,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// ── Service Worker Registrierung + Update-Erkennung ──
+// ── Service Worker Registrierung ──
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(reg => {
-    // Bei jedem App-Start sofort auf Updates prüfen
-    reg.update().catch(() => {});
-
-    // Wenn bereits ein wartender SW da ist -> Banner sofort zeigen
-    if (reg.waiting) showUpdateBanner();
-
-    reg.addEventListener('updatefound', () => {
-      const newWorker = reg.installing;
-      newWorker.addEventListener('statechange', () => {
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          showUpdateBanner();
-        }
-      });
-    });
-  }).catch(() => {});
-
-  // Wenn der neue SW die Kontrolle übernimmt -> Seite neu laden
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload();
-  });
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
-function showUpdateBanner() {
-  // Verhindere doppeltes Banner
-  if (document.getElementById('update-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'update-banner';
-  banner.innerHTML = `
-    Neue Version verfügbar!
-    <button onclick="applyUpdate()">Jetzt aktualisieren</button>
-    <button onclick="this.parentElement.remove()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)">Später</button>
-  `;
-  document.body.appendChild(banner);
-}
-
-function applyUpdate() {
-  navigator.serviceWorker.getRegistration().then(reg => {
-    if (reg && reg.waiting) {
-      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+// ── Automatischer Versionscheck beim Start ──
+async function checkForUpdate() {
+  try {
+    const resp = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (data.version && data.version !== APP_VERSION) {
+      console.log(`Update verfügbar: ${APP_VERSION} → ${data.version}`);
+      await forceUpdate();
     }
-  });
+  } catch {
+    // Offline oder Fehler - kein Update möglich, weiter mit aktueller Version
+  }
 }
+
+async function forceUpdate() {
+  // 1. Service Worker Cache komplett löschen
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  }
+  // 2. Service Worker deregistrieren
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+  }
+  // 3. Seite komplett neu laden (vom Server)
+  window.location.reload();
+}
+
+// Versionscheck 2 Sekunden nach Start (damit UI sofort da ist)
+setTimeout(checkForUpdate, 2000);
