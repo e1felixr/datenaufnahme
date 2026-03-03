@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.5';
-const APP_BUILD_DATE = '03.03.2026 19:11'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.6';
+const APP_BUILD_DATE = '03.03.2026 19:32'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -787,18 +787,19 @@ async function fetchGebaeudedatenFromServer() {
   }
 }
 
-function loadGebaeudedaten() {
-  // Zuerst aus localStorage laden (sofort verfügbar, auch offline)
-  const stored = localStorage.getItem('gebaeudedaten');
-  if (stored) {
-    gebaeudeDaten = JSON.parse(stored);
-  } else {
-    gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
+async function loadGebaeudedaten() {
+  // Zuerst vom Server holen (immer aktuell)
+  const fetched = await fetchGebaeudedatenFromServer();
+  if (!fetched) {
+    // Offline-Fallback: aus localStorage laden
+    const stored = localStorage.getItem('gebaeudedaten');
+    if (stored) {
+      gebaeudeDaten = JSON.parse(stored);
+    } else {
+      gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
+    }
+    renderDatalists();
   }
-  renderDatalists();
-
-  // Im Hintergrund aktuelle Version vom Server holen
-  fetchGebaeudedatenFromServer();
 }
 
 function renderDatalists() {
@@ -1159,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await openDB();
   populateDropdowns();
   setupDatalistFilters();
-  loadGebaeudedaten();
+  await loadGebaeudedaten();
   await renderProjekte();
 
   // Event-Listener für Typ-Dropdown

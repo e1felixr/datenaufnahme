@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'hk-aufnahme-v15';
+const CACHE_NAME = 'hk-aufnahme-v16';
 const ASSETS = [
   './',
   './index.html',
@@ -42,7 +42,7 @@ self.addEventListener('message', (event) => {
 // Network-first: Online immer aktuell, Offline aus Cache
 // version.json wird NICHT gecacht (muss immer frisch vom Server kommen)
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('version.json')) {
+  if (event.request.url.includes('version.json') || event.request.url.includes('gebaeudedaten.xlsx')) {
     event.respondWith(fetch(event.request));
     return;
   }
