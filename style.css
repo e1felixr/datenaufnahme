@@ -771,3 +771,72 @@ body {
   flex-shrink: 0;
   accent-color: var(--primary);
 }
+
+/* ── Inline Help Buttons ── */
+.btn-help-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: .75rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 6px;
+  vertical-align: middle;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-help-inline:active {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ── Help Image Modal ── */
+.help-image-modal {
+  background: var(--card);
+  border-radius: 12px;
+  width: 95vw;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  overflow: hidden;
+}
+
+.help-image-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: .95rem;
+}
+
+.help-image-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-sec);
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.help-image-body {
+  overflow: auto;
+  padding: 8px;
+  text-align: center;
+}
+
+.help-image-body img {
+  max-width: 100%;
+  height: auto;
+}

@@ -84,7 +84,7 @@
   </div>
 
   <!-- HK Daten -->
-  <div class="section-title">Heizkörper</div>
+  <div class="section-title">Heizkörper <button class="btn-help-inline" onclick="openHelpImage('hilfe/hk-typen.png','Heizkörpertypen')" title="Hilfe: Heizkörpertypen">?</button></div>
   <div class="form-row">
     <div class="form-group">
       <label>HK-Nr.</label>
@@ -121,7 +121,7 @@
   </div>
 
   <!-- Ventil -->
-  <div class="section-title">Ventil / Anschluss</div>
+  <div class="section-title">Ventil / Anschluss <button class="btn-help-inline" onclick="openHelpImage('hilfe/ventiltypen.png','Ventiltypen')" title="Hilfe: Ventiltypen">?</button></div>
   <div class="form-row">
     <div class="form-group">
       <label>Nabenabstand [mm]</label>
@@ -173,10 +173,16 @@
   </div>
 
   <!-- Einbau -->
-  <div class="section-title">Einbau / Sonstiges</div>
-  <div class="form-group">
-    <label>Einbausituation</label>
-    <select id="f-einbausituation"></select>
+  <div class="section-title">Einbau / Sonstiges <button class="btn-help-inline" onclick="openHelpImage('hilfe/hilfe_kompakt.jpg','Kompakthilfe')" title="Hilfe: Kompaktübersicht">?</button></div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Einbausituation</label>
+      <select id="f-einbausituation"></select>
+    </div>
+    <div class="form-group">
+      <label>Strang</label>
+      <input type="text" id="f-strang" placeholder="z.B. Strang 1" autocomplete="off">
+    </div>
   </div>
   <div class="form-group">
     <label>Bemerkung</label>
@@ -306,6 +312,19 @@
 <datalist id="dl-bauhoehe"></datalist>
 <datalist id="dl-baulaenge"></datalist>
 <datalist id="dl-nabenabstand"></datalist>
+
+<!-- ════════ Modal: Hilfe-Bild ════════ -->
+<div class="modal-overlay" id="modal-help-image" style="display:none" onclick="closeHelpImage()">
+  <div class="help-image-modal">
+    <div class="help-image-header">
+      <span id="help-image-title"></span>
+      <button class="help-image-close" onclick="closeHelpImage()">&times;</button>
+    </div>
+    <div class="help-image-body">
+      <img id="help-image-img" src="" alt="">
+    </div>
+  </div>
+</div>
 
 <!-- ════════ Toast ════════ -->
 <div class="toast" id="toast"></div>

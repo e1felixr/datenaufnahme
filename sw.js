@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'hk-aufnahme-v11';
+const CACHE_NAME = 'hk-aufnahme-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -10,7 +10,10 @@ const ASSETS = [
   './manifest.json',
   './lib/xlsx.mini.min.js',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './hilfe/hk-typen.png',
+  './hilfe/ventiltypen.png',
+  './hilfe/hilfe_kompakt.jpg'
 ];
 
 self.addEventListener('install', (event) => {

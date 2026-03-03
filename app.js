@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.2';
-const APP_BUILD_DATE = '27.02.2026 16:06'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.3';
+const APP_BUILD_DATE = '03.03.2026 11:51'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -323,6 +323,7 @@ function fillForm(hk) {
   document.getElementById('f-ventilform').value = hk.ventilform || '';
   document.getElementById('f-artThermostatkopf').value = hk.artThermostatkopf || '';
   document.getElementById('f-einbausituation').value = hk.einbausituation || '';
+  document.getElementById('f-strang').value = hk.strang || '';
   document.getElementById('f-bemerkung').value = hk.bemerkung || '';
 
   setToggle('f-hahnblock', hk.hahnblock);
@@ -442,7 +443,7 @@ function getToggleValue(name) {
 // Felder, die als Standard übernommen werden (ohne Standort/HK-Nr/Bemerkung/Fotos)
 const STANDARD_FIELDS = [
   'typ', 'subtyp', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
-  'nabenabstand', 'dnVentil', 'ventilform', 'einbausituation',
+  'nabenabstand', 'dnVentil', 'ventilform', 'einbausituation', 'strang',
   'artThermostatkopf', 'ventilVoreinstellbar', 'ventilVoreinstellbarWert'
 ];
 
@@ -469,6 +470,7 @@ function readFormIntoHk(hk) {
   hk.ventilVoreinstellbarWert = document.getElementById('f-ventilVoreinstellbarWert').value.trim();
   hk.artThermostatkopf = document.getElementById('f-artThermostatkopf').value;
   hk.einbausituation = document.getElementById('f-einbausituation').value;
+  hk.strang = document.getElementById('f-strang').value.trim();
   hk.bemerkung = document.getElementById('f-bemerkung').value.trim();
   hk.fotos = formPhotos.filter(Boolean);
   hk.erfasser = localStorage.getItem('erfasser-name') || '';
@@ -528,6 +530,7 @@ async function saveAndNextRoom() {
   nextHk.dnVentil = hk.dnVentil;
   nextHk.ventilform = hk.ventilform;
   nextHk.einbausituation = hk.einbausituation;
+  nextHk.strang = hk.strang;
   nextHk.artThermostatkopf = hk.artThermostatkopf;
   nextHk.ventilVoreinstellbar = hk.ventilVoreinstellbar;
   nextHk.ventilVoreinstellbarWert = hk.ventilVoreinstellbarWert;
@@ -566,6 +569,7 @@ async function saveAndNextHk() {
   nextHk.dnVentil = hk.dnVentil;
   nextHk.ventilform = hk.ventilform;
   nextHk.einbausituation = hk.einbausituation;
+  nextHk.strang = hk.strang;
 
   currentHkId = null;
   document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
@@ -882,6 +886,20 @@ function esc(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ── Hilfe-Bild Modal ──
+
+function openHelpImage(src, title) {
+  document.getElementById('help-image-title').textContent = title || 'Hilfe';
+  const img = document.getElementById('help-image-img');
+  img.src = src;
+  img.alt = title || 'Hilfe';
+  document.getElementById('modal-help-image').style.display = 'flex';
+}
+
+function closeHelpImage() {
+  document.getElementById('modal-help-image').style.display = 'none';
 }
 
 // ── Hilfe / README ──

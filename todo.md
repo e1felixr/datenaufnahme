@@ -2,9 +2,9 @@ Offene Punkte
 
 * Einige Räume haben scheinbar QR-Codes an den Türen. Mach es möglich, dass diese mit der Kamera abfotografiert werden können und versuche dann, den ausgelesenen Code mit der Raumlsite aus Gebäudedaten verschränkt zu bekommen. Das würde bedeuten: Wenn der Barcode erkannt wird, werden die Raumnummer und -bezeichnung sofort in die Eingabemaske übernommen.
 
-* Schau dir gebaeudeplan.pdf an. Ich brauche für jeden Raum die Raumnr. (z.B. "1.54"), die Fläche (hier: 30,46m². Dezimaltrennzeichen Komma statt Punkt), die Nutzung (hier "Büro") und den Barcode (hier "TO9"). Lies alle Daten aus und füge sie in gebaeudedaten.xlsx als zusätzliche Spalten ein.
+* ~~Wir müssen noch etwas Hilfestellung bieten. Es gibt ja eine Vielzahl an verschiendenen Heizkörpertypen oder Ventiltypen. Dazu möchte ich an relevanten Stellen kleine "Hilfe"- oder "Info"- oder "?"-Buttons haben, bei deren Klick sich Bilddateien öffnen. Diese habe ich im Ordner /hilfe abgelegt: ventiltypen.png und hk-typen.png und hilfe_kompakt.jpg~~ **erledigt v2.3** (btn-help-inline "?"-Buttons an Section-Titles Heizkörper/Ventil/Einbau, openHelpImage()-Modal in app.js, Bilder im SW-Cache)
 
-
+* ~~Eine Strangzuordnung muss möglich sein (Eingabefeld: "Strang:"). Freie Eingabe ermöglichen.~~ **erledigt v2.3** (f-strang Freitext-Feld in Einbau/Sonstiges, in db.js/app.js/export.js, wird als Standard übernommen)
 
 -------------------------------------------------------------------------------------------
 

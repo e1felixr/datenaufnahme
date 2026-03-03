@@ -101,6 +101,7 @@ function newHeizkoerper(projektId, defaults) {
     ventilVoreinstellbarWert: '',
     artThermostatkopf: '',
     einbausituation: '',
+    strang: '',
     bemerkung: '',
     erfasser: '',
     erstelltAm: new Date().toISOString(),
