@@ -78,6 +78,13 @@ def distance(x1, y1, x2, y2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
+def weighted_distance(x1, y1, x2, y2, dx_weight=3):
+    """Gewichtete Distanz: horizontaler Abstand zählt stärker (Daten stehen untereinander)."""
+    dx = abs(x1 - x2) * dx_weight
+    dy = y1 - y2
+    return (dx ** 2 + dy ** 2) ** 0.5
+
+
 def count_tiles_for_image(W, H):
     """Berechnet die Anzahl Kacheln für ein Bild der Größe WxH."""
     import math
@@ -117,7 +124,7 @@ def ocr_tiled(img_path, reader, room_prefix=None):
             dy = y - r['y']
             if dy < -50:
                 continue
-            d = distance(x, y, r['x'], r['y'])
+            d = weighted_distance(x, y, r['x'], r['y'])
             if d < best_d:
                 best_d = d
                 best = nr
@@ -194,7 +201,7 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                             live_rooms[t] = {'x': gx, 'y': gy, 'nutzung': '', 'flaeche': '', 'barcode': ''}
                             # Rückwärts: bereits bekannte Daten zuordnen
                             for a in live_areas:
-                                if not live_rooms[t]['flaeche'] and distance(gx, gy, a['x'], a['y']) < LIVE_MAX_DIST:
+                                if not live_rooms[t]['flaeche'] and weighted_distance(gx, gy, a['x'], a['y']) < LIVE_MAX_DIST:
                                     val = a['area']
                                     if val in used_flaechen:
                                         warn = f"Hinweis: Fläche {val} m² identisch mit Raum {used_flaechen[val]}"
@@ -203,10 +210,10 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                                     used_flaechen.setdefault(val, t)
                                     live_rooms[t]['flaeche'] = val
                             for n in live_nutzungen:
-                                if not live_rooms[t]['nutzung'] and distance(gx, gy, n['x'], n['y']) < 300:
+                                if not live_rooms[t]['nutzung'] and weighted_distance(gx, gy, n['x'], n['y']) < 300:
                                     live_rooms[t]['nutzung'] = n['nutzung']
                             for b in live_barcodes:
-                                if not live_rooms[t]['barcode'] and distance(gx, gy, b['x'], b['y']) < LIVE_MAX_DIST:
+                                if not live_rooms[t]['barcode'] and weighted_distance(gx, gy, b['x'], b['y']) < LIVE_MAX_DIST:
                                     bc = b['code']
                                     if bc in used_barcodes:
                                         warn = f"FEHLER: Barcode '{bc}' doppelt! Raum {used_barcodes[bc]} und {t}"
@@ -389,7 +396,7 @@ def assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers):
             dy = y - r['y']
             if dy < -50:
                 continue
-            d = distance(x, y, r['x'], r['y'])
+            d = weighted_distance(x, y, r['x'], r['y'])
             if d < best_dist:
                 best_dist = d
                 best = r
