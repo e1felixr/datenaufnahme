@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.8';
-const APP_BUILD_DATE = '04.03.2026 11:19'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_BUILD_DATE = '04.03.2026 11:21'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
