@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.7';
-const APP_BUILD_DATE = '04.03.2026 08:31'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_BUILD_DATE = '04.03.2026 08:33'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -363,7 +363,7 @@ function updateTypFields() {
   const subtypSel = document.getElementById('f-subtyp');
   const curSubtyp = subtypSel.value;
   if (subtypOptions.length > 0) {
-    fillSelect('f-subtyp', subtypOptions, 'Subtyp');
+    fillSelect('f-subtyp', subtypOptions, 'Bauart');
     subtypSel.value = subtypOptions.includes(curSubtyp) ? curSubtyp : '';
     groupSubtyp.style.display = 'block';
   } else {
