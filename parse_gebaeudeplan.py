@@ -107,6 +107,9 @@ def ocr_tiled(img_path, reader, room_prefix=None):
     live_hnf = []        # [{x, y}]
     LIVE_MAX_DIST = 350
     live_printed = {}    # {nr: "last_printed_line"} — nur bei Änderung neu ausgeben
+    used_barcodes = {}   # {barcode: raumnr} — Duplikat-Erkennung
+    used_flaechen = {}   # {flaeche: raumnr} — Duplikat-Warnung
+    live_warnings = []   # gesammelte Warnungen
 
     def _live_find_nearest_room(x, y):
         best, best_d = None, LIVE_MAX_DIST
@@ -124,6 +127,20 @@ def ocr_tiled(img_path, reader, room_prefix=None):
         """Versucht ein neues Area/Nutzung/Barcode dem nächsten Raum zuzuordnen."""
         nr = _live_find_nearest_room(x, y)
         if nr and not live_rooms[nr][kind]:
+            # Duplikat-Prüfung
+            if kind == 'barcode':
+                if value in used_barcodes:
+                    warn = f"FEHLER: Barcode '{value}' doppelt! Raum {used_barcodes[value]} und {nr}"
+                    live_warnings.append(warn)
+                    print(f"\n    *** {warn}", end='', flush=True)
+                    return  # Nicht zuordnen
+                used_barcodes[value] = nr
+            elif kind == 'flaeche':
+                if value in used_flaechen:
+                    warn = f"Hinweis: Fläche {value} m² identisch mit Raum {used_flaechen[value]}"
+                    live_warnings.append(warn)
+                    print(f"\n    ?   {warn}", end='', flush=True)
+                used_flaechen[value] = nr
             live_rooms[nr][kind] = value
             _live_print_room(nr)
 
@@ -178,13 +195,26 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                             # Rückwärts: bereits bekannte Daten zuordnen
                             for a in live_areas:
                                 if not live_rooms[t]['flaeche'] and distance(gx, gy, a['x'], a['y']) < LIVE_MAX_DIST:
-                                    live_rooms[t]['flaeche'] = a['area']
+                                    val = a['area']
+                                    if val in used_flaechen:
+                                        warn = f"Hinweis: Fläche {val} m² identisch mit Raum {used_flaechen[val]}"
+                                        live_warnings.append(warn)
+                                        print(f"\n    ?   {warn}", end='', flush=True)
+                                    used_flaechen.setdefault(val, t)
+                                    live_rooms[t]['flaeche'] = val
                             for n in live_nutzungen:
                                 if not live_rooms[t]['nutzung'] and distance(gx, gy, n['x'], n['y']) < 300:
                                     live_rooms[t]['nutzung'] = n['nutzung']
                             for b in live_barcodes:
                                 if not live_rooms[t]['barcode'] and distance(gx, gy, b['x'], b['y']) < LIVE_MAX_DIST:
-                                    live_rooms[t]['barcode'] = b['code']
+                                    bc = b['code']
+                                    if bc in used_barcodes:
+                                        warn = f"FEHLER: Barcode '{bc}' doppelt! Raum {used_barcodes[bc]} und {t}"
+                                        live_warnings.append(warn)
+                                        print(f"\n    *** {warn}", end='', flush=True)
+                                    else:
+                                        used_barcodes[bc] = t
+                                        live_rooms[t]['barcode'] = bc
                             _live_print_room(t)
                     continue
 
@@ -233,6 +263,14 @@ def ocr_tiled(img_path, reader, room_prefix=None):
 
     elapsed_total = time.time() - t_start
     print(f"\r  {tile_count} Kacheln, {len(all_results)} Textblöcke, {len(live_rooms)} Räume erkannt ({_format_duration(elapsed_total)})          ")
+
+    # Warnungen zusammenfassen
+    if live_warnings:
+        print(f"\n  {'!'*50}")
+        print(f"  {len(live_warnings)} Warnung(en):")
+        for w in live_warnings:
+            print(f"    - {w}")
+        print(f"  {'!'*50}")
 
     # Deduplizieren
     unique = []
