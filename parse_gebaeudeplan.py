@@ -7,6 +7,7 @@ Nutzung:
   python parse_gebaeudeplan.py                        # alle *.pdf aus plaene/
   python parse_gebaeudeplan.py plan1.pdf plan2.pdf    # bestimmte PDFs
   python parse_gebaeudeplan.py -o output.xlsx *.pdf   # Output-Datei angeben
+  python parse_gebaeudeplan.py --cpu 80               # CPU auf 80% begrenzen (default: 90%)
 """
 
 import re
@@ -454,20 +455,43 @@ def _format_duration(seconds):
     return f"{int(seconds)}s"
 
 
+def limit_cpu(max_percent=90):
+    """Begrenzt die CPU-Nutzung über Core-Affinity (z.B. 90% = 7 von 8 Cores)."""
+    try:
+        import psutil
+        p = psutil.Process()
+        all_cpus = list(range(psutil.cpu_count()))
+        n_use = max(1, int(len(all_cpus) * max_percent / 100))
+        p.cpu_affinity(all_cpus[:n_use])
+        p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS if sys.platform == 'win32' else 10)
+        print(f"  CPU begrenzt: {n_use}/{len(all_cpus)} Cores ({max_percent}%), Priorität gesenkt")
+    except ImportError:
+        print("  Hinweis: psutil nicht installiert, CPU-Limit nicht aktiv (pip install psutil)")
+    except Exception as e:
+        print(f"  Hinweis: CPU-Limit konnte nicht gesetzt werden: {e}")
+
+
 def main():
     # Argumente parsen
     args = sys.argv[1:]
     output = OUTPUT_FILE
     pdf_files = []
+    max_cpu = 90
 
     i = 0
     while i < len(args):
         if args[i] == '-o' and i + 1 < len(args):
             output = args[i + 1]
             i += 2
+        elif args[i] == '--cpu' and i + 1 < len(args):
+            max_cpu = int(args[i + 1])
+            i += 2
         else:
             pdf_files.append(args[i])
             i += 1
+
+    # CPU begrenzen
+    limit_cpu(max_cpu)
 
     # Wenn keine PDFs angegeben, alle *.pdf im Ordner /plaene (rekursiv) nehmen
     if not pdf_files:
