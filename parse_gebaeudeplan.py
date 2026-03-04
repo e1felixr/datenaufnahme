@@ -89,14 +89,28 @@ def ocr_tiled(img_path, reader):
     rows_count = math.ceil(H / step)
     total_tiles = cols * rows_count
 
+    import time
     all_results = []
     ty = 0
     tile_count = 0
+    t_start = time.time()
     while ty < H:
         tx = 0
         while tx < W:
             tile_count += 1
-            print(f"\r  Kachel {tile_count}/{total_tiles} ({tile_count*100//total_tiles}%)", end='', flush=True)
+            pct = tile_count * 100 // total_tiles
+            # Restdauer schätzen ab Kachel 2
+            if tile_count > 1:
+                elapsed = time.time() - t_start
+                avg = elapsed / (tile_count - 1)
+                remaining = avg * (total_tiles - tile_count)
+                if remaining >= 60:
+                    eta = f"~{int(remaining//60)}m {int(remaining%60):02d}s"
+                else:
+                    eta = f"~{int(remaining)}s"
+            else:
+                eta = "..."
+            print(f"\r  Kachel {tile_count}/{total_tiles} ({pct}%) — Rest: {eta}   ", end='', flush=True)
             x2 = min(tx + TILE_SIZE, W)
             y2 = min(ty + TILE_SIZE, H)
             crop = img.crop((tx, ty, x2, y2))
@@ -110,7 +124,8 @@ def ocr_tiled(img_path, reader):
             tx += TILE_SIZE - TILE_OVERLAP
         ty += TILE_SIZE - TILE_OVERLAP
 
-    print(f"\r  {tile_count} Kacheln, {len(all_results)} Textblöcke erkannt     ")
+    elapsed_total = time.time() - t_start
+    print(f"\r  {tile_count} Kacheln, {len(all_results)} Textblöcke erkannt ({int(elapsed_total)}s)          ")
 
     # Deduplizieren
     unique = []
