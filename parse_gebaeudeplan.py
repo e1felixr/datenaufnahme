@@ -89,7 +89,7 @@ def count_tiles_for_image(W, H):
 _global_progress = {'done': 0, 'total': 0, 't_start': 0}
 
 
-def ocr_tiled(img_path, reader):
+def ocr_tiled(img_path, reader, room_prefix=None):
     """OCR auf Kacheln für bessere Erkennung bei großen Bildern."""
     import time
     img = Image.open(img_path)
@@ -99,6 +99,7 @@ def ocr_tiled(img_path, reader):
 
     gp = _global_progress
     all_results = []
+    live_rooms = set()  # Live-Erkennung von Raumnummern
     ty = 0
     tile_count = 0
     t_start = time.time()
@@ -116,7 +117,8 @@ def ocr_tiled(img_path, reader):
                 g_eta = f"~{_format_duration(g_remaining)}"
             else:
                 g_eta = "..."
-            print(f"\r  Kachel {tile_count}/{local_total} | Gesamt: {gp['done']}/{gp['total']} ({g_pct}%) — Rest: {g_eta}   ", end='', flush=True)
+            rooms_info = f" | Räume: {len(live_rooms)}" if live_rooms else ""
+            print(f"\r  Kachel {tile_count}/{local_total} | Gesamt: {gp['done']}/{gp['total']} ({g_pct}%) — Rest: {g_eta}{rooms_info}   ", end='', flush=True)
             x2 = min(tx + TILE_SIZE, W)
             y2 = min(ty + TILE_SIZE, H)
             crop = img.crop((tx, ty, x2, y2))
@@ -126,12 +128,20 @@ def ocr_tiled(img_path, reader):
             for bbox, text, conf in results:
                 gx = bbox[0][0] + tx
                 gy = bbox[0][1] + ty
-                all_results.append({'x': gx, 'y': gy, 'text': text.strip(), 'conf': conf})
+                t = text.strip()
+                all_results.append({'x': gx, 'y': gy, 'text': t, 'conf': conf})
+                # Live: Raumnummern erkennen
+                if ROOM_PATTERN.match(t) and conf > 0.4 and t not in KNOWN_DIMENSIONS:
+                    if room_prefix is None or t.split('.')[0] == str(room_prefix):
+                        if t not in live_rooms:
+                            live_rooms.add(t)
+                            # Neue Raumnummer auf eigener Zeile anzeigen
+                            print(f"\n    + Raum {t}", end='', flush=True)
             tx += TILE_SIZE - TILE_OVERLAP
         ty += TILE_SIZE - TILE_OVERLAP
 
     elapsed_total = time.time() - t_start
-    print(f"\r  {tile_count} Kacheln, {len(all_results)} Textblöcke erkannt ({_format_duration(elapsed_total)})          ")
+    print(f"\r  {tile_count} Kacheln, {len(all_results)} Textblöcke, {len(live_rooms)} Räume erkannt ({_format_duration(elapsed_total)})          ")
 
     # Deduplizieren
     unique = []
@@ -348,7 +358,7 @@ def process_single_pdf(pdf_file, reader):
 
     # OCR
     print(f"  Starte Kachel-OCR...")
-    ocr_results = ocr_tiled(img_path, reader)
+    ocr_results = ocr_tiled(img_path, reader, room_prefix=geb_nr)
 
     # Klassifizieren (mit Gebäude-Prefix-Filter)
     rooms, barcodes, areas, nutzungen, hnf_markers = classify_texts(ocr_results, room_prefix=geb_nr)
