@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.8';
-const APP_BUILD_DATE = '04.03.2026 11:57'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_BUILD_DATE = '04.03.2026 16:33'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -1220,8 +1220,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rNr = document.getElementById('f-raumnr').value.trim();
     const data = getActiveGebaeudeDaten();
     const details = data.raumDetails && data.raumDetails[rNr];
-    if (details && details.nutzung && !document.getElementById('f-raumbezeichnung').value.trim()) {
+    if (details && details.nutzung) {
       document.getElementById('f-raumbezeichnung').value = details.nutzung;
+    } else {
+      document.getElementById('f-raumbezeichnung').value = '';
     }
   });
 
