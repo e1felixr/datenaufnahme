@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.7';
-const APP_BUILD_DATE = '04.03.2026 11:05'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.8';
+const APP_BUILD_DATE = '04.03.2026 11:16'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -31,7 +31,8 @@ let currentProjektId = null;
 let currentHkId = null;
 let formPhotos = [null, null, null];
 let settingsReady = false;
-let gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
+let allGebaeudeDaten = {}; // Key=Liegenschaft, Value={gebaeude,geschoss,raum,raumDetails}
+let currentLiegenschaft = null;
 let newHkBaseData = null; // Basisdaten für Mode-Toggle (neuer HK)
 const DATALIST_OPTS = {}; // Volle Optionslisten für Autocomplete-Filter
 
@@ -82,11 +83,12 @@ async function renderProjekte() {
   for (const p of projekte) {
     const hks = await getHeizkoerperByProjekt(p.id);
     const datum = new Date(p.erstelltAm).toLocaleDateString('de-DE');
+    const liegBadge = p.liegenschaft ? ` <span class="badge">${esc(p.liegenschaft)}</span>` : '';
     html += `
       <div class="card" data-id="${p.id}">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="flex:1;cursor:pointer" onclick="openProjekt('${p.id}')">
-            <div class="card-title">${esc(p.name)}</div>
+            <div class="card-title">${esc(p.name)}${liegBadge}</div>
             <div class="card-sub">${datum} &middot; ${hks.length} HK</div>
           </div>
           <button class="btn-icon btn-icon-danger" onclick="event.stopPropagation();confirmDeleteProjekt('${p.id}')" title="Löschen">&#128465;</button>
@@ -100,6 +102,12 @@ function showNewProjektDialog() {
   document.getElementById('modal-new-projekt').style.display = 'flex';
   const inp = document.getElementById('input-projekt-name');
   inp.value = '';
+  // Liegenschaft-Select befüllen
+  const sel = document.getElementById('input-projekt-liegenschaft');
+  const keys = Object.keys(allGebaeudeDaten);
+  sel.innerHTML = '<option value="">-- Liegenschaft --</option>' +
+    keys.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+  if (keys.length === 1) sel.value = keys[0];
   inp.focus();
 }
 
@@ -110,7 +118,8 @@ function closeNewProjektDialog() {
 async function createNewProjekt() {
   const name = document.getElementById('input-projekt-name').value.trim();
   if (!name) return;
-  await createProjekt(name);
+  const liegenschaft = document.getElementById('input-projekt-liegenschaft').value;
+  await createProjekt(name, liegenschaft);
   closeNewProjektDialog();
   await renderProjekte();
   showToast('Projekt erstellt');
@@ -124,6 +133,9 @@ async function openProjekt(id) {
   currentProjektId = id;
   const p = await getProjekt(id);
   document.getElementById('header-projekt-name').textContent = p.name;
+  // Liegenschaft setzen und Datalists aktualisieren
+  currentLiegenschaft = p.liegenschaft || null;
+  renderDatalists();
   await renderHkList();
   navigate('screen-hk-list');
 }
@@ -739,46 +751,53 @@ function removePhoto(index) {
 
 function parseGebaeudedatenXlsx(arrayBuffer) {
   const wb = XLSX.read(arrayBuffer, { type: 'array' });
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+  const result = {}; // Key=Liegenschaft (Sheet-Name), Value={gebaeude,geschoss,raum,raumDetails}
 
-  const gebaeude = new Set();
-  const geschoss = new Set();
-  const raum = new Set();
-  const raumDetails = {}; // { raumnr: { flaeche, nutzung, barcode } }
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
-  // Ab Zeile 1 (Index 1) = Header übersprungen
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
-    if (row[2] != null && String(row[2]).trim()) geschoss.add(String(row[2]).trim());
-    if (row[4] != null && String(row[4]).trim()) {
-      const rNr = String(row[4]).trim();
-      raum.add(rNr);
-      raumDetails[rNr] = {
-        flaeche: row[5] != null ? String(row[5]).trim() : '',
-        nutzung: row[6] != null ? String(row[6]).trim() : '',
-        barcode: row[7] != null ? String(row[7]).trim() : ''
-      };
+    const gebaeude = new Set();
+    const geschoss = new Set();
+    const raum = new Set();
+    const raumDetails = {};
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
+      if (row[2] != null && String(row[2]).trim()) geschoss.add(String(row[2]).trim());
+      if (row[4] != null && String(row[4]).trim()) {
+        const rNr = String(row[4]).trim();
+        raum.add(rNr);
+        raumDetails[rNr] = {
+          flaeche: row[5] != null ? String(row[5]).trim() : '',
+          nutzung: row[6] != null ? String(row[6]).trim() : '',
+          barcode: row[7] != null ? String(row[7]).trim() : ''
+        };
+      }
     }
+
+    result[sheetName] = {
+      gebaeude: [...gebaeude],
+      geschoss: [...geschoss],
+      raum: [...raum],
+      raumDetails
+    };
   }
 
-  return {
-    gebaeude: [...gebaeude],
-    geschoss: [...geschoss],
-    raum: [...raum],
-    raumDetails
-  };
+  return result;
 }
 
 function importGebaeudedaten(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    gebaeudeDaten = parseGebaeudedatenXlsx(e.target.result);
-    localStorage.setItem('gebaeudedaten', JSON.stringify(gebaeudeDaten));
+    allGebaeudeDaten = parseGebaeudedatenXlsx(e.target.result);
+    localStorage.setItem('gebaeudedaten', JSON.stringify(allGebaeudeDaten));
     renderDatalists();
-    showToast(`${gebaeudeDaten.gebaeude.length} Gebäude, ${gebaeudeDaten.geschoss.length} Etagen, ${gebaeudeDaten.raum.length} Räume importiert`);
+    const keys = Object.keys(allGebaeudeDaten);
+    const totalRaeume = keys.reduce((s, k) => s + allGebaeudeDaten[k].raum.length, 0);
+    showToast(`${keys.length} Liegenschaft(en), ${totalRaeume} Räume importiert`);
   };
   reader.readAsArrayBuffer(file);
   document.getElementById('file-gebaeudedaten').value = '';
@@ -789,8 +808,8 @@ async function fetchGebaeudedatenFromServer() {
     const resp = await fetch('gebaeudedaten.xlsx', { cache: 'no-cache' });
     if (!resp.ok) return false;
     const buf = await resp.arrayBuffer();
-    gebaeudeDaten = parseGebaeudedatenXlsx(buf);
-    localStorage.setItem('gebaeudedaten', JSON.stringify(gebaeudeDaten));
+    allGebaeudeDaten = parseGebaeudedatenXlsx(buf);
+    localStorage.setItem('gebaeudedaten', JSON.stringify(allGebaeudeDaten));
     renderDatalists();
     return true;
   } catch {
@@ -805,21 +824,38 @@ async function loadGebaeudedaten() {
     // Offline-Fallback: aus localStorage laden
     const stored = localStorage.getItem('gebaeudedaten');
     if (stored) {
-      gebaeudeDaten = JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Backwards-Compat: altes Format {gebaeude,...} → {Standard: {...}}
+      if (parsed.gebaeude && Array.isArray(parsed.gebaeude)) {
+        allGebaeudeDaten = { Standard: parsed };
+      } else {
+        allGebaeudeDaten = parsed;
+      }
     } else {
-      gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
+      allGebaeudeDaten = {};
     }
     renderDatalists();
   }
 }
 
+function getActiveGebaeudeDaten() {
+  if (currentLiegenschaft && allGebaeudeDaten[currentLiegenschaft]) {
+    return allGebaeudeDaten[currentLiegenschaft];
+  }
+  // Fallback: erste verfügbare Liegenschaft
+  const keys = Object.keys(allGebaeudeDaten);
+  if (keys.length > 0) return allGebaeudeDaten[keys[0]];
+  return { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
+}
+
 function renderDatalists() {
+  const data = getActiveGebaeudeDaten();
   const dlGeb = document.getElementById('dl-gebaeude');
   const dlGes = document.getElementById('dl-geschoss');
   const dlRaum = document.getElementById('dl-raumnr');
-  dlGeb.innerHTML = gebaeudeDaten.gebaeude.map(v => `<option value="${esc(v)}">`).join('');
-  dlGes.innerHTML = gebaeudeDaten.geschoss.map(v => `<option value="${esc(v)}">`).join('');
-  dlRaum.innerHTML = gebaeudeDaten.raum.map(v => `<option value="${esc(v)}">`).join('');
+  dlGeb.innerHTML = data.gebaeude.map(v => `<option value="${esc(v)}">`).join('');
+  dlGes.innerHTML = data.geschoss.map(v => `<option value="${esc(v)}">`).join('');
+  dlRaum.innerHTML = data.raum.map(v => `<option value="${esc(v)}">`).join('');
 }
 
 // ── Versand ──
@@ -1137,7 +1173,8 @@ async function resetAllData() {
   localStorage.removeItem('gebaeudedaten');
 
   currentProjektId = null;
-  gebaeudeDaten = { gebaeude: [], geschoss: [], raum: [] };
+  allGebaeudeDaten = {};
+  currentLiegenschaft = null;
   await renderProjekte();
   navigate('screen-projekte');
   showToast('Alle Daten gelöscht');
@@ -1181,7 +1218,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
   document.getElementById('f-raumnr').addEventListener('change', () => {
     const rNr = document.getElementById('f-raumnr').value.trim();
-    const details = gebaeudeDaten.raumDetails && gebaeudeDaten.raumDetails[rNr];
+    const data = getActiveGebaeudeDaten();
+    const details = data.raumDetails && data.raumDetails[rNr];
     if (details && details.nutzung && !document.getElementById('f-raumbezeichnung').value.trim()) {
       document.getElementById('f-raumbezeichnung').value = details.nutzung;
     }

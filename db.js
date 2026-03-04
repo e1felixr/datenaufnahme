@@ -36,11 +36,12 @@ function reqToPromise(req) {
 
 // ── Projekte ──
 
-async function createProjekt(name) {
+async function createProjekt(name, liegenschaft) {
   await openDB();
   const projekt = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: name,
+    liegenschaft: liegenschaft || '',
     erstelltAm: new Date().toISOString()
   };
   await reqToPromise(tx('projekte', 'readwrite').put(projekt));

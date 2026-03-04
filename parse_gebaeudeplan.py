@@ -351,62 +351,73 @@ def sort_key(room):
     return (1, 0, 0, nr)
 
 
-def write_xlsx(all_pdf_data, output_file):
-    """Schreibt alle Raumdaten aus allen PDFs in eine xlsx."""
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Gebaeudedaten"
+def extract_liegenschaft(pdf_file):
+    """Extrahiert den Liegenschaftsnamen aus dem Unterordner-Pfad unter plaene/."""
+    parts = os.path.normpath(pdf_file).split(os.sep)
+    if 'plaene' in parts:
+        idx = parts.index('plaene')
+        if idx + 1 < len(parts) - 1:  # Es gibt einen Unterordner zwischen plaene/ und der Datei
+            return parts[idx + 1]
+    return 'Standard'
 
-    ws.append(['Gebäude', None, 'Etagen', None, 'Raumnr.', 'Fläche (m²)', 'Nutzung', 'Barcode'])
+
+def write_xlsx(all_pdf_data, output_file):
+    """Schreibt alle Raumdaten aus allen PDFs in eine xlsx — ein Sheet pro Liegenschaft."""
+    wb = openpyxl.Workbook()
+    # Default-Sheet entfernen
+    wb.remove(wb.active)
+
+    # Nach Liegenschaft gruppieren
+    from collections import OrderedDict
+    liegenschaften = OrderedDict()
+    for gebaeude, etage, rooms, liegenschaft in all_pdf_data:
+        if liegenschaft not in liegenschaften:
+            liegenschaften[liegenschaft] = []
+        liegenschaften[liegenschaft].append((gebaeude, etage, rooms))
 
     total_rooms = 0
-    # Sammle alle Etagen pro Gebäude
-    gebaeude_etagen = {}  # {gebaeude: set(etagen)}
-    for gebaeude, etage, rooms in all_pdf_data:
-        if gebaeude:
-            if gebaeude not in gebaeude_etagen:
-                gebaeude_etagen[gebaeude] = set()
-            if etage:
-                gebaeude_etagen[gebaeude].add(etage)
+    for lieg_name, pdf_entries in liegenschaften.items():
+        ws = wb.create_sheet(title=lieg_name[:31])  # Sheet-Name max 31 Zeichen
+        ws.append(['Gebäude', None, 'Etagen', None, 'Raumnr.', 'Fläche (m²)', 'Nutzung', 'Barcode'])
 
-    first_gebaeude = True
-    first_etage_per_geb = {}
+        first_etage_per_geb = {}
 
-    for gebaeude, etage, rooms in all_pdf_data:
-        sorted_rooms = sorted(rooms.values(), key=sort_key)
-        if not sorted_rooms:
-            continue
+        for gebaeude, etage, rooms in pdf_entries:
+            sorted_rooms = sorted(rooms.values(), key=sort_key)
+            if not sorted_rooms:
+                continue
 
-        is_first_geb = gebaeude not in first_etage_per_geb
-        first_etage_per_geb.setdefault(gebaeude, True)
+            is_first_geb = gebaeude not in first_etage_per_geb
+            first_etage_per_geb.setdefault(gebaeude, True)
 
-        for i, room in enumerate(sorted_rooms):
-            flaeche = float(room['flaeche']) if room['flaeche'] else None
-            row = [
-                gebaeude if i == 0 and is_first_geb else None,
-                None,
-                etage if i == 0 else None,
-                None,
-                room['raumnr'],
-                flaeche,
-                room['nutzung'],
-                room['barcode']
-            ]
-            ws.append(row)
-            total_rooms += 1
+            for i, room in enumerate(sorted_rooms):
+                flaeche = float(room['flaeche']) if room['flaeche'] else None
+                row = [
+                    gebaeude if i == 0 and is_first_geb else None,
+                    None,
+                    etage if i == 0 else None,
+                    None,
+                    room['raumnr'],
+                    flaeche,
+                    room['nutzung'],
+                    room['barcode']
+                ]
+                ws.append(row)
+                total_rooms += 1
 
-        if is_first_geb:
-            first_etage_per_geb[gebaeude] = False
+            if is_first_geb:
+                first_etage_per_geb[gebaeude] = False
 
-    ws.column_dimensions['A'].width = 15
-    ws.column_dimensions['C'].width = 10
-    ws.column_dimensions['E'].width = 12
-    ws.column_dimensions['F'].width = 12
-    ws.column_dimensions['G'].width = 20
-    ws.column_dimensions['H'].width = 12
+        ws.column_dimensions['A'].width = 15
+        ws.column_dimensions['C'].width = 10
+        ws.column_dimensions['E'].width = 12
+        ws.column_dimensions['F'].width = 12
+        ws.column_dimensions['G'].width = 20
+        ws.column_dimensions['H'].width = 12
 
     wb.save(output_file)
-    print(f"\n{output_file} geschrieben: {total_rooms} Räume aus {len(all_pdf_data)} PDFs")
+    print(f"\n{output_file} geschrieben: {total_rooms} Räume aus {len(all_pdf_data)} PDFs, "
+          f"{len(liegenschaften)} Liegenschaft(en): {', '.join(liegenschaften.keys())}")
 
 
 def main():
@@ -445,18 +456,20 @@ def main():
     reader = easyocr.Reader(['de', 'en'], gpu=False)
 
     # Alle PDFs verarbeiten
-    all_pdf_data = []  # [(gebaeude, etage, rooms), ...]
+    all_pdf_data = []  # [(gebaeude, etage, rooms, liegenschaft), ...]
     for pdf_file in pdf_files:
         gebaeude, etage, rooms = process_single_pdf(pdf_file, reader)
         if rooms:
-            all_pdf_data.append((gebaeude, etage, rooms))
+            # Liegenschaft = Name des Unterordners unter plaene/
+            liegenschaft = extract_liegenschaft(pdf_file)
+            all_pdf_data.append((gebaeude, etage, rooms, liegenschaft))
 
     if not all_pdf_data:
         print("\nKeine Raumdaten erkannt!")
         sys.exit(1)
 
     # Zusammenfassung
-    total = sum(len(rooms) for _, _, rooms in all_pdf_data)
+    total = sum(len(rooms) for _, _, rooms, _ in all_pdf_data)
     print(f"\n{'='*60}")
     print(f"GESAMT: {total} Räume aus {len(all_pdf_data)} PDFs")
     print(f"{'='*60}")
