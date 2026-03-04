@@ -104,10 +104,7 @@ def ocr_tiled(img_path, reader):
                 elapsed = time.time() - t_start
                 avg = elapsed / (tile_count - 1)
                 remaining = avg * (total_tiles - tile_count)
-                if remaining >= 60:
-                    eta = f"~{int(remaining//60)}m {int(remaining%60):02d}s"
-                else:
-                    eta = f"~{int(remaining)}s"
+                eta = f"~{_format_duration(remaining)}"
             else:
                 eta = "..."
             print(f"\r  Kachel {tile_count}/{total_tiles} ({pct}%) — Rest: {eta}   ", end='', flush=True)
@@ -443,6 +440,13 @@ def write_xlsx(all_pdf_data, output_file):
           f"{len(liegenschaften)} Liegenschaft(en): {', '.join(liegenschaften.keys())}")
 
 
+def _format_duration(seconds):
+    """Formatiert Sekunden als 'Xm YYs' oder 'Xs'."""
+    if seconds >= 60:
+        return f"{int(seconds//60)}m {int(seconds%60):02d}s"
+    return f"{int(seconds)}s"
+
+
 def main():
     # Argumente parsen
     args = sys.argv[1:]
@@ -479,13 +483,32 @@ def main():
     reader = easyocr.Reader(['de', 'en'], gpu=False)
 
     # Alle PDFs verarbeiten
+    import time
     all_pdf_data = []  # [(gebaeude, etage, rooms, liegenschaft), ...]
-    for pdf_file in pdf_files:
+    t_total_start = time.time()
+    for pi, pdf_file in enumerate(pdf_files):
+        t_pdf_start = time.time()
+        # Gesamt-Fortschritt anzeigen
+        if len(pdf_files) > 1:
+            elapsed_total = time.time() - t_total_start
+            if pi > 0:
+                avg_per_pdf = elapsed_total / pi
+                remaining_total = avg_per_pdf * (len(pdf_files) - pi)
+                eta_str = _format_duration(remaining_total)
+                print(f"\n  >>> PDF {pi+1}/{len(pdf_files)} — Gesamt-Rest: {eta_str} <<<")
+            else:
+                print(f"\n  >>> PDF {pi+1}/{len(pdf_files)} <<<")
+
         gebaeude, etage, rooms = process_single_pdf(pdf_file, reader)
+
+        t_pdf_elapsed = time.time() - t_pdf_start
+        print(f"  Dauer für diesen Plan: {_format_duration(t_pdf_elapsed)}")
+
         if rooms:
-            # Liegenschaft = Name des Unterordners unter plaene/
             liegenschaft = extract_liegenschaft(pdf_file)
             all_pdf_data.append((gebaeude, etage, rooms, liegenschaft))
+
+    t_total_elapsed = time.time() - t_total_start
 
     if not all_pdf_data:
         print("\nKeine Raumdaten erkannt!")
@@ -495,6 +518,7 @@ def main():
     total = sum(len(rooms) for _, _, rooms, _ in all_pdf_data)
     print(f"\n{'='*60}")
     print(f"GESAMT: {total} Räume aus {len(all_pdf_data)} PDFs")
+    print(f"Gesamtdauer: {_format_duration(t_total_elapsed)}")
     print(f"{'='*60}")
 
     # Schreiben
