@@ -8,6 +8,7 @@ Nutzung:
   python parse_gebaeudeplan.py plan1.pdf plan2.pdf    # bestimmte PDFs
   python parse_gebaeudeplan.py -o output.xlsx *.pdf   # Output-Datei angeben
   python parse_gebaeudeplan.py --cpu 80               # CPU auf 80% begrenzen (default: 90%)
+  python parse_gebaeudeplan.py --append                # bestehende Sheets in xlsx beibehalten
 """
 
 import re
@@ -389,63 +390,83 @@ def extract_liegenschaft(pdf_file):
     return 'Standard'
 
 
-def write_xlsx(all_pdf_data, output_file):
-    """Schreibt alle Raumdaten aus allen PDFs in eine xlsx — ein Sheet pro Liegenschaft."""
-    wb = openpyxl.Workbook()
-    # Default-Sheet entfernen
-    wb.remove(wb.active)
+def _write_liegenschaft_sheet(ws, pdf_entries):
+    """Schreibt die Daten einer Liegenschaft in ein Worksheet. Gibt Raumanzahl zurück."""
+    ws.append(['Gebäude', None, 'Etagen', None, 'Raumnr.', 'Fläche (m²)', 'Nutzung', 'Barcode'])
+    total = 0
+    first_etage_per_geb = {}
+
+    for gebaeude, etage, rooms in pdf_entries:
+        sorted_rooms = sorted(rooms.values(), key=sort_key)
+        if not sorted_rooms:
+            continue
+
+        is_first_geb = gebaeude not in first_etage_per_geb
+        first_etage_per_geb.setdefault(gebaeude, True)
+
+        for i, room in enumerate(sorted_rooms):
+            flaeche = float(room['flaeche']) if room['flaeche'] else None
+            row = [
+                gebaeude if i == 0 and is_first_geb else None,
+                None,
+                etage if i == 0 else None,
+                None,
+                room['raumnr'],
+                flaeche,
+                room['nutzung'],
+                room['barcode']
+            ]
+            ws.append(row)
+            total += 1
+
+        if is_first_geb:
+            first_etage_per_geb[gebaeude] = False
+
+    ws.column_dimensions['A'].width = 15
+    ws.column_dimensions['C'].width = 10
+    ws.column_dimensions['E'].width = 12
+    ws.column_dimensions['F'].width = 12
+    ws.column_dimensions['G'].width = 20
+    ws.column_dimensions['H'].width = 12
+    return total
+
+
+def write_xlsx(all_pdf_data, output_file, append=False):
+    """Schreibt alle Raumdaten in eine xlsx — ein Sheet pro Liegenschaft.
+    Bei append=True werden bestehende Sheets beibehalten, nur betroffene Liegenschaften ersetzt."""
+    from collections import OrderedDict
 
     # Nach Liegenschaft gruppieren
-    from collections import OrderedDict
     liegenschaften = OrderedDict()
     for gebaeude, etage, rooms, liegenschaft in all_pdf_data:
         if liegenschaft not in liegenschaften:
             liegenschaften[liegenschaft] = []
         liegenschaften[liegenschaft].append((gebaeude, etage, rooms))
 
+    # Bestehende Datei laden oder neue erstellen
+    if append and os.path.exists(output_file):
+        wb = openpyxl.load_workbook(output_file)
+        kept = [s for s in wb.sheetnames if s not in liegenschaften]
+        print(f"  Append-Modus: {len(kept)} bestehende Sheets beibehalten, "
+              f"{len(liegenschaften)} Liegenschaft(en) neu geschrieben")
+        # Betroffene Sheets löschen (werden neu erstellt)
+        for lieg_name in liegenschaften:
+            if lieg_name[:31] in wb.sheetnames:
+                del wb[lieg_name[:31]]
+    else:
+        wb = openpyxl.Workbook()
+        wb.remove(wb.active)
+
     total_rooms = 0
     for lieg_name, pdf_entries in liegenschaften.items():
-        ws = wb.create_sheet(title=lieg_name[:31])  # Sheet-Name max 31 Zeichen
-        ws.append(['Gebäude', None, 'Etagen', None, 'Raumnr.', 'Fläche (m²)', 'Nutzung', 'Barcode'])
-
-        first_etage_per_geb = {}
-
-        for gebaeude, etage, rooms in pdf_entries:
-            sorted_rooms = sorted(rooms.values(), key=sort_key)
-            if not sorted_rooms:
-                continue
-
-            is_first_geb = gebaeude not in first_etage_per_geb
-            first_etage_per_geb.setdefault(gebaeude, True)
-
-            for i, room in enumerate(sorted_rooms):
-                flaeche = float(room['flaeche']) if room['flaeche'] else None
-                row = [
-                    gebaeude if i == 0 and is_first_geb else None,
-                    None,
-                    etage if i == 0 else None,
-                    None,
-                    room['raumnr'],
-                    flaeche,
-                    room['nutzung'],
-                    room['barcode']
-                ]
-                ws.append(row)
-                total_rooms += 1
-
-            if is_first_geb:
-                first_etage_per_geb[gebaeude] = False
-
-        ws.column_dimensions['A'].width = 15
-        ws.column_dimensions['C'].width = 10
-        ws.column_dimensions['E'].width = 12
-        ws.column_dimensions['F'].width = 12
-        ws.column_dimensions['G'].width = 20
-        ws.column_dimensions['H'].width = 12
+        ws = wb.create_sheet(title=lieg_name[:31])
+        total_rooms += _write_liegenschaft_sheet(ws, pdf_entries)
 
     wb.save(output_file)
-    print(f"\n{output_file} geschrieben: {total_rooms} Räume aus {len(all_pdf_data)} PDFs, "
-          f"{len(liegenschaften)} Liegenschaft(en): {', '.join(liegenschaften.keys())}")
+    total_sheets = len(wb.sheetnames)
+    print(f"\n{output_file} geschrieben: {total_rooms} neue Räume, "
+          f"{total_sheets} Sheet(s) gesamt, "
+          f"Liegenschaften: {', '.join(wb.sheetnames)}")
 
 
 def _format_duration(seconds):
@@ -484,6 +505,7 @@ def main():
     output = OUTPUT_FILE
     pdf_files = []
     max_cpu = 90
+    append = False
 
     i = 0
     while i < len(args):
@@ -493,6 +515,9 @@ def main():
         elif args[i] == '--cpu' and i + 1 < len(args):
             max_cpu = int(args[i + 1])
             i += 2
+        elif args[i] == '--append':
+            append = True
+            i += 1
         else:
             pdf_files.append(args[i])
             i += 1
@@ -573,7 +598,7 @@ def main():
     print(f"{'='*60}")
 
     # Schreiben
-    write_xlsx(all_pdf_data, output)
+    write_xlsx(all_pdf_data, output, append=append)
 
     # Aufräumen
     for f in ['_temp_plan_ocr.png', '_temp_tile.png']:
