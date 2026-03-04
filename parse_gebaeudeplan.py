@@ -76,20 +76,26 @@ def distance(x1, y1, x2, y2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def ocr_tiled(img_path, reader):
-    """OCR auf Kacheln für bessere Erkennung bei großen Bildern."""
-    img = Image.open(img_path)
-    W, H = img.size
-    print(f"  Bild: {W}x{H}, Kacheln à {TILE_SIZE}px")
-
-    # Gesamtzahl Kacheln vorab berechnen
+def count_tiles_for_image(W, H):
+    """Berechnet die Anzahl Kacheln für ein Bild der Größe WxH."""
     import math
     step = TILE_SIZE - TILE_OVERLAP
-    cols = math.ceil(W / step)
-    rows_count = math.ceil(H / step)
-    total_tiles = cols * rows_count
+    return math.ceil(W / step) * math.ceil(H / step)
 
+
+# Globaler Fortschritt über alle PDFs
+_global_progress = {'done': 0, 'total': 0, 't_start': 0}
+
+
+def ocr_tiled(img_path, reader):
+    """OCR auf Kacheln für bessere Erkennung bei großen Bildern."""
     import time
+    img = Image.open(img_path)
+    W, H = img.size
+    local_total = count_tiles_for_image(W, H)
+    print(f"  Bild: {W}x{H}, {local_total} Kacheln à {TILE_SIZE}px")
+
+    gp = _global_progress
     all_results = []
     ty = 0
     tile_count = 0
@@ -98,16 +104,17 @@ def ocr_tiled(img_path, reader):
         tx = 0
         while tx < W:
             tile_count += 1
-            pct = tile_count * 100 // total_tiles
-            # Restdauer schätzen ab Kachel 2
-            if tile_count > 1:
-                elapsed = time.time() - t_start
-                avg = elapsed / (tile_count - 1)
-                remaining = avg * (total_tiles - tile_count)
-                eta = f"~{_format_duration(remaining)}"
+            gp['done'] += 1
+            # Gesamt-Fortschritt
+            g_pct = gp['done'] * 100 // gp['total'] if gp['total'] else 0
+            if gp['done'] > 1:
+                g_elapsed = time.time() - gp['t_start']
+                g_avg = g_elapsed / (gp['done'] - 1)
+                g_remaining = g_avg * (gp['total'] - gp['done'])
+                g_eta = f"~{_format_duration(g_remaining)}"
             else:
-                eta = "..."
-            print(f"\r  Kachel {tile_count}/{total_tiles} ({pct}%) — Rest: {eta}   ", end='', flush=True)
+                g_eta = "..."
+            print(f"\r  Kachel {tile_count}/{local_total} | Gesamt: {gp['done']}/{gp['total']} ({g_pct}%) — Rest: {g_eta}   ", end='', flush=True)
             x2 = min(tx + TILE_SIZE, W)
             y2 = min(ty + TILE_SIZE, H)
             crop = img.crop((tx, ty, x2, y2))
@@ -122,7 +129,7 @@ def ocr_tiled(img_path, reader):
         ty += TILE_SIZE - TILE_OVERLAP
 
     elapsed_total = time.time() - t_start
-    print(f"\r  {tile_count} Kacheln, {len(all_results)} Textblöcke erkannt ({int(elapsed_total)}s)          ")
+    print(f"\r  {tile_count} Kacheln, {len(all_results)} Textblöcke erkannt ({_format_duration(elapsed_total)})          ")
 
     # Deduplizieren
     unique = []
@@ -478,26 +485,39 @@ def main():
     print(f"Verarbeite {len(pdf_files)} PDF(s): {', '.join(pdf_files)}")
     print(f"Ausgabe: {output}")
 
+    # Kachelzahl aller PDFs vorab berechnen (schnell, nur Bildgröße lesen)
+    import time
+    print("\nBerechne Gesamtumfang...")
+    total_tiles_all = 0
+    for pdf_file in pdf_files:
+        try:
+            doc = fitz.open(pdf_file)
+            page = doc[0]
+            # Bildgröße bei DPI berechnen ohne tatsächlich zu rendern
+            W = int(page.rect.width * DPI / 72)
+            H = int(page.rect.height * DPI / 72)
+            doc.close()
+            total_tiles_all += count_tiles_for_image(W, H)
+        except Exception:
+            total_tiles_all += 48  # Fallback-Schätzung
+    print(f"  {len(pdf_files)} PDFs, {total_tiles_all} Kacheln gesamt")
+
+    # Globalen Fortschritt initialisieren
+    _global_progress['total'] = total_tiles_all
+    _global_progress['done'] = 0
+
     # OCR-Reader einmal initialisieren (spart Zeit bei mehreren PDFs)
     print("\nInitialisiere OCR-Reader...")
     reader = easyocr.Reader(['de', 'en'], gpu=False)
 
     # Alle PDFs verarbeiten
-    import time
     all_pdf_data = []  # [(gebaeude, etage, rooms, liegenschaft), ...]
     t_total_start = time.time()
+    _global_progress['t_start'] = t_total_start
     for pi, pdf_file in enumerate(pdf_files):
         t_pdf_start = time.time()
-        # Gesamt-Fortschritt anzeigen
         if len(pdf_files) > 1:
-            elapsed_total = time.time() - t_total_start
-            if pi > 0:
-                avg_per_pdf = elapsed_total / pi
-                remaining_total = avg_per_pdf * (len(pdf_files) - pi)
-                eta_str = _format_duration(remaining_total)
-                print(f"\n  >>> PDF {pi+1}/{len(pdf_files)} — Gesamt-Rest: {eta_str} <<<")
-            else:
-                print(f"\n  >>> PDF {pi+1}/{len(pdf_files)} <<<")
+            print(f"\n  >>> PDF {pi+1}/{len(pdf_files)} <<<")
 
         gebaeude, etage, rooms = process_single_pdf(pdf_file, reader)
 
