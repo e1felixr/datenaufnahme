@@ -2,7 +2,7 @@
 
 const EXPORT_HEADERS = [
   'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'HK-Nr.',
-  'Typ', 'Subtyp', 'Baulänge [mm]', 'Bauhöhe [mm]', 'Anz. Röhren', 'Anz. Glieder',
+  'Typ', 'Subtyp', 'Bauart Konvektor', 'Baulänge [mm]', 'Bauhöhe [mm]', 'Anz. Röhren', 'Anz. Glieder',
   'Nabenabstand [mm]', 'DN Ventil', 'Ventilform',
   'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Entleerung',
   'Ventil voreinstellbar', 'Voreinstellwert', 'Art Thermostatkopf',
@@ -12,7 +12,7 @@ const EXPORT_HEADERS = [
 
 const EXPORT_FIELDS = [
   'gebaeude', 'geschoss', 'raumnr', 'raumbezeichnung', 'hkNr',
-  'typ', 'subtyp', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
+  'typ', 'subtyp', 'konvektorBauart', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
   'nabenabstand', 'dnVentil', 'ventilform',
   'hahnblock', 'rlVerschraubung', 'entlueftung', 'entleerung',
   'ventilVoreinstellbar', 'ventilVoreinstellbarWert', 'artThermostatkopf',

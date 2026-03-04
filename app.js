@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.6';
-const APP_BUILD_DATE = '03.03.2026 19:32'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.7';
+const APP_BUILD_DATE = '04.03.2026 08:31'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -314,6 +314,7 @@ function fillForm(hk) {
 
   // Subtyp: Alte artFlach-Werte übernehmen
   document.getElementById('f-subtyp').value = hk.subtyp || hk.artFlach || '';
+  document.getElementById('f-konvektorBauart').value = hk.konvektorBauart || '';
   document.getElementById('f-baulaenge').value = hk.baulaenge || '';
   document.getElementById('f-bauhoehe').value = hk.bauhoehe || '';
   document.getElementById('f-anzahlRoehren').value = hk.anzahlRoehren || '';
@@ -350,6 +351,7 @@ function fillForm(hk) {
 function updateTypFields() {
   const typ = document.getElementById('f-typ').value;
   const groupSubtyp = document.getElementById('group-subtyp');
+  const groupKonvektorBauart = document.getElementById('group-konvektorBauart');
   const groupRoehrenGlieder = document.getElementById('group-roehrenGlieder');
   const groupBaulaenge = document.getElementById('group-baulaenge');
 
@@ -367,6 +369,14 @@ function updateTypFields() {
   } else {
     subtypSel.value = '';
     groupSubtyp.style.display = 'none';
+  }
+
+  // Konvektor-Bauart: nur für Konvektoren
+  if (typ === 'Konvektoren') {
+    groupKonvektorBauart.style.display = 'block';
+  } else {
+    document.getElementById('f-konvektorBauart').value = '';
+    groupKonvektorBauart.style.display = 'none';
   }
 
   // Röhren/Glieder: nur für Stahlröhren, Stahlglieder, Gussglieder
@@ -441,7 +451,7 @@ function getToggleValue(name) {
 
 // Felder, die als Standard übernommen werden (ohne Standort/HK-Nr/Bemerkung/Fotos)
 const STANDARD_FIELDS = [
-  'typ', 'subtyp', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
+  'typ', 'subtyp', 'konvektorBauart', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
   'nabenabstand', 'dnVentil', 'ventilform', 'einbausituation', 'strang',
   'artThermostatkopf', 'ventilVoreinstellbar', 'ventilVoreinstellbarWert'
 ];
@@ -454,6 +464,7 @@ function readFormIntoHk(hk) {
   hk.hkNr = document.getElementById('f-hkNr').value.trim();
   hk.typ = document.getElementById('f-typ').value;
   hk.subtyp = document.getElementById('f-subtyp').value;
+  hk.konvektorBauart = document.getElementById('f-konvektorBauart').value;
   hk.baulaenge = document.getElementById('f-baulaenge').value;
   hk.bauhoehe = document.getElementById('f-bauhoehe').value;
   hk.anzahlRoehren = document.getElementById('f-anzahlRoehren').value;
