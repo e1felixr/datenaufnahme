@@ -82,12 +82,21 @@ def ocr_tiled(img_path, reader):
     W, H = img.size
     print(f"  Bild: {W}x{H}, Kacheln à {TILE_SIZE}px")
 
+    # Gesamtzahl Kacheln vorab berechnen
+    import math
+    step = TILE_SIZE - TILE_OVERLAP
+    cols = math.ceil(W / step)
+    rows_count = math.ceil(H / step)
+    total_tiles = cols * rows_count
+
     all_results = []
     ty = 0
     tile_count = 0
     while ty < H:
         tx = 0
         while tx < W:
+            tile_count += 1
+            print(f"\r  Kachel {tile_count}/{total_tiles} ({tile_count*100//total_tiles}%)", end='', flush=True)
             x2 = min(tx + TILE_SIZE, W)
             y2 = min(ty + TILE_SIZE, H)
             crop = img.crop((tx, ty, x2, y2))
@@ -98,11 +107,10 @@ def ocr_tiled(img_path, reader):
                 gx = bbox[0][0] + tx
                 gy = bbox[0][1] + ty
                 all_results.append({'x': gx, 'y': gy, 'text': text.strip(), 'conf': conf})
-            tile_count += 1
             tx += TILE_SIZE - TILE_OVERLAP
         ty += TILE_SIZE - TILE_OVERLAP
 
-    print(f"  {tile_count} Kacheln, {len(all_results)} Textblöcke erkannt")
+    print(f"\r  {tile_count} Kacheln, {len(all_results)} Textblöcke erkannt     ")
 
     # Deduplizieren
     unique = []
