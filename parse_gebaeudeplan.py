@@ -485,7 +485,28 @@ def extract_metadata(pdf_file):
         if m:
             etage = f'UG {m.group(1)}'
 
-    return gebaeude, etage, geb_nr
+    # room_prefix aus Etage ableiten (Räume sind nach Geschoss nummeriert)
+    room_prefix = etage_to_room_prefix(etage)
+    if room_prefix is None:
+        room_prefix = str(geb_nr) if geb_nr is not None else None
+
+    return gebaeude, etage, geb_nr, room_prefix
+
+
+def etage_to_room_prefix(etage):
+    """Leitet den Raumnummer-Prefix aus der Etage ab.
+    EG → '0', OG 1 → '1', OG 2 → '2', UG 1 → '01', UG 2 → '02', None → None."""
+    if etage is None:
+        return None
+    m = re.match(r'OG\s+(\d+)', etage)
+    if m:
+        return m.group(1)
+    if etage == 'EG':
+        return '0'
+    m = re.match(r'UG\s+(\d+)', etage)
+    if m:
+        return f'0{m.group(1)}'
+    return None
 
 
 def process_single_pdf(pdf_file, reader):
@@ -499,8 +520,8 @@ def process_single_pdf(pdf_file, reader):
         return None, None, {}
 
     # Metadaten
-    gebaeude, etage, geb_nr = extract_metadata(pdf_file)
-    print(f"  Gebäude: {gebaeude}, Etage: {etage}")
+    gebaeude, etage, geb_nr, room_prefix = extract_metadata(pdf_file)
+    print(f"  Gebäude: {gebaeude}, Etage: {etage}, Raum-Prefix: {room_prefix}")
 
     # PDF rendern
     print(f"  Rendere bei {DPI} DPI...")
@@ -512,10 +533,10 @@ def process_single_pdf(pdf_file, reader):
 
     # OCR
     print(f"  Starte Kachel-OCR...")
-    ocr_results = ocr_tiled(img_path, reader, room_prefix=geb_nr)
+    ocr_results = ocr_tiled(img_path, reader, room_prefix=room_prefix)
 
-    # Klassifizieren (mit Gebäude-Prefix-Filter)
-    rooms, barcodes, areas, nutzungen, hnf_markers = classify_texts(ocr_results, room_prefix=geb_nr)
+    # Klassifizieren (mit Etagen-Prefix-Filter)
+    rooms, barcodes, areas, nutzungen, hnf_markers = classify_texts(ocr_results, room_prefix=room_prefix)
 
     # Zuordnen
     room_data = assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers)
