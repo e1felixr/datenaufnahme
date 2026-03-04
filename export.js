@@ -3,7 +3,7 @@
 const EXPORT_HEADERS = [
   'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'HK-Nr.',
   'Typ', 'Bauart', 'Bauart Konvektor', 'Baulänge [mm]', 'Bauhöhe [mm]', 'Anz. Röhren', 'Anz. Glieder',
-  'Nabenabstand [mm]', 'DN Ventil', 'Ventilform',
+  'Nabenabstand [mm]', 'DN Ventil', 'Ventiltyp',
   'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Entleerung',
   'Ventil voreinstellbar', 'Voreinstellwert', 'Art Thermostatkopf',
   'Einbausituation', 'Strang-Nr.', 'Bemerkung', 'Erfasser', 'Erfasst am',
