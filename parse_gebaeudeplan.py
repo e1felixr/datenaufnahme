@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 """
-Parst gebaeudeplan.pdf via Kachel-OCR und erzeugt gebaeudedaten.xlsx
+Parst Gebäudeplan-PDFs via Kachel-OCR und erzeugt gebaeudedaten.xlsx
 Erkennt Raumnummern, Flächen (HNF), Bezeichnungen und Barcodes.
 
 Nutzung:
-  python parse_gebaeudeplan.py [input.pdf] [output.xlsx]
+  python parse_gebaeudeplan.py                        # alle *.pdf aus plaene/
+  python parse_gebaeudeplan.py plan1.pdf plan2.pdf    # bestimmte PDFs
+  python parse_gebaeudeplan.py -o output.xlsx *.pdf   # Output-Datei angeben
 """
 
 import re
 import sys
 import os
+import glob
 import fitz  # PyMuPDF
 import easyocr
 from PIL import Image
 import openpyxl
 
-PDF_FILE = "gebaeudeplan.pdf"
 OUTPUT_FILE = "gebaeudedaten.xlsx"
 DPI = 600
 TILE_SIZE = 1500
 TILE_OVERLAP = 200
 
 # --- Pattern ---
-# Raumnummern im Format 1.XX oder 1.XXa (Gebäude 1)
-# Ganzzahlteil muss 1 sein (für dieses Gebäude), Nachkommastellen 2-3 stellig
-ROOM_PATTERN = re.compile(r'^(1\.(?:\d{2,3})[a-z]?)$')
+# Raumnummern: X.YY oder X.YYa — Ganzzahlteil wird pro PDF aus Metadaten gefiltert
+ROOM_PATTERN = re.compile(r'^(\d{1,2}\.\d{2,3}[a-z]?)$')
 SPECIAL_ROOM_PATTERN = re.compile(r'^(TH\s*[A-Z]|A\s*\d+)$')
 BARCODE_PATTERN = re.compile(r'[Bb]arcode[:\s;]+(\S+)')
-# Fläche: z.B. "40.36 m2", "17.45 mz", oder als reiner Zahlenwert neben HNF
 AREA_PATTERN = re.compile(r'(\d{1,3}[\.,]\d{1,2})\s*m[2zZ²]?')
 
 # Bekannte Maße (Fenster/Türen), die NICHT als Raumnummern erkannt werden sollen
@@ -66,7 +66,6 @@ def match_nutzung(text):
     t = text.strip().lower()
     if t in NUTZUNG_MAP:
         return NUTZUNG_MAP[t]
-    # Substring-Match
     for key, val in NUTZUNG_MAP.items():
         if key in t or t in key:
             return val
@@ -77,15 +76,13 @@ def distance(x1, y1, x2, y2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def ocr_tiled(img_path):
+def ocr_tiled(img_path, reader):
     """OCR auf Kacheln für bessere Erkennung bei großen Bildern."""
     img = Image.open(img_path)
     W, H = img.size
-    print(f"Bild: {W}x{H}, Kacheln à {TILE_SIZE}px mit {TILE_OVERLAP}px Overlap")
+    print(f"  Bild: {W}x{H}, Kacheln à {TILE_SIZE}px")
 
-    reader = easyocr.Reader(['de', 'en'], gpu=False)
     all_results = []
-
     ty = 0
     tile_count = 0
     while ty < H:
@@ -105,15 +102,14 @@ def ocr_tiled(img_path):
             tx += TILE_SIZE - TILE_OVERLAP
         ty += TILE_SIZE - TILE_OVERLAP
 
-    print(f"{tile_count} Kacheln verarbeitet, {len(all_results)} Textblöcke erkannt")
+    print(f"  {tile_count} Kacheln, {len(all_results)} Textblöcke erkannt")
 
-    # Deduplizieren (gleicher Text innerhalb 40px)
+    # Deduplizieren
     unique = []
     for r in all_results:
         dup = False
         for i, u in enumerate(unique):
             if abs(r['x'] - u['x']) < 40 and abs(r['y'] - u['y']) < 40:
-                # Nur als Duplikat werten wenn gleicher Text
                 if r['text'] == u['text']:
                     if r['conf'] > u['conf']:
                         unique[i] = r
@@ -122,29 +118,32 @@ def ocr_tiled(img_path):
         if not dup:
             unique.append(r)
 
-    print(f"Nach Deduplizierung: {len(unique)} eindeutige Textblöcke")
+    print(f"  Nach Deduplizierung: {len(unique)} eindeutige Textblöcke")
     return unique
 
 
-def classify_texts(ocr_results):
+def classify_texts(ocr_results, room_prefix=None):
     """Klassifiziert OCR-Ergebnisse in Raumnummern, Barcodes, Flächen, Nutzungen."""
-    rooms = []       # {'nr': str, 'x': float, 'y': float}
-    barcodes = []    # {'code': str, 'x': float, 'y': float}
-    areas = []       # {'area': str, 'x': float, 'y': float}
-    nutzungen = []   # {'nutzung': str, 'x': float, 'y': float}
-    hnf_markers = [] # {'x': float, 'y': float}
+    rooms = []
+    barcodes = []
+    areas = []
+    nutzungen = []
+    hnf_markers = []
 
     for r in ocr_results:
         text = r['text']
         x, y = r['x'], r['y']
         conf = r['conf']
 
-        # Raumnummer (bekannte Maße ausschließen)
+        # Raumnummer
         if ROOM_PATTERN.match(text) and conf > 0.4 and text not in KNOWN_DIMENSIONS:
+            # Wenn Gebäude-Prefix bekannt, nur passende Raumnummern akzeptieren
+            if room_prefix is not None:
+                nr_prefix = text.split('.')[0]
+                if nr_prefix != str(room_prefix):
+                    continue
             rooms.append({'nr': text, 'x': x, 'y': y, 'conf': conf})
             continue
-        # Zahlen die wie Maße aussehen könnten aber trotzdem Raumnummern sein könnten
-        # -> werden später per Kontextprüfung gefiltert
 
         if SPECIAL_ROOM_PATTERN.match(text) and conf > 0.5:
             rooms.append({'nr': text, 'x': x, 'y': y, 'conf': conf})
@@ -162,7 +161,7 @@ def classify_texts(ocr_results):
             hnf_markers.append({'x': x, 'y': y})
             continue
 
-        # Fläche: mit m²-Suffix oder als reiner Zahlenwert neben HNF
+        # Fläche mit m²-Suffix
         am = AREA_PATTERN.match(text)
         if am and conf > 0.5:
             val = am.group(1).replace(',', '.')
@@ -171,7 +170,7 @@ def classify_texts(ocr_results):
                 areas.append({'area': val, 'x': x, 'y': y})
                 continue
 
-        # Reiner Zahlenwert (z.B. "40.36") — nur wenn HNF-Marker direkt daneben
+        # Reiner Zahlenwert neben HNF
         plain_num = re.match(r'^(\d{2,3}\.\d{2})$', text)
         if plain_num and conf > 0.6 and text not in KNOWN_DIMENSIONS:
             val = plain_num.group(1)
@@ -187,22 +186,21 @@ def classify_texts(ocr_results):
         if nutz and conf > 0.4:
             nutzungen.append({'nutzung': nutz, 'x': x, 'y': y})
 
-    print(f"Klassifiziert: {len(rooms)} Räume, {len(barcodes)} Barcodes, "
+    print(f"  Klassifiziert: {len(rooms)} Räume, {len(barcodes)} Barcodes, "
           f"{len(areas)} Flächen, {len(nutzungen)} Nutzungen, {len(hnf_markers)} HNF-Marker")
     return rooms, barcodes, areas, nutzungen, hnf_markers
 
 
 def assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers):
     """Ordnet Barcodes, Flächen und Nutzungen den nächsten Raumnummern zu."""
-    MAX_DIST_BARCODE = 350   # max Pixel-Abstand für Barcode-Zuordnung
-    MAX_DIST_AREA = 350      # max Pixel-Abstand für Fläche
-    MAX_DIST_NUTZUNG = 300   # max Pixel-Abstand für Nutzung
+    MAX_DIST_BARCODE = 350
+    MAX_DIST_AREA = 350
+    MAX_DIST_NUTZUNG = 300
 
     result = {}
     for room in rooms:
         nr = room['nr']
         if nr in result:
-            # Duplikat: höheres Confidence behalten
             if room['conf'] > result[nr]['conf']:
                 result[nr] = {
                     'raumnr': nr, 'flaeche': '', 'nutzung': '', 'barcode': '',
@@ -217,13 +215,11 @@ def assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers):
     room_list = list(result.values())
 
     def find_nearest_room(x, y, max_dist):
-        """Findet den nächsten Raum, der unterhalb der y-Position liegt (Barcode/HNF sind unter der Raumnr)."""
         best = None
         best_dist = max_dist
         for r in room_list:
-            # Zuordnungselemente liegen unterhalb der Raumnummer
             dy = y - r['y']
-            if dy < -50:  # Element liegt deutlich über der Raumnummer -> skip
+            if dy < -50:
                 continue
             d = distance(x, y, r['x'], r['y'])
             if d < best_dist:
@@ -231,15 +227,12 @@ def assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers):
                 best = r
         return best
 
-    # Barcodes zuordnen
     for bc in barcodes:
         room = find_nearest_room(bc['x'], bc['y'], MAX_DIST_BARCODE)
         if room and not room['barcode']:
             room['barcode'] = bc['code']
 
-    # Flächen zuordnen (nur in der Nähe von HNF-Markern)
     for area in areas:
-        # Prüfe ob ein HNF-Marker in der Nähe ist
         has_hnf = any(distance(area['x'], area['y'], h['x'], h['y']) < 150 for h in hnf_markers)
         if not has_hnf:
             continue
@@ -247,42 +240,24 @@ def assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers):
         if room and not room['flaeche']:
             room['flaeche'] = area['area']
 
-    # Nutzungen zuordnen
     for nutz in nutzungen:
         room = find_nearest_room(nutz['x'], nutz['y'], MAX_DIST_NUTZUNG)
         if room and not room['nutzung']:
             room['nutzung'] = nutz['nutzung']
 
-    # Validierung: Räume ohne Barcode UND ohne Nutzung UND ohne Fläche
-    # mit verdächtiger Nummer (Ganzzahlteil > 1 oder < 1) entfernen
-    to_remove = []
-    for nr, room in result.items():
-        m = re.match(r'^(\d+)\.(\d+)', nr)
-        if m:
-            prefix = int(m.group(1))
-            # Raumnummern im Gebäude 1 beginnen mit 1.
-            # Alles andere ist verdächtig und braucht Bestätigung durch Barcode/HNF
-            if prefix != 1:
-                if not room['barcode'] and not room['flaeche'] and not room['nutzung']:
-                    to_remove.append(nr)
-                elif not room['barcode'] and not room['nutzung']:
-                    to_remove.append(nr)
-    for nr in to_remove:
-        print(f"  Entferne verdächtige Raumnummer: {nr}")
-        del result[nr]
-
     return result
 
 
 def extract_metadata(pdf_file):
-    """Extrahiert Gebäude und Etage aus den lesbaren (Helvetica) Texten."""
+    """Extrahiert Gebäude und Etage aus PDF-Text oder Dateiname."""
+    gebaeude = None
+    etage = None
+    geb_nr = None
+
+    # 1. Versuch: aus dem PDF-Text (Helvetica-Font)
     doc = fitz.open(pdf_file)
     page = doc[0]
     blocks = page.get_text('dict')['blocks']
-
-    gebaeude = None
-    etage = None
-
     for b in blocks:
         if 'lines' not in b:
             continue
@@ -292,10 +267,80 @@ def extract_metadata(pdf_file):
                     text = span['text'].strip()
                     m = re.search(r'Geb.ude\s+(\d+),\s+(\S+\s*\d*)', text)
                     if m:
-                        gebaeude = f'Gebäude {m.group(1)}'
+                        geb_nr = int(m.group(1))
+                        gebaeude = f'Gebäude {geb_nr}'
                         etage = m.group(2).strip()
+    doc.close()
 
-    return gebaeude, etage
+    # 2. Fallback: aus dem Dateinamen
+    # z.B. "2018 - Gebaeude 1 - 1.Obergeschoss.pdf"
+    basename = os.path.basename(pdf_file)
+    if not gebaeude:
+        m = re.search(r'Geb.ude\s*(\d+)', basename, re.IGNORECASE)
+        if m:
+            geb_nr = int(m.group(1))
+            gebaeude = f'Gebäude {geb_nr}'
+    if not etage:
+        # Etage aus Dateiname: "1.Obergeschoss" -> "OG 1", "Erdgeschoss" -> "EG",
+        # "1.Untergeschoss" -> "UG 1"
+        m = re.search(r'(\d+)\.\s*Obergeschoss', basename, re.IGNORECASE)
+        if m:
+            etage = f'OG {m.group(1)}'
+        elif re.search(r'Erdgeschoss', basename, re.IGNORECASE):
+            etage = 'EG'
+        m = re.search(r'(\d+)\.\s*Untergeschoss', basename, re.IGNORECASE)
+        if m:
+            etage = f'UG {m.group(1)}'
+
+    return gebaeude, etage, geb_nr
+
+
+def process_single_pdf(pdf_file, reader):
+    """Verarbeitet eine einzelne PDF und gibt (gebaeude, etage, rooms) zurück."""
+    print(f"\n{'='*60}")
+    print(f"Verarbeite: {pdf_file}")
+    print(f"{'='*60}")
+
+    if not os.path.exists(pdf_file):
+        print(f"  FEHLER: Datei nicht gefunden!")
+        return None, None, {}
+
+    # Metadaten
+    gebaeude, etage, geb_nr = extract_metadata(pdf_file)
+    print(f"  Gebäude: {gebaeude}, Etage: {etage}")
+
+    # PDF rendern
+    print(f"  Rendere bei {DPI} DPI...")
+    doc = fitz.open(pdf_file)
+    page = doc[0]
+    pix = page.get_pixmap(dpi=DPI)
+    img_path = "_temp_plan_ocr.png"
+    pix.save(img_path)
+
+    # OCR
+    print(f"  Starte Kachel-OCR...")
+    ocr_results = ocr_tiled(img_path, reader)
+
+    # Klassifizieren (mit Gebäude-Prefix-Filter)
+    rooms, barcodes, areas, nutzungen, hnf_markers = classify_texts(ocr_results, room_prefix=geb_nr)
+
+    # Zuordnen
+    room_data = assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers)
+
+    # Ergebnis anzeigen
+    sorted_rooms = sorted(room_data.values(), key=sort_key)
+    print(f"\n  {'Raum':<10} {'Fläche':>10} {'Nutzung':<20} {'Barcode':<10}")
+    print(f"  {'-'*55}")
+    for r in sorted_rooms:
+        print(f"  {r['raumnr']:<10} {r['flaeche']:>10} {r['nutzung']:<20} {r['barcode']:<10}")
+
+    with_barcode = sum(1 for r in sorted_rooms if r['barcode'])
+    with_area = sum(1 for r in sorted_rooms if r['flaeche'])
+    with_nutzung = sum(1 for r in sorted_rooms if r['nutzung'])
+    print(f"\n  Statistik: {len(sorted_rooms)} Räume, "
+          f"{with_barcode} Barcodes, {with_area} Flächen, {with_nutzung} Nutzungen")
+
+    return gebaeude, etage, room_data
 
 
 def sort_key(room):
@@ -306,30 +351,52 @@ def sort_key(room):
     return (1, 0, 0, nr)
 
 
-def write_xlsx(rooms, gebaeude, etage, output_file):
-    """Schreibt die Raumdaten als xlsx."""
+def write_xlsx(all_pdf_data, output_file):
+    """Schreibt alle Raumdaten aus allen PDFs in eine xlsx."""
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Gebaeudedaten"
 
     ws.append(['Gebäude', None, 'Etagen', None, 'Raumnr.', 'Fläche (m²)', 'Nutzung', 'Barcode'])
 
-    sorted_rooms = sorted(rooms.values(), key=sort_key)
+    total_rooms = 0
+    # Sammle alle Etagen pro Gebäude
+    gebaeude_etagen = {}  # {gebaeude: set(etagen)}
+    for gebaeude, etage, rooms in all_pdf_data:
+        if gebaeude:
+            if gebaeude not in gebaeude_etagen:
+                gebaeude_etagen[gebaeude] = set()
+            if etage:
+                gebaeude_etagen[gebaeude].add(etage)
 
-    first = True
-    for room in sorted_rooms:
-        flaeche = float(room['flaeche']) if room['flaeche'] else None
-        ws.append([
-            gebaeude if first else None,
-            None,
-            etage if first else None,
-            None,
-            room['raumnr'],
-            flaeche,
-            room['nutzung'],
-            room['barcode']
-        ])
-        first = False
+    first_gebaeude = True
+    first_etage_per_geb = {}
+
+    for gebaeude, etage, rooms in all_pdf_data:
+        sorted_rooms = sorted(rooms.values(), key=sort_key)
+        if not sorted_rooms:
+            continue
+
+        is_first_geb = gebaeude not in first_etage_per_geb
+        first_etage_per_geb.setdefault(gebaeude, True)
+
+        for i, room in enumerate(sorted_rooms):
+            flaeche = float(room['flaeche']) if room['flaeche'] else None
+            row = [
+                gebaeude if i == 0 and is_first_geb else None,
+                None,
+                etage if i == 0 else None,
+                None,
+                room['raumnr'],
+                flaeche,
+                room['nutzung'],
+                room['barcode']
+            ]
+            ws.append(row)
+            total_rooms += 1
+
+        if is_first_geb:
+            first_etage_per_geb[gebaeude] = False
 
     ws.column_dimensions['A'].width = 15
     ws.column_dimensions['C'].width = 10
@@ -339,57 +406,63 @@ def write_xlsx(rooms, gebaeude, etage, output_file):
     ws.column_dimensions['H'].width = 12
 
     wb.save(output_file)
-    print(f"\n{output_file} geschrieben: {len(sorted_rooms)} Räume")
+    print(f"\n{output_file} geschrieben: {total_rooms} Räume aus {len(all_pdf_data)} PDFs")
 
 
 def main():
-    pdf_file = sys.argv[1] if len(sys.argv) > 1 else PDF_FILE
-    output = sys.argv[2] if len(sys.argv) > 2 else OUTPUT_FILE
+    # Argumente parsen
+    args = sys.argv[1:]
+    output = OUTPUT_FILE
+    pdf_files = []
 
-    if not os.path.exists(pdf_file):
-        print(f"Fehler: {pdf_file} nicht gefunden!")
+    i = 0
+    while i < len(args):
+        if args[i] == '-o' and i + 1 < len(args):
+            output = args[i + 1]
+            i += 2
+        else:
+            pdf_files.append(args[i])
+            i += 1
+
+    # Wenn keine PDFs angegeben, alle *.pdf im Ordner /plaene (rekursiv) nehmen
+    if not pdf_files:
+        pdf_files = sorted(glob.glob('plaene/**/*.pdf', recursive=True))
+        if not pdf_files:
+            pdf_files = sorted(glob.glob('plaene/*.pdf'))
+        if not pdf_files:
+            pdf_files = sorted(glob.glob('*.pdf'))
+        if not pdf_files:
+            print("Keine PDF-Dateien gefunden!")
+            print("Lege PDFs in den Ordner 'plaene/' oder gib sie als Argument an:")
+            print("  python parse_gebaeudeplan.py plan1.pdf plan2.pdf ...")
+            sys.exit(1)
+
+    print(f"Verarbeite {len(pdf_files)} PDF(s): {', '.join(pdf_files)}")
+    print(f"Ausgabe: {output}")
+
+    # OCR-Reader einmal initialisieren (spart Zeit bei mehreren PDFs)
+    print("\nInitialisiere OCR-Reader...")
+    reader = easyocr.Reader(['de', 'en'], gpu=False)
+
+    # Alle PDFs verarbeiten
+    all_pdf_data = []  # [(gebaeude, etage, rooms), ...]
+    for pdf_file in pdf_files:
+        gebaeude, etage, rooms = process_single_pdf(pdf_file, reader)
+        if rooms:
+            all_pdf_data.append((gebaeude, etage, rooms))
+
+    if not all_pdf_data:
+        print("\nKeine Raumdaten erkannt!")
         sys.exit(1)
 
-    # Metadaten aus PDF
-    gebaeude, etage = extract_metadata(pdf_file)
-    print(f"Gebäude: {gebaeude}, Etage: {etage}")
-
-    # PDF rendern
-    print(f"\nRendere PDF bei {DPI} DPI...")
-    doc = fitz.open(pdf_file)
-    page = doc[0]
-    pix = page.get_pixmap(dpi=DPI)
-    img_path = "_temp_plan_ocr.png"
-    pix.save(img_path)
-
-    # OCR
-    print("\nStarte Kachel-OCR...")
-    ocr_results = ocr_tiled(img_path)
-
-    # Klassifizieren
-    print("\nKlassifiziere Ergebnisse...")
-    rooms, barcodes, areas, nutzungen, hnf_markers = classify_texts(ocr_results)
-
-    # Zuordnen
-    print("\nOrdne Daten den Räumen zu...")
-    room_data = assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers)
-
-    # Ausgabe
-    sorted_rooms = sorted(room_data.values(), key=sort_key)
-    print(f"\n{'Raum':<10} {'Fläche':>10} {'Nutzung':<20} {'Barcode':<10}")
-    print('-' * 55)
-    for r in sorted_rooms:
-        print(f"{r['raumnr']:<10} {r['flaeche']:>10} {r['nutzung']:<20} {r['barcode']:<10}")
-
-    # Statistik
-    with_barcode = sum(1 for r in sorted_rooms if r['barcode'])
-    with_area = sum(1 for r in sorted_rooms if r['flaeche'])
-    with_nutzung = sum(1 for r in sorted_rooms if r['nutzung'])
-    print(f"\nStatistik: {len(sorted_rooms)} Räume, "
-          f"{with_barcode} mit Barcode, {with_area} mit Fläche, {with_nutzung} mit Nutzung")
+    # Zusammenfassung
+    total = sum(len(rooms) for _, _, rooms in all_pdf_data)
+    print(f"\n{'='*60}")
+    print(f"GESAMT: {total} Räume aus {len(all_pdf_data)} PDFs")
+    print(f"{'='*60}")
 
     # Schreiben
-    write_xlsx(room_data, gebaeude, etage, output)
+    write_xlsx(all_pdf_data, output)
 
     # Aufräumen
     for f in ['_temp_plan_ocr.png', '_temp_tile.png']:
