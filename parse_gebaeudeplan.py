@@ -118,11 +118,21 @@ def ocr_tiled(img_path, reader, room_prefix=None):
     used_flaechen = {}   # {flaeche: raumnr} — Duplikat-Warnung
     live_warnings = []   # gesammelte Warnungen
 
-    def _live_find_nearest_room(x, y):
+    def _live_find_nearest_room(x, y, kind=None):
+        """Findet den nächsten Raum. kind='flaeche'|'nutzung'|'barcode' für Reihenfolge-Check."""
         best, best_d = None, LIVE_MAX_DIST
         for nr, r in live_rooms.items():
             dy = y - r['y']
-            if dy < -50:
+            # Daten liegen immer UNTER der Raumnummer
+            if dy < 0:
+                continue
+            # Reihenfolge: Raumnr > Fläche > Nutzung > Barcode
+            # Barcode muss weiter unten sein als Fläche, etc.
+            if kind == 'flaeche' and dy > 250:
+                continue  # Fläche direkt unter Raumnr
+            if kind == 'nutzung' and dy > 350:
+                continue
+            if kind == 'barcode' and dy > 450:
                 continue
             d = weighted_distance(x, y, r['x'], r['y'])
             if d < best_d:
@@ -132,7 +142,7 @@ def ocr_tiled(img_path, reader, room_prefix=None):
 
     def _live_try_assign_new(x, y, kind, value):
         """Versucht ein neues Area/Nutzung/Barcode dem nächsten Raum zuzuordnen."""
-        nr = _live_find_nearest_room(x, y)
+        nr = _live_find_nearest_room(x, y, kind=kind)
         if nr and not live_rooms[nr][kind]:
             # Duplikat-Prüfung
             if kind == 'barcode':
@@ -200,8 +210,10 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                         if t not in live_rooms:
                             live_rooms[t] = {'x': gx, 'y': gy, 'nutzung': '', 'flaeche': '', 'barcode': ''}
                             # Rückwärts: bereits bekannte Daten zuordnen
+                            # Daten müssen unterhalb der Raumnr liegen (a['y'] > gy)
                             for a in live_areas:
-                                if not live_rooms[t]['flaeche'] and weighted_distance(gx, gy, a['x'], a['y']) < LIVE_MAX_DIST:
+                                a_dy = a['y'] - gy
+                                if not live_rooms[t]['flaeche'] and 0 < a_dy < 250 and weighted_distance(gx, gy, a['x'], a['y']) < LIVE_MAX_DIST:
                                     val = a['area']
                                     if val in used_flaechen:
                                         warn = f"Hinweis: Fläche {val} m² identisch mit Raum {used_flaechen[val]}"
@@ -210,10 +222,12 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                                     used_flaechen.setdefault(val, t)
                                     live_rooms[t]['flaeche'] = val
                             for n in live_nutzungen:
-                                if not live_rooms[t]['nutzung'] and weighted_distance(gx, gy, n['x'], n['y']) < 300:
+                                n_dy = n['y'] - gy
+                                if not live_rooms[t]['nutzung'] and 0 < n_dy < 350 and weighted_distance(gx, gy, n['x'], n['y']) < 300:
                                     live_rooms[t]['nutzung'] = n['nutzung']
                             for b in live_barcodes:
-                                if not live_rooms[t]['barcode'] and weighted_distance(gx, gy, b['x'], b['y']) < LIVE_MAX_DIST:
+                                b_dy = b['y'] - gy
+                                if not live_rooms[t]['barcode'] and 0 < b_dy < 450 and weighted_distance(gx, gy, b['x'], b['y']) < LIVE_MAX_DIST:
                                     bc = b['code']
                                     if bc in used_barcodes:
                                         warn = f"FEHLER: Barcode '{bc}' doppelt! Raum {used_barcodes[bc]} und {t}"
@@ -389,12 +403,15 @@ def assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers):
 
     room_list = list(result.values())
 
-    def find_nearest_room(x, y, max_dist):
+    def find_nearest_room(x, y, max_dist, max_dy=None):
         best = None
         best_dist = max_dist
         for r in room_list:
             dy = y - r['y']
-            if dy < -50:
+            # Daten liegen immer UNTER der Raumnummer
+            if dy < 0:
+                continue
+            if max_dy and dy > max_dy:
                 continue
             d = weighted_distance(x, y, r['x'], r['y'])
             if d < best_dist:
@@ -402,23 +419,24 @@ def assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers):
                 best = r
         return best
 
-    for bc in barcodes:
-        room = find_nearest_room(bc['x'], bc['y'], MAX_DIST_BARCODE)
-        if room and not room['barcode']:
-            room['barcode'] = bc['code']
-
+    # Reihenfolge v.o.n.u.: Raumnr > Fläche > Nutzung > Barcode
     for area in areas:
         has_hnf = any(distance(area['x'], area['y'], h['x'], h['y']) < 150 for h in hnf_markers)
         if not has_hnf:
             continue
-        room = find_nearest_room(area['x'], area['y'], MAX_DIST_AREA)
+        room = find_nearest_room(area['x'], area['y'], MAX_DIST_AREA, max_dy=250)
         if room and not room['flaeche']:
             room['flaeche'] = area['area']
 
     for nutz in nutzungen:
-        room = find_nearest_room(nutz['x'], nutz['y'], MAX_DIST_NUTZUNG)
+        room = find_nearest_room(nutz['x'], nutz['y'], MAX_DIST_NUTZUNG, max_dy=350)
         if room and not room['nutzung']:
             room['nutzung'] = nutz['nutzung']
+
+    for bc in barcodes:
+        room = find_nearest_room(bc['x'], bc['y'], MAX_DIST_BARCODE, max_dy=450)
+        if room and not room['barcode']:
+            room['barcode'] = bc['code']
 
     return result
 
