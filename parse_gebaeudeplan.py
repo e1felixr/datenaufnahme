@@ -449,10 +449,17 @@ def write_xlsx(all_pdf_data, output_file):
 
 
 def _format_duration(seconds):
-    """Formatiert Sekunden als 'Xm YYs' oder 'Xs'."""
-    if seconds >= 60:
-        return f"{int(seconds//60)}m {int(seconds%60):02d}s"
-    return f"{int(seconds)}s"
+    """Formatiert Dauer: '1h 23m' / '5m 12s' / '45s'."""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    if h > 0:
+        return f"{h}h {m:02d}m"
+    if m >= 10:
+        return f"{m}m"
+    if m > 0:
+        return f"{m}m {s:02d}s"
+    return f"{s}s"
 
 
 def limit_cpu(max_percent=90):
