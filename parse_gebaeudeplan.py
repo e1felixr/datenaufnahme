@@ -99,7 +99,45 @@ def ocr_tiled(img_path, reader, room_prefix=None):
 
     gp = _global_progress
     all_results = []
-    live_rooms = set()  # Live-Erkennung von Raumnummern
+    # Live-Zuordnung: Räume mit Position + zugeordnete Daten
+    live_rooms = {}      # {nr: {x, y, nutzung, flaeche, barcode}}
+    live_areas = []      # [{area, x, y}]
+    live_nutzungen = []  # [{nutzung, x, y}]
+    live_barcodes = []   # [{code, x, y}]
+    live_hnf = []        # [{x, y}]
+    LIVE_MAX_DIST = 350
+    live_printed = {}    # {nr: "last_printed_line"} — nur bei Änderung neu ausgeben
+
+    def _live_find_nearest_room(x, y):
+        best, best_d = None, LIVE_MAX_DIST
+        for nr, r in live_rooms.items():
+            dy = y - r['y']
+            if dy < -50:
+                continue
+            d = distance(x, y, r['x'], r['y'])
+            if d < best_d:
+                best_d = d
+                best = nr
+        return best
+
+    def _live_try_assign_new(x, y, kind, value):
+        """Versucht ein neues Area/Nutzung/Barcode dem nächsten Raum zuzuordnen."""
+        nr = _live_find_nearest_room(x, y)
+        if nr and not live_rooms[nr][kind]:
+            live_rooms[nr][kind] = value
+            _live_print_room(nr)
+
+    def _live_print_room(nr):
+        r = live_rooms[nr]
+        parts = [f"Raum {nr:<10}"]
+        if r['flaeche']:  parts.append(f"{r['flaeche']:>8} m²")
+        if r['nutzung']:  parts.append(r['nutzung'])
+        if r['barcode']:  parts.append(f"BC:{r['barcode']}")
+        line = '  '.join(parts)
+        if live_printed.get(nr) != line:
+            live_printed[nr] = line
+            print(f"\n    + {line}", end='', flush=True)
+
     ty = 0
     tile_count = 0
     t_start = time.time()
@@ -130,13 +168,66 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                 gy = bbox[0][1] + ty
                 t = text.strip()
                 all_results.append({'x': gx, 'y': gy, 'text': t, 'conf': conf})
-                # Live: Raumnummern erkennen
+
+                # Live-Klassifizierung
+                # Raumnummer?
                 if ROOM_PATTERN.match(t) and conf > 0.4 and t not in KNOWN_DIMENSIONS:
                     if room_prefix is None or t.split('.')[0] == str(room_prefix):
                         if t not in live_rooms:
-                            live_rooms.add(t)
-                            # Neue Raumnummer auf eigener Zeile anzeigen
-                            print(f"\n    + Raum {t}", end='', flush=True)
+                            live_rooms[t] = {'x': gx, 'y': gy, 'nutzung': '', 'flaeche': '', 'barcode': ''}
+                            # Rückwärts: bereits bekannte Daten zuordnen
+                            for a in live_areas:
+                                if not live_rooms[t]['flaeche'] and distance(gx, gy, a['x'], a['y']) < LIVE_MAX_DIST:
+                                    live_rooms[t]['flaeche'] = a['area']
+                            for n in live_nutzungen:
+                                if not live_rooms[t]['nutzung'] and distance(gx, gy, n['x'], n['y']) < 300:
+                                    live_rooms[t]['nutzung'] = n['nutzung']
+                            for b in live_barcodes:
+                                if not live_rooms[t]['barcode'] and distance(gx, gy, b['x'], b['y']) < LIVE_MAX_DIST:
+                                    live_rooms[t]['barcode'] = b['code']
+                            _live_print_room(t)
+                    continue
+
+                # HNF-Marker?
+                if t in ('HNF', 'HNF:', 'HNF(1,5m)'):
+                    live_hnf.append({'x': gx, 'y': gy})
+                    continue
+
+                # Fläche?
+                am = AREA_PATTERN.match(t)
+                if am and conf > 0.5:
+                    val = am.group(1).replace(',', '.')
+                    fval = float(val)
+                    if 3 < fval < 300:
+                        live_areas.append({'area': val, 'x': gx, 'y': gy})
+                        if any(distance(gx, gy, h['x'], h['y']) < 150 for h in live_hnf):
+                            _live_try_assign_new(gx, gy, 'flaeche', val)
+                        continue
+
+                # Reiner Zahlenwert neben HNF?
+                plain_num = re.match(r'^(\d{2,3}\.\d{2})$', t)
+                if plain_num and conf > 0.6 and t not in KNOWN_DIMENSIONS:
+                    val = plain_num.group(1)
+                    fval = float(val)
+                    if 3 < fval < 300 and any(distance(gx, gy, h['x'], h['y']) < 120 for h in live_hnf):
+                        live_areas.append({'area': val, 'x': gx, 'y': gy})
+                        _live_try_assign_new(gx, gy, 'flaeche', val)
+                        continue
+
+                # Barcode?
+                bm = BARCODE_PATTERN.search(t)
+                if bm and conf > 0.4:
+                    code = bm.group(1).rstrip(';.,')
+                    live_barcodes.append({'code': code, 'x': gx, 'y': gy})
+                    _live_try_assign_new(gx, gy, 'barcode', code)
+                    continue
+
+                # Nutzung?
+                nutz = match_nutzung(t)
+                if nutz and conf > 0.4:
+                    live_nutzungen.append({'nutzung': nutz, 'x': gx, 'y': gy})
+                    _live_try_assign_new(gx, gy, 'nutzung', nutz)
+
             tx += TILE_SIZE - TILE_OVERLAP
         ty += TILE_SIZE - TILE_OVERLAP
 
