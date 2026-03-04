@@ -146,31 +146,60 @@
       <select id="f-ventilform"></select>
     </div>
     <div class="form-group">
-      <label>Art Thermostatkopf</label>
+      <label>Art Thermostatkopf <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/thermostatkoepfe.jpg','Thermostatköpfe')" title="Hilfe: Thermostatköpfe">?</button></label>
       <select id="f-artThermostatkopf"></select>
     </div>
   </div>
 
+
+  <!-- Einbau -->
+  <div class="section-title">Einbau / Sonstiges</div>
+  <div class="form-group">
+    <label>Besondere Einbausituation? <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/einbausituation.jpg','Einbausituation')" title="Hilfe: Einbausituation">?</button></label>
+    <div class="checkbox-grid">
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-einbau-verkleidung">
+        <span>hinter Verkleidung</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-einbau-bruestung">
+        <span>unter Brüstung</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-einbau-moebel">
+        <span>hinter Möbeln</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-einbau-sonstige" onchange="checkSonstigeHinweis()">
+        <span>Sonstige</span>
+      </label>
+    </div>
+  </div>
   <div class="checkbox-grid">
     <label class="checkbox-row">
       <input type="checkbox" id="f-hahnblock">
-      <span>Hahnblock vorhanden?</span>
+      <span>Hahnblock?</span>
+      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hahnblock.jpg','Hahnblock')" title="Hilfe: Hahnblock">?</button>
     </label>
     <label class="checkbox-row">
       <input type="checkbox" id="f-rlVerschraubung">
-      <span>RL-Verschraubung vorhanden?</span>
+      <span>RL-Verschraubung?</span>
+      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/rlverschraubung.jpg','RL-Verschraubung')" title="Hilfe: RL-Verschraubung">?</button>
     </label>
     <label class="checkbox-row">
       <input type="checkbox" id="f-entlueftung">
-      <span>Entlüftung vorhanden?</span>
+      <span>Entlüftung?</span>
+      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/entflueftung.jpg','Entlüftung')" title="Hilfe: Entlüftung">?</button>
     </label>
     <label class="checkbox-row">
       <input type="checkbox" id="f-entleerung">
-      <span>Entleerung vorhanden?</span>
+      <span>Entleerung?</span>
+      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/entleerung.jpg','Entleerung')" title="Hilfe: Entleerung">?</button>
     </label>
     <label class="checkbox-row">
       <input type="checkbox" id="f-ventilVoreinstellbar" onchange="document.getElementById('group-ventilWert').style.display=this.checked?'block':'none'">
-      <span>Ventil voreinstellbar?</span>
+      <span>Voreinstellbar?</span>
+      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/voreinstellbar.jpg','Voreinstellbar')" title="Hilfe: Voreinstellbar">?</button>
     </label>
   </div>
   <div id="group-ventilWert" style="display:none;margin-top:6px">
@@ -179,14 +208,7 @@
       <input type="text" id="f-ventilVoreinstellbarWert" placeholder="z.B. 3.5" inputmode="decimal">
     </div>
   </div>
-
-  <!-- Einbau -->
-  <div class="section-title">Einbau / Sonstiges</div>
   <div class="form-row">
-    <div class="form-group">
-      <label>Einbausituation</label>
-      <select id="f-einbausituation"></select>
-    </div>
     <div class="form-group">
       <label>Strang-Nr.</label>
       <input type="text" id="f-strang" inputmode="decimal" placeholder="z.B. 1.1">
@@ -211,7 +233,7 @@
   <label class="checkbox-row" style="margin-top:16px">
     <input type="checkbox" id="f-setStandard">
     <span>Diesen Heizkörper als Standard definieren</span>
-    <button class="btn-help-inline" onclick="event.preventDefault();alert('Wenn aktiviert, werden Typ, Maße, Ventildaten und Einbausituation dieses Heizkörpers als Vorlage für alle neuen Heizkörper übernommen.')" title="Was bedeutet Standard?">?</button>
+    <button class="btn-help-inline" onclick="event.preventDefault();alert('Wenn aktiviert, werden Typ, Ventildaten und Einbausituation dieses Heizkörpers als Vorlage für alle neuen Heizkörper übernommen (ohne Maße).')" title="Was bedeutet Standard?">?</button>
   </label>
 
   <!-- Buttons -->

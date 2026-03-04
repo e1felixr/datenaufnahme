@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.8';
-const APP_BUILD_DATE = '04.03.2026 16:33'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.9';
+const APP_BUILD_DATE = '04.03.2026 16:37'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -22,14 +22,14 @@ const CONFIG = {
   stahlBANA: { 200:300, 350:400, 500:600, 900:1000 },
   nabenabstandOpts: [100,150,200,300,350,500,600,900],
   dnVentil: ['DN10', 'DN15', 'DN20', 'DN25'],
-  ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck li.', 'Winkeleck re.'],
-  artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde'],
-  einbausituation: ['normal', 'hinter Verkleidung', 'unter Brüstung', 'zugestellt', 'sonstige']
+  ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck'],
+  artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde', 'Fernversteller', 'fehlt', 'Sonstiges'],
+  einbausituationCheckboxes: ['verkleidung', 'bruestung', 'moebel', 'sonstige']
 };
 
 let currentProjektId = null;
 let currentHkId = null;
-let formPhotos = [null, null, null];
+let formPhotos = [null, null];
 let settingsReady = false;
 let allGebaeudeDaten = {}; // Key=Liegenschaft, Value={gebaeude,geschoss,raum,raumDetails}
 let currentLiegenschaft = null;
@@ -333,9 +333,16 @@ function fillForm(hk) {
   document.getElementById('f-anzahlGlieder').value = hk.anzahlGlieder || '';
   document.getElementById('f-nabenabstand').value = hk.nabenabstand || '';
   document.getElementById('f-dnVentil').value = hk.dnVentil || '';
-  document.getElementById('f-ventilform').value = hk.ventilform || '';
+  let vf = hk.ventilform || '';
+  if (vf === 'Winkeleck li.' || vf === 'Winkeleck re.') vf = 'Winkeleck';
+  document.getElementById('f-ventilform').value = vf;
   document.getElementById('f-artThermostatkopf').value = hk.artThermostatkopf || '';
-  document.getElementById('f-einbausituation').value = hk.einbausituation || '';
+  // Einbausituation: String → Checkboxen (mit Migration: "zugestellt"→"hinter Möbeln")
+  const einbauStr = (hk.einbausituation || '').replace('zugestellt', 'hinter Möbeln');
+  document.getElementById('f-einbau-verkleidung').checked = einbauStr.includes('hinter Verkleidung');
+  document.getElementById('f-einbau-bruestung').checked = einbauStr.includes('unter Brüstung');
+  document.getElementById('f-einbau-moebel').checked = einbauStr.includes('hinter Möbeln');
+  document.getElementById('f-einbau-sonstige').checked = einbauStr.includes('sonstige');
   document.getElementById('f-strang').value = hk.strang || '';
   document.getElementById('f-bemerkung').value = hk.bemerkung || '';
 
@@ -350,11 +357,11 @@ function fillForm(hk) {
   // Typabhängige Felder (inkl. Bauhöhen-Datalist)
   updateTypFields();
 
-  // Fotos (dynamisch, min. 3 Slots)
-  formPhotos = [null, null, null];
+  // Fotos (dynamisch, min. 2 Slots)
+  formPhotos = [null, null];
   if (hk.fotos && hk.fotos.length > 0) {
     formPhotos = hk.fotos.map(f => f || null);
-    while (formPhotos.length < 3) formPhotos.push(null);
+    while (formPhotos.length < 2) formPhotos.push(null);
   }
   renderPhotoSlots();
   checkSonstigeHinweis();
@@ -463,7 +470,7 @@ function getToggleValue(name) {
 
 // Felder, die als Standard übernommen werden (ohne Standort/HK-Nr/Bemerkung/Fotos)
 const STANDARD_FIELDS = [
-  'typ', 'subtyp', 'konvektorBauart', 'baulaenge', 'bauhoehe', 'anzahlRoehren', 'anzahlGlieder',
+  'typ', 'subtyp', 'konvektorBauart',
   'nabenabstand', 'dnVentil', 'ventilform', 'einbausituation', 'strang',
   'artThermostatkopf', 'ventilVoreinstellbar', 'ventilVoreinstellbarWert'
 ];
@@ -491,7 +498,13 @@ function readFormIntoHk(hk) {
   hk.ventilVoreinstellbar = getToggleValue('f-ventilVoreinstellbar');
   hk.ventilVoreinstellbarWert = document.getElementById('f-ventilVoreinstellbarWert').value.trim();
   hk.artThermostatkopf = document.getElementById('f-artThermostatkopf').value;
-  hk.einbausituation = document.getElementById('f-einbausituation').value;
+  // Einbausituation: Checkboxen → komma-separierter String
+  const einbauParts = [];
+  if (document.getElementById('f-einbau-verkleidung').checked) einbauParts.push('hinter Verkleidung');
+  if (document.getElementById('f-einbau-bruestung').checked) einbauParts.push('unter Brüstung');
+  if (document.getElementById('f-einbau-moebel').checked) einbauParts.push('hinter Möbeln');
+  if (document.getElementById('f-einbau-sonstige').checked) einbauParts.push('sonstige');
+  hk.einbausituation = einbauParts.length > 0 ? einbauParts.join(', ') : 'normal';
   hk.strang = document.getElementById('f-strang').value.trim();
   hk.bemerkung = document.getElementById('f-bemerkung').value.trim();
   hk.fotos = formPhotos.filter(Boolean);
@@ -545,9 +558,6 @@ async function saveAndNextRoom() {
   nextHk.hkNr = 1;
   nextHk.typ = hk.typ;
   nextHk.subtyp = hk.subtyp;
-  nextHk.baulaenge = hk.baulaenge;
-  nextHk.bauhoehe = hk.bauhoehe;
-  nextHk.anzahlRoehren = hk.anzahlRoehren;
   nextHk.nabenabstand = hk.nabenabstand;
   nextHk.dnVentil = hk.dnVentil;
   nextHk.ventilform = hk.ventilform;
@@ -583,10 +593,6 @@ async function saveAndNextHk() {
   nextHk.hkNr = (Number(hk.hkNr) || 0) + 1;
   nextHk.typ = hk.typ;
   nextHk.subtyp = hk.subtyp;
-  nextHk.baulaenge = hk.baulaenge;
-  nextHk.bauhoehe = hk.bauhoehe;
-  nextHk.anzahlRoehren = hk.anzahlRoehren;
-  nextHk.anzahlGlieder = hk.anzahlGlieder;
   nextHk.nabenabstand = hk.nabenabstand;
   nextHk.dnVentil = hk.dnVentil;
   nextHk.ventilform = hk.ventilform;
@@ -658,8 +664,11 @@ function checkSonstigeHinweis() {
   const hinweis = document.getElementById('sonstige-foto-hinweis');
   if (!hinweis) return;
   const typ = document.getElementById('f-typ').value;
-  const einbau = document.getElementById('f-einbausituation').value;
-  hinweis.style.display = (typ === 'Sonstige' || einbau === 'sonstige') ? 'block' : 'none';
+  const einbau = document.getElementById('f-einbausituation');
+  const einbauSonstige = document.getElementById('f-einbau-sonstige');
+  const thermo = document.getElementById('f-artThermostatkopf').value;
+  const einbauIsSonstige = einbauSonstige ? einbauSonstige.checked : (einbau ? einbau.value === 'sonstige' : false);
+  hinweis.style.display = (typ === 'Sonstige' || einbauIsSonstige || thermo === 'Sonstiges') ? 'block' : 'none';
 }
 
 function triggerPhoto(index) {
@@ -675,7 +684,6 @@ function handlePhotoInput(input) {
   compressImage(file, (dataUrl) => {
     formPhotos[index] = dataUrl;
     renderPhotoSlots();
-    savePhotoToDevice(dataUrl, index);
   });
   input.value = '';
 }
@@ -716,30 +724,6 @@ function compressImage(file, callback, directDataUrl) {
     reader.onload = (e) => processImage(e.target.result);
     reader.readAsDataURL(file);
   }
-}
-
-function savePhotoToDevice(dataUrl, index) {
-  // Foto als Download auf dem Gerät speichern
-  const raum = document.getElementById('f-raumnr').value.trim() || 'X';
-  const geschoss = document.getElementById('f-geschoss').value.trim() || 'X';
-  const hkNr = document.getElementById('f-hkNr').value.trim() || 'X';
-  const suffix = index > 0 ? `_${index + 1}` : '';
-  const filename = `${sanitizeFilename(geschoss)}_${sanitizeFilename(raum)}_HK${hkNr}${suffix}.jpg`;
-
-  // Versuche "silent save" via <a download>
-  const byteString = atob(dataUrl.split(',')[1]);
-  const ab = new ArrayBuffer(byteString.length);
-  const ia = new Uint8Array(ab);
-  for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-  const blob = new Blob([ab], { type: 'image/jpeg' });
-
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
 }
 
 function removePhoto(index) {
@@ -978,7 +962,6 @@ function populateDropdowns() {
   fillSelect('f-dnVentil', CONFIG.dnVentil, 'DN Ventil');
   fillSelect('f-ventilform', CONFIG.ventilform, 'Ventilform');
   fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf, 'Thermostatkopf');
-  fillSelect('f-einbausituation', CONFIG.einbausituation, 'Einbausituation');
   // Datalists werden in updateTypFields befüllt
   fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
   fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
@@ -1213,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Event-Listener für Typ-Dropdown
   document.getElementById('f-typ').addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
-  document.getElementById('f-einbausituation').addEventListener('change', checkSonstigeHinweis);
+  document.getElementById('f-artThermostatkopf').addEventListener('change', checkSonstigeHinweis);
 
   // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
   document.getElementById('f-raumnr').addEventListener('change', () => {

@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'hk-aufnahme-v18';
+const CACHE_NAME = 'hk-aufnahme-v19';
 const ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,14 @@ const ASSETS = [
   './icons/icon-512.png',
   './hilfe/hk-typen.png',
   './hilfe/ventiltypen.png',
-  './hilfe/hilfe_kompakt.jpg'
+  './hilfe/hilfe_kompakt.jpg',
+  './hilfe/einbausituation.jpg',
+  './hilfe/thermostatkoepfe.jpg',
+  './hilfe/hahnblock.jpg',
+  './hilfe/entflueftung.jpg',
+  './hilfe/entleerung.jpg',
+  './hilfe/rlverschraubung.jpg',
+  './hilfe/voreinstellbar.jpg'
 ];
 
 self.addEventListener('install', (event) => {
