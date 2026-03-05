@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.6.3';
-const APP_BUILD_DATE = '05.03.2026 22:50'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.6.4';
+const APP_BUILD_DATE = '05.03.2026 22:54'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2164,12 +2164,17 @@ if ('serviceWorker' in navigator) {
 
 // ── Automatischer Versionscheck beim Start ──
 async function checkForUpdate() {
+  // Schutz vor Endlos-Reload: maximal 1x pro 60 Sekunden updaten
+  const lastUpdate = sessionStorage.getItem('lastForceUpdate');
+  if (lastUpdate && Date.now() - Number(lastUpdate) < 60000) return;
+
   try {
     const resp = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) return;
     const data = await resp.json();
     if (data.version && data.version !== APP_VERSION) {
       console.log(`Update verfügbar: ${APP_VERSION} → ${data.version}`);
+      sessionStorage.setItem('lastForceUpdate', String(Date.now()));
       await forceUpdate();
     }
   } catch {
