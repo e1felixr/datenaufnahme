@@ -23,7 +23,10 @@
       "Bash(node:*)",
       "Bash(pip show:*)",
       "Bash(tesseract:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(GIT_TERMINAL_PROMPT=0 git push:*)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth:*)",
+      "Bash(GIT_TRACE=1 git push:*)"
     ]
   },
   "outputStyle": "default"

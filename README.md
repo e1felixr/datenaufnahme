@@ -1,14 +1,29 @@
-# Heizkörper-Erfassung (HK-Aufnahme)
+# Datenaufnahme (HK + Beleuchtung)
 
-Progressive Web App (PWA) zur mobilen Erfassung von Heizkörperdaten bei Gebäudebegehungen. Läuft komplett im Browser, funktioniert offline und kann auf dem Smartphone wie eine native App installiert werden.
+Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung bei Gebäudebegehungen. Läuft komplett im Browser, funktioniert offline und kann auf dem Smartphone wie eine native App installiert werden.
 
-**👉 App starten:** [https://e1felixr.github.io/heizkoerper/](https://e1felixr.github.io/heizkoerper/)
+**App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
 ## Installation auf dem Smartphone
 
-1. Seite im Browser öffnen (Chrome oder Edge empfohlen)
-2. **Android (Chrome):** Menü (drei Punkte) > "Zum Startbildschirm hinzufügen"
-3. Die App erscheint als Icon auf dem Startbildschirm
+Die App-URL im Browser öffnen und dann je nach Browser installieren:
+
+**Chrome (Android) — empfohlen:**
+1. Menü (drei Punkte oben rechts) antippen
+2. "Zum Startbildschirm hinzufügen" oder "App installieren" wählen
+3. Namen bestätigen > "Hinzufügen"
+
+**Edge (Android):**
+1. Menü (drei Punkte unten mittig) antippen
+2. "Zum Smartphone hinzufügen" wählen
+3. "Installieren" bestätigen
+
+**Samsung Internet:**
+1. Menü (drei Striche unten rechts) antippen
+2. "Seite hinzufügen zu" > "Startbildschirm" wählen
+3. Namen bestätigen > "Hinzufügen"
+
+Die App erscheint danach als Icon auf dem Startbildschirm und öffnet sich ohne Browser-Leiste im Vollbildmodus.
 
 ## Updates & Versionierung
 
@@ -45,7 +60,7 @@ Nur wenn sich die `manifest.json` ändert (z.B. App-Name, Icons, Orientierung). 
 
 | Was | Wo | Überlebt Cache-Löschen? |
 |-----|-----|------------------------|
-| Projekte & Heizkörper | IndexedDB (im Browser) | Ja |
+| Projekte, Heizkörper & Beleuchtung | IndexedDB (im Browser) | Ja |
 | Gebäudedaten (Import) | localStorage (pro Projekt) | Ja |
 | Einstellungen (Erfasser, Schriftgröße) | localStorage | Ja |
 | App-Dateien (HTML, CSS, JS) | Service Worker Cache | Nein (wird automatisch neu geladen) |
@@ -54,7 +69,7 @@ Alle Nutzerdaten bleiben lokal auf dem Gerät. Es werden keine Daten an einen Se
 
 ### Daten zurücksetzen
 
-Unter **Einstellungen > "Alle Daten zurücksetzen"** können sämtliche Projekte, Heizkörper und importierte Gebäudedaten unwiderruflich gelöscht werden. Vor dem endgültigen Löschen erfolgt eine doppelte Sicherheitsabfrage.
+Unter **Einstellungen > "Alle Daten zurücksetzen"** können sämtliche Projekte, Heizkörper, Beleuchtungsdaten und importierte Gebäudedaten unwiderruflich gelöscht werden. Vor dem endgültigen Löschen erfolgt eine doppelte Sicherheitsabfrage.
 
 ## Neue Erfassung vorbereiten
 
@@ -77,11 +92,11 @@ Beim ersten Start der App wird der **Erfasser-Name** abgefragt (Pflichtfeld). Di
 
 ### 3. Projekt anlegen
 
-In der App auf **"+"** tippen und einen Projektnamen vergeben (z.B. "Musterstraße 12" oder "Liegenschaft Nord"). Die Gebäudedaten aus der zentralen xlsx-Datei stehen danach automatisch als Autovervollständigung zur Verfügung.
+In der App auf **"+"** tippen und einen Projektnamen vergeben (z.B. "Musterstraße 12" oder "Liegenschaft Nord"). Erfassungsart wählen: **HK**, **Beleuchtung** oder **Beides**. Die Gebäudedaten aus der zentralen xlsx-Datei stehen danach automatisch als Autovervollständigung zur Verfügung.
 
 ### 4. Erfassung starten
 
-Im Projekt auf **"+"** tippen, um den ersten Heizkörper anzulegen. Die Felder Gebäude, Geschoss und Raum-Nr. bieten Autovervollständigung aus den Gebäudedaten.
+Im Projekt auf **"+"** tippen, um den ersten Eintrag anzulegen. Bei "Beides" wird gefragt, ob Heizkörper oder Beleuchtung erfasst werden soll. Die Felder Gebäude, Geschoss und Raum-Nr. bieten Autovervollständigung aus den Gebäudedaten.
 
 ### Checkliste vor der Begehung
 
@@ -140,14 +155,14 @@ Die Datei muss folgende Spaltenstruktur haben (Zeile 1 = Überschrift, wird übe
 
 ## Features
 
-- Projekte anlegen und verwalten
-- Heizkörper mit Standort, Typ, Maßen, Ventil- und Einbaudaten erfassen
-- Raumweise Übersicht: HK-Liste gruppiert nach Raum, mehrere HK pro Raum nebeneinander
-- Typabhängige Felder (Kompakt, Röhren, Glieder, Konvektoren)
+- Projekte anlegen und verwalten (HK, Beleuchtung oder Beides)
+- **Heizkörper:** Standort, Typ, Maße, Ventil- und Einbaudaten, Fotos
+- **Beleuchtung:** Raumdecke, Installationsart, Leuchtenart, Leuchtmittel mit Smart-Lookup (bidirektional: Typ/Länge/Wattage), Vorschaltgerät (EVG/VVG-Erkennung)
+- Raumweise Übersicht: Einträge gruppiert nach Raum
 - Fotos direkt über die Kamera aufnehmen (unbegrenzte Anzahl)
-- Hilfe-Bilder zu Heizkörpertypen und Ventiltypen direkt im Formular
-- Gebäudedaten aus xlsx-Datei importieren (Autovervollständigung für Gebäude, Etagen, Räume)
-- Export als xlsx oder CSV (ZIP mit Fotos)
+- Hilfe-Bilder zu Heizkörpertypen, Ventiltypen etc. direkt im Formular
+- Gebäudedaten aus xlsx-Datei importieren (Autovervollständigung, Geschoss-Raum-Filterung)
+- Export als ZIP (xlsx + Fotos), Multi-Sheet bei "Beides"
 - Daten versenden per Web Share API (ZIP als echter Anhang)
 - Offline-fähig
 - Optimiert für Chrome und Edge (empfohlen)
@@ -157,8 +172,8 @@ Die Datei muss folgende Spaltenstruktur haben (Zeile 1 = Überschrift, wird übe
 ```
 index.html          Haupt-HTML mit allen Screens
 app.js              Hauptlogik, Navigation, Event-Handling
-db.js               IndexedDB-Wrapper (Projekte & Heizkörper)
-export.js           Export-Funktionen (xlsx, CSV)
+db.js               IndexedDB-Wrapper (Projekte, HK & Beleuchtung)
+export.js           Export-Funktionen (xlsx, ZIP)
 style.css           Mobile-first CSS
 sw.js               Service Worker (Offline-Cache)
 manifest.json       PWA-Manifest
