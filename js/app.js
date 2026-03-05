@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v3.6';
-const APP_BUILD_DATE = '05.03.2026 22:07'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 22:17'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -849,6 +849,8 @@ function fillBelForm(bel) {
   document.getElementById('f-zustand-verschmutzt').checked = zustand.includes('stark verschmutzt');
   document.getElementById('f-zustand-abgaengig').checked = zustand.includes('abgängig');
   document.getElementById('f-zustand-erreichbar').checked = zustand.includes('schlecht erreichbar');
+  document.getElementById('f-lph').value = bel.lph || '';
+  toggleLph();
 
   document.getElementById('f-bel-bemerkung').value = bel.bemerkung || '';
 
@@ -945,6 +947,7 @@ function readBelFormIntoObj(bel) {
   if (document.getElementById('f-zustand-abgaengig').checked) zustandParts.push('abgängig');
   if (document.getElementById('f-zustand-erreichbar').checked) zustandParts.push('schlecht erreichbar');
   bel.zustand = zustandParts.join(', ');
+  bel.lph = document.getElementById('f-lph').value.trim();
 
   // Steuerung
   const steuerungParts = [];
@@ -1056,6 +1059,12 @@ function updateInstallationsartFields() {
   document.getElementById('group-installationsartSub').style.display = art === 'Pendel' ? 'block' : 'none';
   if (art !== 'Pendel') document.getElementById('f-installationsartSub').value = '';
   checkBelSonstigeHinweis();
+}
+
+function toggleLph() {
+  const checked = document.getElementById('f-zustand-erreichbar').checked;
+  document.getElementById('group-lph').style.display = checked ? 'block' : 'none';
+  if (!checked) document.getElementById('f-lph').value = '';
 }
 
 // ── Leuchtmittel Smart-Lookup ──

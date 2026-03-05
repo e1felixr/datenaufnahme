@@ -176,6 +176,7 @@ function newBeleuchtung(projektId, defaults) {
     fassung: defaults?.fassung || '',
     vorschaltgeraet: defaults?.vorschaltgeraet || '',
     steuerung: defaults?.steuerung || '',
+    lph: defaults?.lph || '',
     zustand: defaults?.zustand || '',
     bemerkung: '',
     erfasser: '',
