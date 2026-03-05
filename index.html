@@ -352,7 +352,7 @@
 <div class="modal-overlay" id="modal-send" style="display:none" onclick="if(event.target===this)closeSendDialog()">
   <div class="modal">
     <h2>Daten versenden</h2>
-    <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:12px">ZIP-Datei (Excel + Fotos) wird erstellt und zum Teilen angeboten. Im Teilen-Dialog bitte <strong>E-Mail-App</strong> auswählen.</p>
+    <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:12px">ZIP wird erstellt und geteilt. Im Teilen-Dialog <strong>Outlook</strong> auswählen – die Mail wird automatisch mit dem Anhang vorbereitet.</p>
     <div class="send-recipients">
       <label class="send-recipient-row">
         <input type="checkbox" id="send-r1" value="felix.rundel@e1-energie.com">
@@ -367,7 +367,7 @@
         <input type="email" id="send-r3" placeholder="weitere E-Mail-Adresse" style="flex:1;padding:6px 8px;border:2px solid var(--border);border-radius:var(--radius);font-size:.85rem">
       </label>
     </div>
-    <button class="btn btn-primary" onclick="sendData()" style="margin-top:12px">Versenden</button>
+    <button class="btn btn-primary" id="btn-send-data" onclick="sendData()" style="margin-top:12px">Versenden</button>
     <button class="btn btn-outline" onclick="closeSendDialog()" style="margin-top:8px">Abbrechen</button>
   </div>
 </div>
@@ -389,6 +389,17 @@
     </div>
     <div class="help-image-body">
       <img id="help-image-img" src="" alt="">
+    </div>
+  </div>
+</div>
+
+<!-- ════════ ZIP-Fortschritts-Overlay ════════ -->
+<div id="zip-progress-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999; flex-direction:column; align-items:center; justify-content:center; gap:16px">
+  <div style="background:#fff; border-radius:12px; padding:24px 32px; text-align:center; min-width:260px">
+    <div style="font-weight:600; margin-bottom:12px">ZIP wird erstellt…</div>
+    <div id="zip-progress-text" style="color:var(--text-sec); font-size:.9rem; margin-bottom:12px">Initialisiere…</div>
+    <div style="background:var(--border); border-radius:4px; height:8px; overflow:hidden">
+      <div id="zip-progress-bar" style="background:var(--primary); height:100%; width:0%; transition:width .2s"></div>
     </div>
   </div>
 </div>

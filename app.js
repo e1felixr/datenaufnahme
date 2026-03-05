@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.12';
-const APP_BUILD_DATE = '05.03.2026 10:09'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v2.13';
+const APP_BUILD_DATE = '05.03.2026 10:23'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -917,6 +917,17 @@ function closeSendDialog() {
   document.getElementById('modal-send').style.display = 'none';
 }
 
+function showZipProgress(text, pct) {
+  const overlay = document.getElementById('zip-progress-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('zip-progress-text').textContent = text;
+  document.getElementById('zip-progress-bar').style.width = pct + '%';
+}
+
+function hideZipProgress() {
+  document.getElementById('zip-progress-overlay').style.display = 'none';
+}
+
 async function sendData() {
   const hks = await getHeizkoerperByProjekt(currentProjektId);
   const projekt = await getProjekt(currentProjektId);
@@ -924,6 +935,9 @@ async function sendData() {
     showToast('Keine Heizkörper zum Versenden');
     return;
   }
+
+  const btnSend = document.getElementById('btn-send-data');
+  if (btnSend) btnSend.disabled = true;
 
   hks.sort((a, b) =>
     (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
@@ -944,39 +958,47 @@ async function sendData() {
   const r3val = document.getElementById('send-r3').value.trim();
   if (r3check && r3check.checked && r3val) recipients.push(r3val);
 
-  // ZIP erstellen (Fotos werden beim Export komprimiert)
-  const zipBlob = await buildExportZip(hks, safeName);
-  const zipFile = new File([zipBlob], zipFileName, { type: 'application/zip' });
+  try {
+    showZipProgress('Erstelle Excel…', 0);
+    const zipBlob = await buildExportZip(hks, safeName, (done, total) => {
+      showZipProgress(`Foto ${done} von ${total} komprimiert`, done / total * 100);
+    });
+    hideZipProgress();
 
-  // Web Share API: Datei wird tatsächlich als Anhang geteilt
-  if (navigator.canShare && navigator.canShare({ files: [zipFile] })) {
-    try {
-      const shareData = { title: subject, files: [zipFile] };
-      // Empfänger-Info im Text mitgeben, falls vorhanden
-      if (recipients.length > 0) {
-        shareData.text = 'An: ' + recipients.join(', ') + '\n\nHK-Aufnahme als ZIP-Datei.';
+    const zipFile = new File([zipBlob], zipFileName, { type: 'application/zip' });
+
+    // Web Share API: Datei wird tatsächlich als Anhang geteilt
+    if (navigator.canShare && navigator.canShare({ files: [zipFile] })) {
+      try {
+        const shareData = { title: subject, files: [zipFile] };
+        if (recipients.length > 0) {
+          shareData.text = 'An: ' + recipients.join(', ') + '\n\nHK-Aufnahme als ZIP-Datei.';
+        }
+        await navigator.share(shareData);
+        closeSendDialog();
+        showToast('Daten versendet');
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
       }
-      await navigator.share(shareData);
-      closeSendDialog();
-      showToast('Daten versendet');
-      return;
-    } catch (e) {
-      if (e.name === 'AbortError') return;
     }
-  }
 
-  // Fallback: ZIP herunterladen, dann mailto mit Hinweis zum Anhängen
-  downloadBlob(zipBlob, zipFileName);
-  if (recipients.length > 0) {
-    const body = 'Bitte die heruntergeladene Datei "' + zipFileName + '" an diese E-Mail anhängen.';
-    const mailto = `mailto:${recipients.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailto, '_blank');
+    // Fallback: ZIP herunterladen, dann mailto mit Hinweis zum Anhängen
+    downloadBlob(zipBlob, zipFileName);
+    if (recipients.length > 0) {
+      const body = 'Bitte die heruntergeladene Datei "' + zipFileName + '" an diese E-Mail anhängen.';
+      const mailto = `mailto:${recipients.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailto;
+    }
+    closeSendDialog();
+    showToast('ZIP heruntergeladen – bitte manuell an E-Mail anhängen');
+  } finally {
+    hideZipProgress();
+    if (btnSend) btnSend.disabled = false;
   }
-  closeSendDialog();
-  showToast('ZIP heruntergeladen – bitte manuell an E-Mail anhängen');
 }
 
-async function buildExportZip(hks, safeName) {
+async function buildExportZip(hks, safeName, onProgress) {
   const data = [EXPORT_HEADERS, ...hks.map(hkToRow)];
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws['!cols'] = EXPORT_HEADERS.map((h, i) => ({
@@ -987,15 +1009,23 @@ async function buildExportZip(hks, safeName) {
   const xlsxBytes = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 
   const zipFiles = [{ name: safeName + '_HK-Aufnahme.xlsx', data: new Uint8Array(xlsxBytes) }];
-  for (const hk of hks) {
-    if (!hk.fotos) continue;
-    for (let i = 0; i < hk.fotos.length; i++) {
-      if (hk.fotos[i]) {
-        const compressed = await compressForExport(hk.fotos[i]);
-        zipFiles.push({ name: fotoFilename(hk, i), data: compressed });
-      }
-    }
+
+  // Alle Foto-Slots sammeln
+  const allFotos = [];
+  for (const hk of hks)
+    for (let i = 0; i < (hk.fotos || []).length; i++)
+      if (hk.fotos[i]) allFotos.push({ hk, i });
+
+  // Batch-Kompression mit UI-Yield zwischen Batches
+  const BATCH = 3;
+  for (let b = 0; b < allFotos.length; b += BATCH) {
+    const batch = allFotos.slice(b, b + BATCH);
+    const results = await Promise.all(batch.map(f => compressForExport(f.hk.fotos[f.i])));
+    results.forEach((data, j) => zipFiles.push({ name: fotoFilename(batch[j].hk, batch[j].i), data }));
+    if (onProgress) onProgress(Math.min(b + BATCH, allFotos.length), allFotos.length);
+    await new Promise(r => setTimeout(r, 0)); // UI-Thread freigeben
   }
+
   const zipData = buildZip(zipFiles);
   return new Blob([zipData], { type: 'application/zip' });
 }
