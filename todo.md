@@ -1,9 +1,32 @@
 Oberhalb der gepunkteten Linie dürften stets nur die offenen Aufgaben stehen!!
+
 Offene Punkte:
 
+* Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden
 
+* Geschoss→Raum-Filterung (wenn Geschoss gewählt, nur passende Räume in Datalist). Benötigt sauberere xlsx mit Geschoss-Raum-Zuordnung.
 
 ………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
+
+### v3.0
+
+* ~~Beleuchtungs-Modul: Aufnahme der Beleuchtung jedes Raumes. Beim Start auswählen: HK / Beleuchtung / Beides (default: Beleuchtung)~~ **erledigt v3.0** (Modulauswahl bei Projekterstellung, neuer IndexedDB Store 'beleuchtung', komplettes Formular)
+
+* ~~GUI-Farbschema: HK in #FF6633, Beleuchtung in #FFCC00, Beides in #FF8C00. Gute Lesbarkeit (gelbe Buttons → schwarze Schrift)~~ **erledigt v3.0** (CSS --module-color System, applyModuleTheme() in app.js)
+
+* ~~Beleuchtungs-Formular: Raumdecke, Anzahl Reihen, Leuchten je Reihe, Leuchtmittel je Leuchte (1-4), Installationsart (Einbau/Anbau/Pendel→direkt/direkt-indirekt/Sonstige→Foto!), Leuchtenart (Langfeld/BAP/Downlight/Freistrahler/Spot/Strahler/Stehleuchte/Sonstige→Foto!), Leuchtmittel (T5/T8/T12/Dulux/Spot/SQ28/LED), Vorschaltgerät (KVG/VVG/EVG mit Kamera-Flimmer-Tipp), Zustand (Checkbox-Grid), Bemerkung~~ **erledigt v3.0**
+
+* ~~Leuchtmittel Smart-Lookup: T5 + 1149mm → Wattages 28/49/54 vorgeschlagen. Dulux: Wattage + Wendel (S/D/T) → Typ ermittelt. /E-Suffix = EVG-Hinweis~~ **erledigt v3.0** (LEUCHTMITTEL_DB + updateLeuchtmittelFields() in app.js)
+
+* ~~[?] Info-Symbole bei Beleuchtungsfeldern~~ **erledigt v3.0** (Vorschaltgerät-Tipp als Alert, Platzhalter für Hilfe-Bilder vorbereitet)
+
+* ~~Mehrere Beleuchtungsarten pro Raum: Button "+ Leuchte im Raum"~~ **erledigt v3.0** (saveBelAndNextGroup() analog zu saveAndNextHk())
+
+* ~~Mehrere Lichtreihen (z.B. fensterseitig 2flammig, flurseitig 1flammig): je separate Leuchtengruppe~~ **erledigt v3.0** (Gruppen-Nr. Auto-Increment, separate Gruppen pro Raum)
+
+* ~~Fotos bei Beleuchtung mit Typenschild-Hinweis~~ **erledigt v3.0** (Typenschild-Hinweisbox + eigene Foto-Slots im Bel-Formular)
+
+* ~~Tastatur überdeckt Eingabefelder im Querformat~~ **erledigt v3.0** (Header wechselt von sticky zu relative bei Landscape + Focus, VisualViewport API)
 
 ### v2.12
 
