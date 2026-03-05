@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v3.0';
-const APP_BUILD_DATE = '05.03.2026 13:13'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 13:19'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1950,6 +1950,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Enter') createNewProjekt();
   });
 
+  // Landscape-Keyboard-Fix: Header ausblenden wenn Input fokussiert + Viewport zu klein
+  setupLandscapeKeyboardFix();
+
   if (!settingsReady) {
     openSettings();
     return;
@@ -1960,6 +1963,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     navigate(hash, false);
   }
 });
+
+// ── Landscape-Keyboard-Fix ──
+
+function setupLandscapeKeyboardFix() {
+  const header = document.getElementById('header');
+  const inputs = 'input, select, textarea';
+
+  function isLandscape() {
+    return window.innerWidth > window.innerHeight;
+  }
+
+  function onFocusIn(e) {
+    if (e.target.matches(inputs) && isLandscape()) {
+      header.style.position = 'relative';
+      // Fokussiertes Feld in den sichtbaren Bereich scrollen
+      setTimeout(() => {
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }
+
+  function onFocusOut(e) {
+    if (e.target.matches(inputs)) {
+      header.style.position = '';
+    }
+  }
+
+  document.addEventListener('focusin', onFocusIn);
+  document.addEventListener('focusout', onFocusOut);
+
+  // VisualViewport API: reagiert auf Keyboard ein-/ausblenden
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const focused = document.activeElement;
+      if (focused && focused.matches(inputs) && isLandscape()) {
+        header.style.position = 'relative';
+      } else if (!focused || !focused.matches(inputs)) {
+        header.style.position = '';
+      }
+    });
+  }
+}
 
 // ── Raum-Filterung ──
 
