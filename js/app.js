@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v3.6.0';
-const APP_BUILD_DATE = '05.03.2026 22:24'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.6.1';
+const APP_BUILD_DATE = '05.03.2026 22:34'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1167,11 +1167,18 @@ function updateLeuchtmittelFields() {
 
   if (kat === 't5' || kat === 't8') {
     document.getElementById('lm-linear-fields').style.display = 'block';
-    // Direkt Datalists für Länge/Wattage befüllen (kein Typ-Dropdown nötig)
+    // Bei Kategorie-Wechsel alte Werte leeren
+    const laengeEl = document.getElementById('f-lm-linear-laenge');
+    const wattEl = document.getElementById('f-lm-linear-wattage');
+    const curLaenge = laengeEl.value ? Number(laengeEl.value) : null;
+    const curWatt = wattEl.value ? Number(wattEl.value) : null;
     let entries = LEUCHTMITTEL_DB[kat];
     if (kat === 't8' && vsg === 'EVG') {
-      entries = entries.filter(e => !e.vvgOnly);  // 65W rausfiltern bei EVG
+      entries = entries.filter(e => !e.vvgOnly);
     }
+    // Prüfen ob aktuelle Werte zur neuen Kategorie passen, sonst leeren
+    if (curLaenge && !entries.some(e => e.mm === curLaenge)) laengeEl.value = '';
+    if (curWatt && !entries.some(e => e.w === curWatt)) wattEl.value = '';
     document.getElementById('dl-lm-laenge').innerHTML = [...new Set(entries.map(e => e.mm))].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
     document.getElementById('dl-lm-wattage').innerHTML = [...new Set(entries.map(e => e.w))].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
 
