@@ -36,6 +36,7 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
 }
 
 /* ── Header ── */
@@ -1010,47 +1011,10 @@ body {
   font-weight: 600;
 }
 
-/* ── Leuchtmittel je Leuchte Toggle ── */
-.lm-toggle {
-  display: flex;
-  gap: 8px;
-}
-
-.lm-toggle-btn {
-  width: 44px;
-  height: 44px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  background: #fff;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .15s;
-}
-
-.lm-toggle-btn.active {
-  border-color: #FFCC00;
-  background: #FFF9C4;
-  color: #B8860B;
-}
-
 /* ── Bel Zustand Checkboxen ── */
 .zustand-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px 12px;
   margin: 6px 0;
-}
-
-/* ── Typenschild-Hinweis ── */
-.typenschild-hinweis {
-  background: #FFF9C4;
-  border: 2px solid #FFCC00;
-  border-radius: var(--radius);
-  padding: 8px 12px;
-  margin: 8px 0;
-  font-weight: 600;
-  color: #B8860B;
-  text-align: center;
-  font-size: .85rem;
 }

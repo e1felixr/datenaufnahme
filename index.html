@@ -244,48 +244,22 @@
   <!-- ════════ Beleuchtungs-Sektion ════════ -->
   <div id="bel-form-section" style="display:none">
     <div class="section-title section-title-bel" id="section-title-bel">Beleuchtung</div>
+    <input type="hidden" id="f-gruppenNr" value="">
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Gruppen-Nr.</label>
-        <input type="number" id="f-gruppenNr" inputmode="numeric" min="1">
-      </div>
-      <div class="form-group">
-        <label>Raumdecke</label>
-        <select id="f-raumdecke">
-          <option value="">Bitte wählen</option>
-          <option value="Trockenbau">Trockenbau</option>
-          <option value="Beton">Beton</option>
-          <option value="Holz">Holz</option>
-          <option value="Metalllamellen">Metalllamellen</option>
-          <option value="Akustikdecke">Akustikdecke</option>
-          <option value="Sonstige">Sonstige &rarr; Foto!</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Anzahl Reihen</label>
-        <input type="number" id="f-anzahlReihen" inputmode="numeric" min="1" placeholder="z.B. 2">
-      </div>
-      <div class="form-group">
-        <label>Leuchten je Reihe</label>
-        <input type="number" id="f-leuchtenJeReihe" inputmode="numeric" min="1" placeholder="z.B. 4">
-      </div>
-    </div>
-
+    <!-- Rauminfo -->
+    <div class="section-title section-title-bel">Rauminfo <button class="btn-help-inline" onclick="openHelpImage('hilfe/raumdecken.jpg','Deckentypen')" title="Hilfe: Deckentypen">?</button></div>
     <div class="form-group">
-      <label>Leuchtmittel je Leuchte</label>
-      <div class="lm-toggle" id="lm-toggle">
-        <button type="button" class="lm-toggle-btn" data-val="1" onclick="setLmToggle(1)">1</button>
-        <button type="button" class="lm-toggle-btn" data-val="2" onclick="setLmToggle(2)">2</button>
-        <button type="button" class="lm-toggle-btn" data-val="3" onclick="setLmToggle(3)">3</button>
-        <button type="button" class="lm-toggle-btn" data-val="4" onclick="setLmToggle(4)">4</button>
-      </div>
-      <input type="hidden" id="f-leuchtmittelJeLeuchte" value="">
+      <label>Raumdecke</label>
+      <select id="f-raumdecke" onchange="checkBelSonstigeHinweis()">
+        <option value="">Bitte wählen</option>
+        <option value="Trockenbau">Trockenbau</option>
+        <option value="Beton">Beton</option>
+        <option value="Holz">Holz</option>
+        <option value="Metalllamellen">Metalllamellen</option>
+        <option value="Akustikdecke">Akustikdecke</option>
+        <option value="Sonstige">Sonstige &rarr; Foto!</option>
+      </select>
     </div>
-
     <div class="form-group">
       <label>Installationsart</label>
       <select id="f-installationsart" onchange="updateInstallationsartFields()">
@@ -304,10 +278,9 @@
         <option value="direkt-indirekt">direkt-indirekt</option>
       </select>
     </div>
-
     <div class="form-group">
       <label>Leuchtenart</label>
-      <select id="f-leuchtenart">
+      <select id="f-leuchtenart" onchange="checkBelSonstigeHinweis()">
         <option value="">Bitte wählen</option>
         <option value="Langfeld">Langfeld</option>
         <option value="BAP-Leuchte">BAP-Leuchte</option>
@@ -320,10 +293,43 @@
       </select>
     </div>
 
-    <!-- Leuchtmittel -->
-    <div class="section-title section-title-bel">Leuchtmittel</div>
+    <!-- Leuchten-Anordnung -->
+    <div class="section-title section-title-bel">Leuchten-Anordnung</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Anzahl Reihen</label>
+        <input type="number" id="f-anzahlReihen" inputmode="numeric" min="1" placeholder="z.B. 2">
+      </div>
+      <div class="form-group">
+        <label>Leuchten je Reihe</label>
+        <input type="number" id="f-leuchtenJeReihe" inputmode="numeric" min="1" placeholder="z.B. 4">
+      </div>
+    </div>
     <div class="form-group">
-      <label>Kategorie</label>
+      <label>Leuchtmittel je Leuchte</label>
+      <input type="number" id="f-leuchtmittelJeLeuchte" inputmode="numeric" min="1" list="dl-lm-je-leuchte" placeholder="z.B. 2" onfocus="try{this.showPicker()}catch(e){}">
+      <datalist id="dl-lm-je-leuchte">
+        <option value="1">
+        <option value="2">
+        <option value="3">
+        <option value="4">
+      </datalist>
+    </div>
+
+    <!-- Vorschaltgerät -->
+    <div class="section-title section-title-bel">Vorschaltgerät / Leuchtmittel</div>
+    <div class="form-group">
+      <label>Vorschaltgerät <button class="btn-help-inline" onclick="event.stopPropagation();alert('Tipp: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\n\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: Vorschaltgerät erkennen">?</button></label>
+      <select id="f-vorschaltgeraet" onchange="updateLeuchtmittelFields()">
+        <option value="">Bitte wählen</option>
+        <option value="KVG/VVG">KVG/VVG (konventionell)</option>
+        <option value="EVG">EVG (elektronisch)</option>
+      </select>
+    </div>
+
+    <!-- Leuchtmittel Kategorie -->
+    <div class="form-group">
+      <label>Leuchtmittel-Kategorie</label>
       <select id="f-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()">
         <option value="">Bitte wählen</option>
         <option value="linear">Leuchtstoffröhre (T5/T8/T12)</option>
@@ -338,19 +344,19 @@
     <div id="lm-linear-fields" style="display:none">
       <div class="form-group">
         <label>Typ</label>
-        <select id="f-lm-linear-typ" onchange="updateLeuchtmittelFields()">
+        <select id="f-lm-linear-typ" onchange="onLinearFieldChange('typ')">
           <option value="">Bitte wählen</option>
         </select>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Länge [mm]</label>
-          <input type="text" id="f-lm-linear-laenge" inputmode="numeric" list="dl-lm-laenge" onchange="updateLeuchtmittelFields()">
+          <input type="text" id="f-lm-linear-laenge" inputmode="numeric" list="dl-lm-laenge" oninput="onLinearFieldChange('laenge')" onchange="onLinearFieldChange('laenge')">
           <datalist id="dl-lm-laenge"></datalist>
         </div>
         <div class="form-group">
           <label>Wattage [W]</label>
-          <input type="text" id="f-lm-linear-wattage" inputmode="numeric" list="dl-lm-wattage" onchange="updateLeuchtmittelFields()">
+          <input type="text" id="f-lm-linear-wattage" inputmode="numeric" list="dl-lm-wattage" oninput="onLinearFieldChange('wattage')" onchange="onLinearFieldChange('wattage')">
           <datalist id="dl-lm-wattage"></datalist>
         </div>
       </div>
@@ -361,11 +367,11 @@
       <div class="form-row">
         <div class="form-group">
           <label>Wattage [W]</label>
-          <input type="number" id="f-lm-dulux-wattage" inputmode="numeric" onchange="updateLeuchtmittelFields()">
+          <input type="number" id="f-lm-dulux-wattage" inputmode="numeric" oninput="updateDuluxTyp()" onchange="updateDuluxTyp()">
         </div>
         <div class="form-group">
           <label>Wendelanzahl</label>
-          <select id="f-lm-dulux-wendel" onchange="updateLeuchtmittelFields()">
+          <select id="f-lm-dulux-wendel" onchange="updateDuluxTyp()">
             <option value="">Bitte wählen</option>
             <option value="S">1 (S)</option>
             <option value="D">2 (D)</option>
@@ -418,20 +424,9 @@
       </div>
     </div>
 
-    <!-- Vorschaltgerät -->
-    <div class="section-title section-title-bel">Vorschaltgerät / Zustand</div>
-    <div class="form-group">
-      <label>Vorschaltgerät <button class="btn-help-inline" onclick="event.stopPropagation();alert('Tipp: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\n\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: Vorschaltgerät erkennen">?</button></label>
-      <select id="f-vorschaltgeraet">
-        <option value="">Bitte wählen</option>
-        <option value="KVG/VVG">KVG/VVG (konventionell)</option>
-        <option value="EVG">EVG (elektronisch)</option>
-      </select>
-    </div>
-
     <!-- Zustand -->
+    <div class="section-title section-title-bel">Zustand</div>
     <div class="form-group">
-      <label>Zustand</label>
       <div class="zustand-grid">
         <label class="checkbox-row">
           <input type="checkbox" id="f-zustand-defekt">
@@ -440,6 +435,7 @@
         <label class="checkbox-row">
           <input type="checkbox" id="f-zustand-beschaedigt">
           <span>beschädigt</span>
+          <button class="btn-help-inline" onclick="event.preventDefault();event.stopPropagation();alert('z.B. Abdeckung gerissen, Befestigung mangelhaft')" title="Info: beschädigt">?</button>
         </label>
         <label class="checkbox-row">
           <input type="checkbox" id="f-zustand-verschmutzt">
@@ -448,6 +444,10 @@
         <label class="checkbox-row">
           <input type="checkbox" id="f-zustand-abgaengig">
           <span>abgängig</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="f-zustand-erreichbar" onchange="checkBelSonstigeHinweis()">
+          <span>schlecht erreichbar</span>
         </label>
       </div>
     </div>
@@ -459,12 +459,11 @@
 
     <!-- Bel Sonstige-Hinweis -->
     <div id="bel-sonstige-foto-hinweis" class="sonstige-hinweis" style="display:none">
-      Sonstiges &rarr; Foto!
+      Sonstiges / schlecht erreichbar &rarr; Foto!
     </div>
 
     <!-- Bel Fotos -->
     <div class="section-title section-title-bel">Fotos</div>
-    <div class="typenschild-hinweis">Bitte Typenschilder fotografieren!</div>
     <div class="photo-slots" id="bel-photo-slots-container"></div>
     <input type="file" id="bel-photo-input" accept="image/*" style="display:none" onchange="handleBelPhotoInput(this)">
 
@@ -501,7 +500,7 @@
       <li><strong>Projekt anlegen:</strong> Auf der Startseite "+" tippen und Projektname vergeben. Erfassungsart wählen: HK, Beleuchtung oder Beides.</li>
       <li><strong>Heizkörper erfassen:</strong> Im Projekt auf "+" tippen. Standort, Typ und Maße eintragen.</li>
       <li><strong>Beleuchtung erfassen:</strong> Im Projekt auf "+" tippen. Raumdecke, Leuchten, Leuchtmittel eintragen.</li>
-      <li><strong>Fotos:</strong> Auf die Foto-Slots tippen, um Fotos mit der Kamera aufzunehmen. Bei "Sonstige" unbedingt ein Foto machen! Bei Beleuchtung: Typenschilder fotografieren!</li>
+      <li><strong>Fotos:</strong> Auf die Foto-Slots tippen, um Fotos mit der Kamera aufzunehmen. Bei "Sonstige" oder "schlecht erreichbar" unbedingt ein Foto machen!</li>
       <li><strong>Speichern & Weiter:</strong>
         <ul>
           <li>"Speichern" &ndash; Eintrag speichern, zurück zur Liste</li>

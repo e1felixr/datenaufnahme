@@ -2,11 +2,31 @@ Oberhalb der gepunkteten Linie dürften stets nur die offenen Aufgaben stehen!!
 
 Offene Punkte:
 
-* Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden
-
-* Geschoss→Raum-Filterung (wenn Geschoss gewählt, nur passende Räume in Datalist). Benötigt sauberere xlsx mit Geschoss-Raum-Zuordnung.
+* Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden. Platzhalter-Buttons sind vorbereitet (hilfe/ Ordner).
 
 ………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
+
+### v3.1
+
+* ~~Geschoss→Raum-Filterung~~ **erledigt v3.1** (parseGebaeudedatenXlsx speichert geschossRaum-Mapping, filterDatalistsForGeschoss() filtert Raum-Datalist bei Geschoss-Auswahl)
+
+* ~~Gruppennr. aus Formular entfernen~~ **erledigt v3.1** (Feld unsichtbar, intern auto-inkrementiert für Export-Sortierung, Chip zeigt Leuchtenart statt BEL-Nr.)
+
+* ~~Abschnitt "Rauminfo" mit Raumdecke, Installationsart, Leuchtenart~~ **erledigt v3.1** (neue Section "Rauminfo" im Formular)
+
+* ~~Pull-to-Refresh landet bei "neuer Heizkörper"~~ **erledigt v3.1** (CSS overscroll-behavior-y: contain verhindert Pull-to-Refresh, sessionStorage speichert aktuellen Screen)
+
+* ~~Zustand: Checkboxen + Mehrfachauswahl + beschädigt-Info~~ **erledigt v3.1** (Info-Button bei "beschädigt" mit Alert "z.B. Abdeckung gerissen, Befestigung mangelhaft")
+
+* ~~"schlecht erreichbar (--> Foto)" Checkbox~~ **erledigt v3.1** (neue Checkbox in Zustand-Grid, löst Foto-Hinweis aus)
+
+* ~~Leuchtmittel je Leuchte als Nummernfeld mit Vorschlägen~~ **erledigt v3.1** (Toggle-Buttons ersetzt durch number-Input + Datalist 1-4 mit showPicker bei Focus)
+
+* ~~Bidirektionales Leuchtmittel Smart-Lookup~~ **erledigt v3.1** (onLinearFieldChange(): Änderung von Typ/Länge/Wattage aktualisiert die jeweils anderen Felder bidirektional, auch Wattage→Typ+Länge)
+
+* ~~Vorschaltgerät vor Leuchtmittelkategorie + EVG-Logik~~ **erledigt v3.1** (Vorschaltgerät im Formular vor Kategorie verschoben, LEUCHTMITTEL_DB mit ballast-Flags, EVG filtert T12 raus, Dulux bevorzugt /E-Varianten bei EVG, Dulux L als beide möglich markiert)
+
+* ~~"bitte Typenschilder fotografieren" entfernen~~ **erledigt v3.1** (typenschild-hinweis aus HTML + CSS entfernt)
 
 ### v3.0
 

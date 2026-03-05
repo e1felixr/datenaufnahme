@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v3.0';
-const APP_BUILD_DATE = '05.03.2026 13:21'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.1';
+const APP_BUILD_DATE = '05.03.2026 14:26'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -27,23 +27,32 @@ const CONFIG = {
 };
 
 // ── Leuchtmittel-Datenbank ──
+// ballast: 'both' = KVG/VVG + EVG, 'evg' = nur EVG, 'vvg' = nur KVG/VVG
 const LEUCHTMITTEL_DB = {
   linear: {
-    'T5': [
-      { w: 8, mm: 288 }, { w: 14, mm: 549 }, { w: 21, mm: 849 }, { w: 24, mm: 549 },
-      { w: 28, mm: 1149 }, { w: 35, mm: 1449 }, { w: 39, mm: 849 },
-      { w: 49, mm: 1149 }, { w: 54, mm: 1149 }, { w: 80, mm: 1449 }
-    ],
-    'T5 Ring': [
-      { w: 22, mm: 216 }, { w: 40, mm: 300 }
-    ],
-    'T8': [
-      { w: 18, mm: 604 }, { w: 30, mm: 909 }, { w: 36, mm: 1213 },
-      { w: 38, mm: 1047 }, { w: 58, mm: 1514 }
-    ],
-    'T12': [
-      { w: 65, mm: 1514 }
-    ]
+    'T5': {
+      ballast: 'both',
+      entries: [
+        { w: 8, mm: 288 }, { w: 14, mm: 549 }, { w: 21, mm: 849 }, { w: 24, mm: 549 },
+        { w: 28, mm: 1149 }, { w: 35, mm: 1449 }, { w: 39, mm: 849 },
+        { w: 49, mm: 1149 }, { w: 54, mm: 1149 }, { w: 80, mm: 1449 }
+      ]
+    },
+    'T5 Ring': {
+      ballast: 'both',
+      entries: [{ w: 22, mm: 216 }, { w: 40, mm: 300 }]
+    },
+    'T8': {
+      ballast: 'both',
+      entries: [
+        { w: 18, mm: 604 }, { w: 30, mm: 909 }, { w: 36, mm: 1213 },
+        { w: 38, mm: 1047 }, { w: 58, mm: 1514 }
+      ]
+    },
+    'T12': {
+      ballast: 'vvg',
+      entries: [{ w: 65, mm: 1514 }]
+    }
   },
   spot: {
     'MR11': [20, 35],
@@ -59,7 +68,7 @@ const LEUCHTMITTEL_DB = {
     'Dulux T':   { wendel: 'T', evg: false, wattages: [13, 18, 26] },
     'Dulux T/E': { wendel: 'T', evg: true,  wattages: [13, 18, 26, 32, 42] },
     'Dulux F':   { wendel: null, evg: false, wattages: [18, 24, 36] },
-    'Dulux L':   { wendel: null, evg: false, wattages: [18, 24, 36, 40, 55] }
+    'Dulux L':   { wendel: null, evg: null, wattages: [18, 24, 36, 40, 55, 80] }  // 2G11: beide Vorschaltgeräte möglich
   },
   sq28: [21, 28, 38]
 };
@@ -86,6 +95,7 @@ function navigate(screen, pushState = true) {
     const hash = screen === 'screen-projekte' ? '' : screen;
     history.pushState({ screen }, '', hash ? '#' + hash : window.location.pathname);
   }
+  sessionStorage.setItem('currentScreen', screen);
   window.scrollTo(0, 0);
 }
 
@@ -350,9 +360,10 @@ async function renderHkList() {
       const fotoCount = bel.fotos ? bel.fotos.filter(Boolean).length : 0;
       const chipFotos = fotoCount > 0 ? `<span class="chip-fotos">${'📷'.repeat(fotoCount)}</span>` : '';
       const lmInfo = bel.leuchtmittelTyp || bel.leuchtmittelKategorie || '';
+      const artInfo = bel.leuchtenart || '';
       html += `
         <div class="room-bel-chip" onclick="openBelForm('${bel.id}')">
-          <span class="room-bel-nr">BEL ${esc(String(bel.gruppenNr || '-'))}</span>
+          <span class="room-bel-nr">${esc(artInfo || 'BEL')}</span>
           ${lmInfo ? `<span class="badge" style="background:#FFF9C4;color:#B8860B">${esc(lmInfo)}</span>` : ''}
           ${chipFotos}
           <button class="room-bel-del" onclick="event.stopPropagation();confirmDeleteBel('${bel.id}')" title="Löschen">&times;</button>
@@ -770,14 +781,15 @@ async function openBelForm(belId) {
       installationsart: last.installationsart,
       installationsartSub: last.installationsartSub,
       leuchtenart: last.leuchtenart,
-      leuchtmittelKategorie: last.leuchtmittelKategorie
+      leuchtmittelKategorie: last.leuchtmittelKategorie,
+      vorschaltgeraet: last.vorschaltgeraet
     } : null;
     bel = newBeleuchtung(currentProjektId, defaults);
 
     const all = await getBeleuchtungByProjekt(currentProjektId);
     const maxNr = all.reduce((max, b) => Math.max(max, Number(b.gruppenNr) || 0), 0);
     bel.gruppenNr = maxNr + 1;
-    document.getElementById('header-form-title').textContent = 'Neue Leuchtengruppe';
+    document.getElementById('header-form-title').textContent = 'Neue Leuchte';
     document.getElementById('btn-delete-bel').style.display = 'none';
 
     newBelBaseData = {
@@ -804,7 +816,7 @@ function fillBelForm(bel) {
   document.getElementById('f-raumdecke').value = bel.raumdecke || '';
   document.getElementById('f-anzahlReihen').value = bel.anzahlReihen || '';
   document.getElementById('f-leuchtenJeReihe').value = bel.leuchtenJeReihe || '';
-  setLmToggle(Number(bel.leuchtmittelJeLeuchte) || 0);
+  document.getElementById('f-leuchtmittelJeLeuchte').value = bel.leuchtmittelJeLeuchte || '';
   document.getElementById('f-installationsart').value = bel.installationsart || '';
   document.getElementById('f-installationsartSub').value = bel.installationsartSub || '';
   updateInstallationsartFields();
@@ -818,6 +830,7 @@ function fillBelForm(bel) {
   document.getElementById('f-zustand-beschaedigt').checked = zustand.includes('beschädigt');
   document.getElementById('f-zustand-verschmutzt').checked = zustand.includes('stark verschmutzt');
   document.getElementById('f-zustand-abgaengig').checked = zustand.includes('abgängig');
+  document.getElementById('f-zustand-erreichbar').checked = zustand.includes('schlecht erreichbar');
 
   document.getElementById('f-bel-bemerkung').value = bel.bemerkung || '';
 
@@ -863,11 +876,11 @@ function readBelFormIntoObj(bel) {
   bel.geschoss = document.getElementById('f-geschoss').value.trim();
   bel.raumnr = document.getElementById('f-raumnr').value.trim();
   bel.raumbezeichnung = document.getElementById('f-raumbezeichnung').value.trim();
-  bel.gruppenNr = document.getElementById('f-gruppenNr').value.trim();
+  bel.gruppenNr = document.getElementById('f-gruppenNr').value || bel.gruppenNr || '';
   bel.raumdecke = document.getElementById('f-raumdecke').value;
   bel.anzahlReihen = document.getElementById('f-anzahlReihen').value.trim();
   bel.leuchtenJeReihe = document.getElementById('f-leuchtenJeReihe').value.trim();
-  bel.leuchtmittelJeLeuchte = document.getElementById('f-leuchtmittelJeLeuchte').value;
+  bel.leuchtmittelJeLeuchte = document.getElementById('f-leuchtmittelJeLeuchte').value.trim();
   bel.installationsart = document.getElementById('f-installationsart').value;
   bel.installationsartSub = document.getElementById('f-installationsartSub').value;
   bel.leuchtenart = document.getElementById('f-leuchtenart').value;
@@ -914,6 +927,7 @@ function readBelFormIntoObj(bel) {
   if (document.getElementById('f-zustand-beschaedigt').checked) zustandParts.push('beschädigt');
   if (document.getElementById('f-zustand-verschmutzt').checked) zustandParts.push('stark verschmutzt');
   if (document.getElementById('f-zustand-abgaengig').checked) zustandParts.push('abgängig');
+  if (document.getElementById('f-zustand-erreichbar').checked) zustandParts.push('schlecht erreichbar');
   bel.zustand = zustandParts.join(', ');
 
   bel.bemerkung = document.getElementById('f-bel-bemerkung').value.trim();
@@ -928,7 +942,7 @@ async function saveBelForm() {
   await saveBeleuchtung(bel);
   await renderHkList();
   navigate('screen-hk-list');
-  showToast('Leuchtengruppe gespeichert');
+  showToast('Leuchte gespeichert');
 }
 
 async function saveBelAndNextGroup() {
@@ -946,16 +960,17 @@ async function saveBelAndNextGroup() {
     installationsart: bel.installationsart,
     installationsartSub: bel.installationsartSub,
     leuchtenart: bel.leuchtenart,
-    leuchtmittelKategorie: bel.leuchtmittelKategorie
+    leuchtmittelKategorie: bel.leuchtmittelKategorie,
+    vorschaltgeraet: bel.vorschaltgeraet
   });
   nextBel.gruppenNr = (Number(bel.gruppenNr) || 0) + 1;
 
   currentBelId = null;
-  document.getElementById('header-form-title').textContent = 'Neue Leuchtengruppe';
+  document.getElementById('header-form-title').textContent = 'Neue Leuchte';
   document.getElementById('btn-delete-bel').style.display = 'none';
   fillBelForm(nextBel);
   window.scrollTo(0, 0);
-  showToast(`BEL ${bel.gruppenNr} gespeichert → BEL ${nextBel.gruppenNr}`);
+  showToast('Leuchte gespeichert → nächste Leuchte im Raum');
 }
 
 async function saveBelAndNextRoom() {
@@ -971,47 +986,39 @@ async function saveBelAndNextRoom() {
     installationsart: bel.installationsart,
     installationsartSub: bel.installationsartSub,
     leuchtenart: bel.leuchtenart,
-    leuchtmittelKategorie: bel.leuchtmittelKategorie
+    leuchtmittelKategorie: bel.leuchtmittelKategorie,
+    vorschaltgeraet: bel.vorschaltgeraet
   });
   nextBel.raumnr = '';
   nextBel.raumbezeichnung = '';
   nextBel.gruppenNr = 1;
 
   currentBelId = null;
-  document.getElementById('header-form-title').textContent = 'Neue Leuchtengruppe';
+  document.getElementById('header-form-title').textContent = 'Neue Leuchte';
   document.getElementById('btn-delete-bel').style.display = 'none';
   fillBelForm(nextBel);
   window.scrollTo(0, 0);
   document.getElementById('f-raumnr').focus();
-  showToast(`BEL ${bel.gruppenNr} gespeichert → neuer Raum`);
+  showToast('Leuchte gespeichert → neuer Raum');
 }
 
 async function deleteCurrentBel() {
   if (!currentBelId) return;
-  if (confirm('Leuchtengruppe wirklich löschen?')) {
+  if (confirm('Leuchte wirklich löschen?')) {
     await deleteBeleuchtung(currentBelId);
     await renderHkList();
     navigate('screen-hk-list');
-    showToast('Leuchtengruppe gelöscht');
+    showToast('Leuchte gelöscht');
   }
 }
 
 async function confirmDeleteBel(id) {
   const bel = await getBeleuchtung(id);
-  if (confirm(`BEL ${bel.gruppenNr || '-'} (${bel.geschoss || ''} / R${bel.raumnr || ''}) wirklich löschen?`)) {
+  if (confirm(`Leuchte (${bel.geschoss || ''} / R${bel.raumnr || ''}) wirklich löschen?`)) {
     await deleteBeleuchtung(id);
     await renderHkList();
-    showToast('Leuchtengruppe gelöscht');
+    showToast('Leuchte gelöscht');
   }
-}
-
-// ── Leuchtmittel je Leuchte Toggle ──
-
-function setLmToggle(val) {
-  document.getElementById('f-leuchtmittelJeLeuchte').value = val || '';
-  document.querySelectorAll('.lm-toggle-btn').forEach(btn => {
-    btn.classList.toggle('active', Number(btn.dataset.val) === val);
-  });
 }
 
 // ── Installationsart Sub-Select ──
@@ -1025,8 +1032,141 @@ function updateInstallationsartFields() {
 
 // ── Leuchtmittel Smart-Lookup ──
 
+// Hilfsfunktion: alle Linear-Einträge über alle Typen sammeln
+function getAllLinearEntries() {
+  const results = [];
+  for (const [typ, data] of Object.entries(LEUCHTMITTEL_DB.linear)) {
+    for (const e of data.entries) {
+      results.push({ typ, w: e.w, mm: e.mm, ballast: data.ballast });
+    }
+  }
+  return results;
+}
+
+// Bidirektionaler Smart-Lookup für Linear (T5/T8/T12)
+function onLinearFieldChange(changedField) {
+  const typSel = document.getElementById('f-lm-linear-typ');
+  const laengeEl = document.getElementById('f-lm-linear-laenge');
+  const wattEl = document.getElementById('f-lm-linear-wattage');
+  const vsg = document.getElementById('f-vorschaltgeraet').value;
+
+  const curTyp = typSel.value;
+  const curLaenge = laengeEl.value ? Number(laengeEl.value) : null;
+  const curWatt = wattEl.value ? Number(wattEl.value) : null;
+
+  // Alle passenden Einträge sammeln (gefiltert nach Vorschaltgerät)
+  let all = getAllLinearEntries();
+  if (vsg === 'EVG') all = all.filter(e => e.ballast !== 'vvg');
+  else if (vsg === 'KVG/VVG') all = all.filter(e => e.ballast !== 'evg');
+
+  // Schrittweise filtern
+  let filtered = all;
+  if (curTyp) filtered = filtered.filter(e => e.typ === curTyp);
+  if (curLaenge) filtered = filtered.filter(e => e.mm === curLaenge);
+  if (curWatt) filtered = filtered.filter(e => e.w === curWatt);
+
+  // Wenn nur Wattage eingegeben: Typ + Länge ermitteln
+  if (changedField === 'wattage' && curWatt && !curTyp) {
+    const byWatt = all.filter(e => e.w === curWatt);
+    if (byWatt.length >= 1) {
+      // Alle möglichen Typen für diese Wattage
+      const typen = [...new Set(byWatt.map(e => e.typ))];
+      if (typen.length === 1) {
+        typSel.value = typen[0];
+        filtered = byWatt;
+      }
+    }
+  }
+
+  // Datalists aktualisieren
+  const activeTyp = typSel.value;
+  if (activeTyp && LEUCHTMITTEL_DB.linear[activeTyp]) {
+    let entries = LEUCHTMITTEL_DB.linear[activeTyp].entries;
+    // Filter nach Eingaben
+    let laengen, wattages;
+    if (curWatt && changedField !== 'laenge') {
+      const matching = entries.filter(e => e.w === curWatt);
+      laengen = matching.length > 0 ? matching.map(e => e.mm) : entries.map(e => e.mm);
+    } else {
+      laengen = entries.map(e => e.mm);
+    }
+    if (curLaenge && changedField !== 'wattage') {
+      const matching = entries.filter(e => e.mm === curLaenge);
+      wattages = matching.length > 0 ? matching.map(e => e.w) : entries.map(e => e.w);
+    } else {
+      wattages = entries.map(e => e.w);
+    }
+    document.getElementById('dl-lm-laenge').innerHTML = [...new Set(laengen)].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
+    document.getElementById('dl-lm-wattage').innerHTML = [...new Set(wattages)].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
+  }
+
+  // Auto-fill wenn eindeutig
+  if (filtered.length === 1) {
+    const match = filtered[0];
+    if (!curTyp) typSel.value = match.typ;
+    if (!curLaenge) laengeEl.value = match.mm;
+    if (!curWatt) wattEl.value = match.w;
+  } else if (changedField === 'laenge' && curLaenge && activeTyp) {
+    const matching = LEUCHTMITTEL_DB.linear[activeTyp].entries.filter(e => e.mm === curLaenge);
+    if (matching.length === 1) wattEl.value = matching[0].w;
+    else if (matching.length > 1) {
+      document.getElementById('dl-lm-wattage').innerHTML = matching.map(e => `<option value="${e.w}">`).join('');
+    }
+  } else if (changedField === 'wattage' && curWatt && activeTyp) {
+    const matching = LEUCHTMITTEL_DB.linear[activeTyp].entries.filter(e => e.w === curWatt);
+    if (matching.length === 1) laengeEl.value = matching[0].mm;
+    else if (matching.length > 1) {
+      document.getElementById('dl-lm-laenge').innerHTML = matching.map(e => `<option value="${e.mm}">`).join('');
+    }
+  }
+}
+
+// Dulux Typ-Ermittlung (eigene Funktion für bidirektionales Lookup)
+function updateDuluxTyp() {
+  const wattage = Number(document.getElementById('f-lm-dulux-wattage').value);
+  const wendel = document.getElementById('f-lm-dulux-wendel').value;
+  const vsg = document.getElementById('f-vorschaltgeraet').value;
+  let ermittelt = '';
+
+  if (wattage && wendel) {
+    // Bei EVG bevorzugt /E-Varianten
+    const candidates = [];
+    for (const [name, info] of Object.entries(LEUCHTMITTEL_DB.dulux)) {
+      if (info.wendel === wendel && info.wattages.includes(wattage)) {
+        candidates.push({ name, info });
+      }
+    }
+    if (candidates.length > 0) {
+      let best;
+      if (vsg === 'EVG') {
+        best = candidates.find(c => c.info.evg === true) || candidates[0];
+      } else if (vsg === 'KVG/VVG') {
+        best = candidates.find(c => c.info.evg === false) || candidates[0];
+      } else {
+        best = candidates[0];
+      }
+      ermittelt = `${best.name} ${wattage}W`;
+      // EVG auto-setzen wenn eindeutig
+      if (best.info.evg === true && !vsg) {
+        document.getElementById('f-vorschaltgeraet').value = 'EVG';
+      }
+    }
+    // Falls keine Wendel-Match, Dulux F/L prüfen
+    if (!ermittelt) {
+      for (const name of ['Dulux F', 'Dulux L']) {
+        if (LEUCHTMITTEL_DB.dulux[name].wattages.includes(wattage)) {
+          ermittelt = `${name} ${wattage}W (?)`;
+          break;
+        }
+      }
+    }
+  }
+  document.getElementById('f-lm-dulux-typ').value = ermittelt;
+}
+
 function updateLeuchtmittelFields() {
   const kat = document.getElementById('f-leuchtmittelKategorie').value;
+  const vsg = document.getElementById('f-vorschaltgeraet').value;
 
   // Alle Sub-Felder verstecken
   document.getElementById('lm-linear-fields').style.display = 'none';
@@ -1037,43 +1177,23 @@ function updateLeuchtmittelFields() {
 
   if (kat === 'linear') {
     document.getElementById('lm-linear-fields').style.display = 'block';
-    // Typ-Select befüllen
+    // Typ-Select befüllen (gefiltert nach Vorschaltgerät)
     const typSel = document.getElementById('f-lm-linear-typ');
     const curTyp = typSel.value;
     typSel.innerHTML = '<option value="">Bitte wählen</option>';
-    for (const t of Object.keys(LEUCHTMITTEL_DB.linear)) {
+    for (const [t, data] of Object.entries(LEUCHTMITTEL_DB.linear)) {
+      if (vsg === 'EVG' && data.ballast === 'vvg') continue;
+      if (vsg === 'KVG/VVG' && data.ballast === 'evg') continue;
       typSel.innerHTML += `<option value="${esc(t)}">${esc(t)}</option>`;
     }
     typSel.value = curTyp;
 
-    // Längen/Wattage Datalists basierend auf ausgewähltem Typ
+    // Datalists initial befüllen
     const selectedTyp = typSel.value;
     if (selectedTyp && LEUCHTMITTEL_DB.linear[selectedTyp]) {
-      const entries = LEUCHTMITTEL_DB.linear[selectedTyp];
-      const laengen = [...new Set(entries.map(e => e.mm))].sort((a,b) => a-b);
-      const wattages = [...new Set(entries.map(e => e.w))].sort((a,b) => a-b);
-      document.getElementById('dl-lm-laenge').innerHTML = laengen.map(v => `<option value="${v}">`).join('');
-      document.getElementById('dl-lm-wattage').innerHTML = wattages.map(v => `<option value="${v}">`).join('');
-
-      // Auto-fill: Länge → Wattage vorschlagen
-      const laengeVal = document.getElementById('f-lm-linear-laenge').value;
-      if (laengeVal) {
-        const matching = entries.filter(e => e.mm === Number(laengeVal));
-        if (matching.length > 0) {
-          document.getElementById('dl-lm-wattage').innerHTML = matching.map(e => `<option value="${e.w}">`).join('');
-          if (matching.length === 1 && !document.getElementById('f-lm-linear-wattage').value) {
-            document.getElementById('f-lm-linear-wattage').value = matching[0].w;
-          }
-        }
-      }
-      // Auto-fill: Wattage → Länge vorschlagen
-      const wattVal = document.getElementById('f-lm-linear-wattage').value;
-      if (wattVal) {
-        const matching = entries.filter(e => e.w === Number(wattVal));
-        if (matching.length === 1 && !document.getElementById('f-lm-linear-laenge').value) {
-          document.getElementById('f-lm-linear-laenge').value = matching[0].mm;
-        }
-      }
+      const entries = LEUCHTMITTEL_DB.linear[selectedTyp].entries;
+      document.getElementById('dl-lm-laenge').innerHTML = [...new Set(entries.map(e => e.mm))].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
+      document.getElementById('dl-lm-wattage').innerHTML = [...new Set(entries.map(e => e.w))].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
     } else {
       document.getElementById('dl-lm-laenge').innerHTML = '';
       document.getElementById('dl-lm-wattage').innerHTML = '';
@@ -1081,33 +1201,7 @@ function updateLeuchtmittelFields() {
 
   } else if (kat === 'dulux') {
     document.getElementById('lm-dulux-fields').style.display = 'block';
-    // Typ ermitteln aus Wendel + Wattage
-    const wattage = Number(document.getElementById('f-lm-dulux-wattage').value);
-    const wendel = document.getElementById('f-lm-dulux-wendel').value;
-    let ermittelt = '';
-    if (wattage && wendel) {
-      for (const [name, info] of Object.entries(LEUCHTMITTEL_DB.dulux)) {
-        if (info.wendel === wendel && info.wattages.includes(wattage)) {
-          ermittelt = `${name} ${wattage}W`;
-          // EVG-Hinweis
-          if (info.evg) {
-            const vsg = document.getElementById('f-vorschaltgeraet');
-            if (!vsg.value) vsg.value = 'EVG';
-          }
-          break;
-        }
-      }
-      // Falls keine exakte Wendel-Übereinstimmung, Dulux F/L prüfen
-      if (!ermittelt) {
-        for (const name of ['Dulux F', 'Dulux L']) {
-          if (LEUCHTMITTEL_DB.dulux[name].wattages.includes(wattage)) {
-            ermittelt = `${name} ${wattage}W (?)`;
-            break;
-          }
-        }
-      }
-    }
-    document.getElementById('f-lm-dulux-typ').value = ermittelt;
+    updateDuluxTyp();
 
   } else if (kat === 'spot') {
     document.getElementById('lm-spot-fields').style.display = 'block';
@@ -1119,7 +1213,6 @@ function updateLeuchtmittelFields() {
     }
     typSel.value = curTyp;
 
-    // Wattage-Options basierend auf Typ
     const wattSel = document.getElementById('f-lm-spot-wattage');
     const curWatt = wattSel.value;
     wattSel.innerHTML = '<option value="">Bitte wählen</option>';
@@ -1146,7 +1239,9 @@ function checkBelSonstigeHinweis() {
   const raumdecke = document.getElementById('f-raumdecke').value;
   const installationsart = document.getElementById('f-installationsart').value;
   const leuchtenart = document.getElementById('f-leuchtenart').value;
-  hinweis.style.display = (raumdecke === 'Sonstige' || installationsart === 'Sonstige' || leuchtenart === 'Sonstige') ? 'block' : 'none';
+  const erreichbar = document.getElementById('f-zustand-erreichbar');
+  const show = raumdecke === 'Sonstige' || installationsart === 'Sonstige' || leuchtenart === 'Sonstige' || (erreichbar && erreichbar.checked);
+  hinweis.style.display = show ? 'block' : 'none';
 }
 
 // ── Bel Fotos ──
@@ -1396,11 +1491,13 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
     const geschoss = new Set();
     const raum = new Set();
     const raumDetails = {};
+    const geschossRaum = {}; // Geschoss → [Raum-Nrn]
 
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
-      if (row[2] != null && String(row[2]).trim()) geschoss.add(String(row[2]).trim());
+      const ges = (row[2] != null && String(row[2]).trim()) ? String(row[2]).trim() : '';
+      if (ges) geschoss.add(ges);
       if (row[4] != null && String(row[4]).trim()) {
         const rNr = String(row[4]).trim();
         raum.add(rNr);
@@ -1409,6 +1506,10 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
           nutzung: row[6] != null ? String(row[6]).trim() : '',
           barcode: row[7] != null ? String(row[7]).trim() : ''
         };
+        if (ges) {
+          if (!geschossRaum[ges]) geschossRaum[ges] = [];
+          if (!geschossRaum[ges].includes(rNr)) geschossRaum[ges].push(rNr);
+        }
       }
     }
 
@@ -1416,7 +1517,8 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
       gebaeude: [...gebaeude],
       geschoss: [...geschoss],
       raum: [...raum],
-      raumDetails
+      raumDetails,
+      geschossRaum
     };
   }
 
@@ -1476,7 +1578,7 @@ function getActiveGebaeudeDaten() {
   }
   const keys = Object.keys(allGebaeudeDaten);
   if (keys.length > 0) return allGebaeudeDaten[keys[0]];
-  return { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
+  return { gebaeude: [], geschoss: [], raum: [], raumDetails: {}, geschossRaum: {} };
 }
 
 function renderDatalists() {
@@ -1916,10 +2018,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('f-typ').addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
   document.getElementById('f-artThermostatkopf').addEventListener('change', checkSonstigeHinweis);
 
-  // Beleuchtung Event-Listener
-  document.getElementById('f-raumdecke').addEventListener('change', checkBelSonstigeHinweis);
-  document.getElementById('f-leuchtenart').addEventListener('change', checkBelSonstigeHinweis);
-
   // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
   document.getElementById('f-raumnr').addEventListener('change', () => {
     const rNr = document.getElementById('f-raumnr').value.trim();
@@ -2015,8 +2113,14 @@ function filterDatalistsForGebaeude() {
 }
 
 function filterDatalistsForGeschoss() {
-  // Aktuell keine geschoss-spezifische Filterung
-  // Kann hier bei Bedarf erweitert werden
+  const data = getActiveGebaeudeDaten();
+  const ges = document.getElementById('f-geschoss').value.trim();
+  const dlRaum = document.getElementById('dl-raumnr');
+  if (ges && data.geschossRaum && data.geschossRaum[ges]) {
+    dlRaum.innerHTML = data.geschossRaum[ges].map(v => `<option value="${esc(v)}">`).join('');
+  } else {
+    dlRaum.innerHTML = data.raum.map(v => `<option value="${esc(v)}">`).join('');
+  }
 }
 
 // ── Service Worker Registrierung ──

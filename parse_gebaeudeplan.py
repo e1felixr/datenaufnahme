@@ -17,6 +17,8 @@ import re
 import sys
 import os
 import glob
+
+IS_IDLE = 'idlelib' in sys.modules
 import fitz  # PyMuPDF
 import easyocr
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
@@ -32,7 +34,7 @@ TILE_OVERLAP = 300
 ROOM_PATTERN = re.compile(r'^(\d{1,2}\.\d{2,3}[a-z]?)$')
 SPECIAL_ROOM_PATTERN = re.compile(r'^(TH\s*[A-Z]|A\s*\d+)$')
 BARCODE_PATTERN = re.compile(r'[Bb]arcode[:\s;]+(\S+)')
-AREA_PATTERN = re.compile(r'(\d{1,3}[\.,]\d{1,2})\s*m[2zZ²]?')
+AREA_PATTERN = re.compile(r'(\d{1,3}[\.,]\d{1,2})\s*(?:m|rn|ni|rii|ri|in)[2zZ²]?')
 
 # Bekannte Maße (Fenster/Türen), die NICHT als Raumnummern erkannt werden sollen
 KNOWN_DIMENSIONS = {'0.56', '0.68', '0.72', '0.81', '0.83', '0.88', '0.90', '0.91',
@@ -228,14 +230,16 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                 if value in used_barcodes:
                     warn = f"FEHLER: Barcode '{value}' doppelt! Raum {used_barcodes[value]} und {nr}"
                     live_warnings.append(warn)
-                    print(f"\n    *** {warn}", end='', flush=True)
+                    if IS_IDLE: print(f"    *** {warn}")
+                    else:       print(f"\n    *** {warn}", end='', flush=True)
                     return  # Nicht zuordnen
                 used_barcodes[value] = nr
             elif kind == 'flaeche':
                 if value in used_flaechen:
                     warn = f"Hinweis: Fläche {value} m² identisch mit Raum {used_flaechen[value]}"
                     live_warnings.append(warn)
-                    print(f"\n    ?   {warn}", end='', flush=True)
+                    if IS_IDLE: print(f"    ?   {warn}")
+                    else:       print(f"\n    ?   {warn}", end='', flush=True)
                 used_flaechen[value] = nr
             live_rooms[nr][kind] = value
             _live_print_room(nr)
@@ -249,7 +253,10 @@ def ocr_tiled(img_path, reader, room_prefix=None):
         line = '  '.join(parts)
         if live_printed.get(nr) != line:
             live_printed[nr] = line
-            print(f"\n    + {line}", end='', flush=True)
+            if IS_IDLE:
+                print(f"    + {line}")
+            else:
+                print(f"\n    + {line}", end='', flush=True)
 
     ty = 0
     tile_count = 0
@@ -269,7 +276,11 @@ def ocr_tiled(img_path, reader, room_prefix=None):
             else:
                 g_eta = "..."
             rooms_info = f" | Räume: {len(live_rooms)}" if live_rooms else ""
-            print(f"\r  Kachel {tile_count}/{local_total} | Gesamt: {gp['done']}/{gp['total']} ({g_pct}%) — Rest: {g_eta}{rooms_info}   ", end='', flush=True)
+            if IS_IDLE:
+                if tile_count % 5 == 0 or tile_count == local_total:
+                    print(f"  Kachel {tile_count}/{local_total} | Gesamt: {gp['done']}/{gp['total']} ({g_pct}%) — Rest: {g_eta}{rooms_info}")
+            else:
+                print(f"\r  Kachel {tile_count}/{local_total} | Gesamt: {gp['done']}/{gp['total']} ({g_pct}%) — Rest: {g_eta}{rooms_info}   ", end='', flush=True)
             x2 = min(tx + TILE_SIZE, W)
             y2 = min(ty + TILE_SIZE, H)
             crop = img.crop((tx, ty, x2, y2))
@@ -298,7 +309,8 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                                     if val in used_flaechen:
                                         warn = f"Hinweis: Fläche {val} m² identisch mit Raum {used_flaechen[val]}"
                                         live_warnings.append(warn)
-                                        print(f"\n    ?   {warn}", end='', flush=True)
+                                        if IS_IDLE: print(f"    ?   {warn}")
+                                        else:       print(f"\n    ?   {warn}", end='', flush=True)
                                     used_flaechen.setdefault(val, t)
                                     live_rooms[t]['flaeche'] = val
                             for n in live_nutzungen:
@@ -312,7 +324,8 @@ def ocr_tiled(img_path, reader, room_prefix=None):
                                     if bc in used_barcodes:
                                         warn = f"FEHLER: Barcode '{bc}' doppelt! Raum {used_barcodes[bc]} und {t}"
                                         live_warnings.append(warn)
-                                        print(f"\n    *** {warn}", end='', flush=True)
+                                        if IS_IDLE: print(f"    *** {warn}")
+                                        else:       print(f"\n    *** {warn}", end='', flush=True)
                                     else:
                                         used_barcodes[bc] = t
                                         live_rooms[t]['barcode'] = bc
@@ -399,6 +412,10 @@ def classify_texts(ocr_results, room_prefix=None):
     nutzungen = []
     hnf_markers = []
 
+    # Vorpass: m²-Marker sammeln (für getrennte OCR-Blöcke "35.50" + "m²")
+    M_MARKER_PATTERN = re.compile(r'^(?:m|rn|ni|rii|ri|in)[2zZ²]?$', re.IGNORECASE)
+    m_markers = [{'x': r['x'], 'y': r['y']} for r in ocr_results if M_MARKER_PATTERN.match(r['text'])]
+
     for r in ocr_results:
         text = r['text']
         x, y = r['x'], r['y']
@@ -439,14 +456,15 @@ def classify_texts(ocr_results, room_prefix=None):
                 areas.append({'area': val, 'x': x, 'y': y})
                 continue
 
-        # Reiner Zahlenwert neben HNF
-        plain_num = re.match(r'^(\d{2,3}\.\d{2})$', text)
+        # Reiner Zahlenwert neben HNF oder m²-Marker
+        plain_num = re.match(r'^(\d{2,3}[\.,]\d{2})$', text)
         if plain_num and conf > 0.6 and text not in KNOWN_DIMENSIONS:
-            val = plain_num.group(1)
+            val = plain_num.group(1).replace(',', '.')
             fval = float(val)
             if 3 < fval < 300:
                 near_hnf = any(distance(x, y, h['x'], h['y']) < 120 for h in hnf_markers)
-                if near_hnf:
+                near_m   = any(distance(x, y, h['x'], h['y']) < 200 for h in m_markers)
+                if near_hnf or near_m:
                     areas.append({'area': val, 'x': x, 'y': y})
                     continue
 
