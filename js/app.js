@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.7.3';
-const APP_BUILD_DATE = '05.03.2026 23:14'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.7.4';
+const APP_BUILD_DATE = '05.03.2026 23:19'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -961,7 +961,7 @@ function readBelFormIntoObj(bel) {
   if (document.getElementById('f-zustand-abgaengig').checked) zustandParts.push('abgängig');
   if (document.getElementById('f-zustand-erreichbar').checked) zustandParts.push('schlecht erreichbar');
   bel.zustand = zustandParts.join(', ');
-  bel.lph = document.getElementById('f-lph').value.trim();
+  bel.lph = document.getElementById('f-lph').value.trim().replace(',', '.');
 
   // Steuerung
   const steuerungParts = [];
