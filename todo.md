@@ -1,13 +1,15 @@
 Oberhalb der gepunkteten Linie dürften stets nur die offenen Aufgaben stehen!!
 Offene Punkte:
 
-* Die Hilfe-Fotos sollen mit den Fingern zoombar sein!
-
-* Funktionen export csv und export xlsx können entfallen
-
 
 
 ………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
+
+### v2.12
+
+* ~~Die Hilfe-Fotos sollen mit den Fingern zoombar sein!~~ **erledigt v2.12** (custom JS Pinch-to-Zoom via touchstart/touchmove auf .help-image-body; touch-action: pan-x pan-y für 1-Finger-Scrollen; Klick resettet Zoom oder togglet zoomed-Klasse)
+
+* ~~Funktionen export csv und export xlsx können entfallen~~ **erledigt v2.12** (Buttons "Export xlsx" und "Export CSV" aus index.html entfernt; exportXlsx() und exportCsv() aus export.js entfernt; exportData() aus app.js entfernt)
 
 IMMER:
 * Bei relevanten Änderungen Version hochzählen

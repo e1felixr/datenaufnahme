@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.11';
-const APP_BUILD_DATE = '05.03.2026 08:26'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v2.12';
+const APP_BUILD_DATE = '05.03.2026 08:40'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -997,26 +997,6 @@ async function buildExportZip(hks, safeName) {
   return new Blob([zipData], { type: 'application/zip' });
 }
 
-// ── Export ──
-
-async function exportData(format) {
-  const hks = await getHeizkoerperByProjekt(currentProjektId);
-  const projekt = await getProjekt(currentProjektId);
-
-  hks.sort((a, b) =>
-    (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
-    (a.geschoss || '').localeCompare(b.geschoss || '') ||
-    (a.raumnr || '').localeCompare(b.raumnr || '') ||
-    (Number(a.hkNr) || 0) - (Number(b.hkNr) || 0)
-  );
-
-  if (format === 'xlsx') {
-    await exportXlsx(hks, projekt.name);
-  } else {
-    exportCsv(hks, projekt.name);
-  }
-}
-
 // ── Dropdown füllen ──
 
 function populateDropdowns() {
@@ -1048,20 +1028,79 @@ function esc(str) {
 
 // ── Hilfe-Bild Modal ──
 
+let _helpPinchHandlers = null;
+
 function openHelpImage(src, title) {
   document.getElementById('help-image-title').textContent = title || 'Hilfe';
   const img = document.getElementById('help-image-img');
   img.src = src;
   img.alt = title || 'Hilfe';
   img.classList.remove('zoomed');
+  img.style.width = '';
+  img.style.maxWidth = '';
   document.getElementById('modal-help-image').style.display = 'flex';
-  // Doppelklick/Doppeltipp zum Zoomen
-  img.onclick = () => img.classList.toggle('zoomed');
+  // Tipp zum Umschalten zwischen Normal/Zoom
+  img.onclick = () => {
+    if (img.style.width) {
+      // nach Pinch-Zoom: zurücksetzen
+      img.style.width = '';
+      img.style.maxWidth = '';
+    } else {
+      img.classList.toggle('zoomed');
+    }
+  };
+  setupHelpImagePinchZoom(img);
+}
+
+function setupHelpImagePinchZoom(img) {
+  const body = img.parentElement;
+  // Alte Handler entfernen
+  if (_helpPinchHandlers) {
+    body.removeEventListener('touchstart', _helpPinchHandlers.start);
+    body.removeEventListener('touchmove', _helpPinchHandlers.move);
+    _helpPinchHandlers = null;
+  }
+
+  let startDist = 0;
+  let startWidth = 0;
+
+  function onStart(e) {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      startDist = Math.sqrt(dx * dx + dy * dy);
+      startWidth = img.offsetWidth;
+      e.preventDefault();
+    }
+  }
+
+  function onMove(e) {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const scale = dist / startDist;
+      const maxW = body.offsetWidth * 4;
+      const minW = body.offsetWidth * 0.8;
+      const newW = Math.max(minW, Math.min(maxW, startWidth * scale));
+      img.style.width = newW + 'px';
+      img.style.maxWidth = 'none';
+      img.classList.remove('zoomed');
+      e.preventDefault();
+    }
+  }
+
+  _helpPinchHandlers = { start: onStart, move: onMove };
+  body.addEventListener('touchstart', onStart, { passive: false });
+  body.addEventListener('touchmove', onMove, { passive: false });
 }
 
 function closeHelpImage() {
   document.getElementById('modal-help-image').style.display = 'none';
-  document.getElementById('help-image-img').classList.remove('zoomed');
+  const img = document.getElementById('help-image-img');
+  img.classList.remove('zoomed');
+  img.style.width = '';
+  img.style.maxWidth = '';
 }
 
 // ── Hilfe / README ──
