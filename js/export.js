@@ -57,7 +57,7 @@ const BEL_EXPORT_HEADERS = [
   'Raumdecke', 'Anzahl Reihen', 'Leuchten je Reihe', 'Leuchtmittel je Leuchte',
   'Installationsart', 'Installationsart Detail', 'Leuchtenart',
   'Leuchtmittel Kategorie', 'Leuchtmittel Typ', 'Leuchtmittel Länge [mm]', 'Leuchtmittel Wattage [W]',
-  'Fassung', 'Vorschaltgerät', 'Steuerung', 'Zustand',
+  'Fassung', 'Vorschaltgerät', 'Steuerung', 'LPH [m]', 'Zustand',
   'Bemerkung', 'Erfasser', 'Erfasst am',
   'Foto 1', 'Foto 2', 'Foto 3'
 ];
@@ -67,7 +67,7 @@ const BEL_EXPORT_FIELDS = [
   'raumdecke', 'anzahlReihen', 'leuchtenJeReihe', 'leuchtmittelJeLeuchte',
   'installationsart', 'installationsartSub', 'leuchtenart',
   'leuchtmittelKategorie', 'leuchtmittelTyp', 'leuchtmittelLaenge', 'leuchtmittelWattage',
-  'fassung', 'vorschaltgeraet', 'steuerung', 'zustand',
+  'fassung', 'vorschaltgeraet', 'steuerung', 'lph', 'zustand',
   'bemerkung', 'erfasser', 'erstelltAm'
 ];
 

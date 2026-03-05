@@ -743,32 +743,35 @@ body {
 
 /* ── Checkbox Row ── */
 .checkbox-row {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: .85rem;
   color: var(--text);
   cursor: pointer;
   padding: 4px 0;
+  vertical-align: middle;
 }
 
 .checkbox-row input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  min-height: 20px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
   flex-shrink: 0;
   border: 2px solid #999;
-  border-radius: 4px;
+  border-radius: 3px;
   background: #fff;
   position: relative;
   cursor: pointer;
   margin: 0;
+  vertical-align: middle;
 }
 .checkbox-row span {
-  line-height: 1.2;
+  line-height: 1;
+  vertical-align: middle;
 }
 .checkbox-row input[type="checkbox"]:checked {
   background: var(--module-color);
@@ -780,7 +783,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: bold;
   line-height: 1;
   color: #fff;

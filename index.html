@@ -287,9 +287,13 @@
       </select>
     </div>
     <label class="checkbox-row" style="margin:4px 0 8px">
-      <input type="checkbox" id="f-zustand-erreichbar" onchange="checkBelSonstigeHinweis()">
+      <input type="checkbox" id="f-zustand-erreichbar" onchange="checkBelSonstigeHinweis();toggleLph()">
       <span>schlecht erreichbar</span>
     </label>
+    <div class="form-group" id="group-lph" style="display:none">
+      <label>LPH [m] <button class="btn-help-inline" onclick="event.stopPropagation();alert('LPH = Lichtpunkthöhe\n\nHöhe der Leuchte über dem Boden in Metern.\nWichtig für die Planung von Wartung und Leuchtmitteltausch.')" title="Hilfe: LPH">?</button></label>
+      <input type="text" id="f-lph" inputmode="decimal" placeholder="z.B. 4.5">
+    </div>
     <div class="form-group">
       <label>Leuchtenart</label>
       <select id="f-leuchtenart" onchange="checkBelSonstigeHinweis()">
