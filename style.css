@@ -1006,7 +1006,7 @@ body {
 }
 
 .modul-toggle-btn.active-beides {
-  background: #FF8C00;
+  background: var(--primary);
   color: #fff;
   font-weight: 600;
 }
