@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v3.6.1';
-const APP_BUILD_DATE = '05.03.2026 22:41'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.6.2';
+const APP_BUILD_DATE = '05.03.2026 22:48'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2018,62 +2018,67 @@ function initSettingsSliders() {
 // ── Init ──
 
 document.addEventListener('DOMContentLoaded', async () => {
-  loadSettings();
-  initSettingsSliders();
-  document.getElementById('header-version').textContent = APP_VERSION;
-  document.getElementById('header-timestamp').textContent = 'letzte Änderung: ' + APP_BUILD_DATE;
+  try {
+    loadSettings();
+    initSettingsSliders();
+    document.getElementById('header-version').textContent = APP_VERSION;
+    document.getElementById('header-timestamp').textContent = 'letzte Änderung: ' + APP_BUILD_DATE;
 
-  await openDB();
-  populateDropdowns();
-  setupDatalistFilters();
-  await loadGebaeudedaten();
-  await renderProjekte();
+    await openDB();
+    populateDropdowns();
+    setupDatalistFilters();
+    await loadGebaeudedaten();
+    await renderProjekte();
 
-  // HK Event-Listener
-  document.getElementById('f-typ').addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
-  document.getElementById('f-artThermostatkopf').addEventListener('change', checkSonstigeHinweis);
+    // HK Event-Listener
+    document.getElementById('f-typ').addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
+    document.getElementById('f-artThermostatkopf').addEventListener('change', checkSonstigeHinweis);
 
-  // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
-  document.getElementById('f-raumnr').addEventListener('change', () => {
-    const rNr = document.getElementById('f-raumnr').value.trim();
-    const data = getActiveGebaeudeDaten();
-    const details = data.raumDetails && data.raumDetails[rNr];
-    if (details && details.nutzung) {
-      document.getElementById('f-raumbezeichnung').value = details.nutzung;
-    } else {
-      document.getElementById('f-raumbezeichnung').value = '';
+    // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
+    document.getElementById('f-raumnr').addEventListener('change', () => {
+      const rNr = document.getElementById('f-raumnr').value.trim();
+      const data = getActiveGebaeudeDaten();
+      const details = data.raumDetails && data.raumDetails[rNr];
+      if (details && details.nutzung) {
+        document.getElementById('f-raumbezeichnung').value = details.nutzung;
+      } else {
+        document.getElementById('f-raumbezeichnung').value = '';
+      }
+    });
+
+    // Gebäude-Filter: Geschoss-Datalist filtern
+    document.getElementById('f-gebaeude').addEventListener('change', () => {
+      filterDatalistsForGebaeude();
+    });
+
+    // Geschoss-Filter: Raum-Datalist filtern
+    document.getElementById('f-geschoss').addEventListener('change', () => {
+      filterDatalistsForGeschoss();
+    });
+
+    // Filter
+    document.getElementById('filter-text').addEventListener('input', renderHkList);
+
+    // Enter in Projekt-Name -> erstellen
+    document.getElementById('input-projekt-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') createNewProjekt();
+    });
+
+    // Landscape-Keyboard-Fix: Header ausblenden wenn Input fokussiert + Viewport zu klein
+    setupLandscapeKeyboardFix();
+
+    if (!settingsReady) {
+      openSettings();
+      return;
     }
-  });
 
-  // Gebäude-Filter: Geschoss-Datalist filtern
-  document.getElementById('f-gebaeude').addEventListener('change', () => {
-    filterDatalistsForGebaeude();
-  });
-
-  // Geschoss-Filter: Raum-Datalist filtern
-  document.getElementById('f-geschoss').addEventListener('change', () => {
-    filterDatalistsForGeschoss();
-  });
-
-  // Filter
-  document.getElementById('filter-text').addEventListener('input', renderHkList);
-
-  // Enter in Projekt-Name -> erstellen
-  document.getElementById('input-projekt-name').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') createNewProjekt();
-  });
-
-  // Landscape-Keyboard-Fix: Header ausblenden wenn Input fokussiert + Viewport zu klein
-  setupLandscapeKeyboardFix();
-
-  if (!settingsReady) {
-    openSettings();
-    return;
-  }
-
-  // Bei Reload immer auf Startseite (Hash entfernen)
-  if (location.hash) {
-    history.replaceState(null, '', window.location.pathname);
+    // Bei Reload immer auf Startseite
+    navigate('screen-projekte');
+  } catch (err) {
+    console.error('Init-Fehler:', err);
+    document.title = 'FEHLER: ' + err.message;
+    const t = document.getElementById('toast');
+    if (t) { t.textContent = 'Fehler: ' + err.message; t.classList.add('show'); }
   }
 });
 
