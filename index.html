@@ -40,7 +40,7 @@
     <button class="btn btn-accent btn-sm" onclick="showSendDialog()">Versenden</button>
     <button class="btn btn-outline btn-sm" onclick="document.getElementById('file-gebaeudedaten').click()">Gebäudedaten</button>
     <input type="file" id="file-gebaeudedaten" accept=".xlsx" style="display:none" onchange="importGebaeudedaten(this.files[0])">
-    <span id="hk-count" class="count-badge" style="align-self:center">0</span>
+    <span id="hk-count" class="count-badge" style="align-self:center;white-space:nowrap">0</span>
   </div>
   <div id="hk-list"></div>
   <button class="fab" onclick="openHkForm()" title="Neuer Heizkörper">+</button>

@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.12';
-const APP_BUILD_DATE = '05.03.2026 08:40'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 10:02'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -174,7 +174,8 @@ async function renderHkList() {
     (Number(a.hkNr) || 0) - (Number(b.hkNr) || 0)
   );
 
-  document.getElementById('hk-count').textContent = hks.length;
+  const raumCount = new Set(hks.map(hk => `${hk.gebaeude}|${hk.geschoss}|${hk.raumnr}`)).size;
+  document.getElementById('hk-count').textContent = `${raumCount} Räume, ${hks.length} HK erfasst`;
 
   if (hks.length === 0) {
     list.innerHTML = `
