@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v3.6';
-const APP_BUILD_DATE = '05.03.2026 22:19'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 22:22'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2064,9 +2064,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  const hash = location.hash.replace('#', '');
-  if (hash) {
-    navigate(hash, false);
+  // Bei Reload immer auf Startseite (Hash entfernen)
+  if (location.hash) {
+    history.replaceState(null, '', window.location.pathname);
   }
 });
 
