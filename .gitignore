@@ -1,3 +1,17 @@
 node_modules/
 *.mp4
 _temp_*.png
+plaene/
+*.docx
+Anleitung_HK-Aufnahme.txt
+HK-Aufnahme.xlsx
+lampentabelle.pdf
+leuchtmittel.txt
+parse_gebaeudeplan.py
+hilfe/einbausituation.png
+hilfe/hilfe_axialventil.jpg
+hilfe/hilfe_durchgang.jpg
+hilfe/hilfe_eckventil.jpg
+hilfe/hilfe_winkeleck.jpg
+hilfe/elektr_antrieb.jpg
+hilfe/fernversteller.jpg
