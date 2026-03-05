@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.7.2';
-const APP_BUILD_DATE = '05.03.2026 23:12'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.7.3';
+const APP_BUILD_DATE = '05.03.2026 23:14'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2220,18 +2220,19 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── Automatischer Versionscheck beim Start ──
-async function checkForUpdate() {
-  // Schutz vor Endlos-Reload: maximal 1x pro 60 Sekunden updaten
-  const lastUpdate = sessionStorage.getItem('lastForceUpdate');
-  if (lastUpdate && Date.now() - Number(lastUpdate) < 60000) return;
 
+// Cache-Buster-Parameter nach erfolgreichem Update entfernen
+if (location.search.includes('_update=')) {
+  history.replaceState(null, '', location.pathname + location.hash);
+}
+
+async function checkForUpdate() {
   try {
     const resp = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) return;
     const data = await resp.json();
     if (data.version && data.version !== APP_VERSION) {
       console.log(`Update verfügbar: ${APP_VERSION} → ${data.version}`);
-      sessionStorage.setItem('lastForceUpdate', String(Date.now()));
       await forceUpdate();
     }
   } catch {
@@ -2248,7 +2249,8 @@ async function forceUpdate() {
     const regs = await navigator.serviceWorker.getRegistrations();
     await Promise.all(regs.map(r => r.unregister()));
   }
-  window.location.reload();
+  // Cache-Buster: erzwingt frische Dateien auch bei CDN-Caching
+  window.location.href = location.pathname + '?_update=' + Date.now();
 }
 
 setTimeout(checkForUpdate, 2000);
