@@ -54,6 +54,37 @@ function base64ToBytes(dataUrl) {
   return bytes;
 }
 
+// ── Export-Komprimierung (erst beim Versenden/Exportieren) ──
+
+function compressForExport(dataUrl) {
+  return new Promise((resolve) => {
+    const MAX_BYTES = 800_000;
+    const img = new Image();
+    img.onerror = () => resolve(base64ToBytes(dataUrl)); // Fallback: unkomprimiert
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      const maxW = 1920;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      let quality = 0.85;
+      let result = canvas.toDataURL('image/jpeg', quality);
+      let bytes = Math.round((result.length - result.indexOf(',') - 1) * 3 / 4);
+
+      while (bytes > MAX_BYTES && quality > 0.3) {
+        quality -= 0.1;
+        result = canvas.toDataURL('image/jpeg', quality);
+        bytes = Math.round((result.length - result.indexOf(',') - 1) * 3 / 4);
+      }
+      resolve(base64ToBytes(result));
+    };
+    img.src = dataUrl;
+  });
+}
+
 // ── Minimaler ZIP-Builder (Store-Methode, kein Komprimieren nötig für JPEGs) ──
 
 function buildZip(files) {
@@ -155,7 +186,7 @@ function crc32(data) {
 
 // ── xlsx-Export (mit Foto-Dateinamen + ZIP) ──
 
-function exportXlsx(hks, projektName) {
+async function exportXlsx(hks, projektName) {
   if (typeof XLSX === 'undefined') {
     showToast('SheetJS Bibliothek nicht geladen');
     return;
@@ -174,7 +205,7 @@ function exportXlsx(hks, projektName) {
   const safeName = sanitizeFilename(projektName);
   const xlsxBytes = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 
-  // Fotos sammeln
+  // Fotos sammeln und für Export komprimieren
   const zipFiles = [];
   zipFiles.push({
     name: safeName + '_HK-Aufnahme.xlsx',
@@ -186,9 +217,10 @@ function exportXlsx(hks, projektName) {
     if (!hk.fotos) continue;
     for (let i = 0; i < hk.fotos.length; i++) {
       if (hk.fotos[i]) {
+        const compressed = await compressForExport(hk.fotos[i]);
         zipFiles.push({
           name: fotoFilename(hk, i),
-          data: base64ToBytes(hk.fotos[i])
+          data: compressed
         });
         fotoCount++;
       }

@@ -9,6 +9,8 @@ Nutzung:
   python parse_gebaeudeplan.py -o output.xlsx *.pdf   # Output-Datei angeben
   python parse_gebaeudeplan.py --cpu 80               # CPU auf 80% begrenzen (default: 90%)
   python parse_gebaeudeplan.py --append                # bestehende Sheets in xlsx beibehalten
+  python parse_gebaeudeplan.py --debug                 # Debug-Bilder mit Erkennungsmarkierungen erzeugen
+  python parse_gebaeudeplan.py --no-preprocess         # Bild-Vorverarbeitung überspringen
 """
 
 import re
@@ -17,13 +19,13 @@ import os
 import glob
 import fitz  # PyMuPDF
 import easyocr
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 import openpyxl
 
 OUTPUT_FILE = "gebaeudedaten.xlsx"
 DPI = 600
 TILE_SIZE = 1500
-TILE_OVERLAP = 200
+TILE_OVERLAP = 300
 
 # --- Pattern ---
 # Raumnummern: X.YY oder X.YYa — Ganzzahlteil wird pro PDF aus Metadaten gefiltert
@@ -90,6 +92,83 @@ def count_tiles_for_image(W, H):
     import math
     step = TILE_SIZE - TILE_OVERLAP
     return math.ceil(W / step) * math.ceil(H / step)
+
+
+def preprocess_image(img_path):
+    """Kontrast und Schärfe für bessere OCR-Erkennung verbessern."""
+    img = Image.open(img_path).convert('L')  # Graustufen
+    img = ImageEnhance.Contrast(img).enhance(1.5)
+    img = img.filter(ImageFilter.SHARPEN)
+    img.save(img_path)
+    print(f"  Vorverarbeitung: Graustufen + Kontrast + Schärfe angewendet")
+
+
+def save_debug_image(img_path, live_rooms, all_results, output_path):
+    """Erzeugt ein annotiertes Debug-Bild mit farbigen Markierungen für erkannte Elemente."""
+    img = Image.open(img_path).convert('RGB')
+    draw = ImageDraw.Draw(img)
+
+    # Alle OCR-Texte als graue Punkte
+    for r in all_results:
+        x, y = int(r['x']), int(r['y'])
+        draw.ellipse([x - 4, y - 4, x + 4, y + 4], fill='gray')
+
+    # Klassifizierte Elemente farbig markieren
+    for r in all_results:
+        x, y, text, conf = int(r['x']), int(r['y']), r['text'], r['conf']
+        color = None
+        if ROOM_PATTERN.match(text) and text not in KNOWN_DIMENSIONS:
+            color = 'green'
+        elif BARCODE_PATTERN.search(text):
+            color = 'red'
+        elif AREA_PATTERN.match(text):
+            color = 'blue'
+        elif match_nutzung(text):
+            color = 'orange'
+        elif text in ('HNF', 'HNF:', 'HNF(1,5m)'):
+            color = 'purple'
+
+        if color:
+            draw.rectangle([x - 3, y - 3, x + 80, y + 15], outline=color, width=2)
+            draw.text((x, y - 18), f"{text} ({conf:.0%})", fill=color)
+
+    # Räume mit Zuordnungslinien
+    for nr, r in live_rooms.items():
+        rx, ry = int(r['x']), int(r['y'])
+        draw.rectangle([rx - 5, ry - 5, rx + 100, ry + 20], outline='green', width=3)
+        label = f"R{nr}"
+        if r['flaeche']:
+            label += f" | {r['flaeche']}m²"
+        if r['nutzung']:
+            label += f" | {r['nutzung']}"
+        if r['barcode']:
+            label += f" | BC:{r['barcode']}"
+        draw.text((rx, ry - 35), label, fill='green')
+
+    img.save(output_path)
+    print(f"  Debug-Bild gespeichert: {output_path}")
+
+
+def print_quality_report(room_data):
+    """Zeigt Erkennungsraten pro Plan als Qualitätsindikator."""
+    total = len(room_data)
+    if total == 0:
+        print("  *** WARNUNG: Keine Räume erkannt!")
+        return
+    with_area = sum(1 for r in room_data.values() if r.get('flaeche') or r.get('flaeche', '') != '')
+    with_usage = sum(1 for r in room_data.values() if r.get('nutzung') or r.get('nutzung', '') != '')
+    with_barcode = sum(1 for r in room_data.values() if r.get('barcode') or r.get('barcode', '') != '')
+    # Korrektur: leere Strings nicht zählen
+    with_area = sum(1 for r in room_data.values() if r.get('flaeche', ''))
+    with_usage = sum(1 for r in room_data.values() if r.get('nutzung', ''))
+    with_barcode = sum(1 for r in room_data.values() if r.get('barcode', ''))
+    print(f"\n  Erkennungsrate: Fläche {with_area}/{total} ({100*with_area//total}%), "
+          f"Nutzung {with_usage}/{total} ({100*with_usage//total}%), "
+          f"Barcode {with_barcode}/{total} ({100*with_barcode//total}%)")
+    if total > 3 and with_area / total < 0.5:
+        print(f"  *** NIEDRIGE FLÄCHENERKENNUNG — Plan prüfen oder mit --debug analysieren")
+    if total > 3 and with_usage / total < 0.3:
+        print(f"  *** NIEDRIGE NUTZUNGSERKENNUNG — Plan prüfen oder mit --debug analysieren")
 
 
 # Globaler Fortschritt über alle PDFs
@@ -198,8 +277,9 @@ def ocr_tiled(img_path, reader, room_prefix=None):
             crop.save(crop_path)
             results = reader.readtext(crop_path, paragraph=False)
             for bbox, text, conf in results:
-                gx = bbox[0][0] + tx
-                gy = bbox[0][1] + ty
+                # Mitte der Bounding-Box statt oben-links (robuster bei gedrehtem Text)
+                gx = (bbox[0][0] + bbox[2][0]) / 2 + tx
+                gy = (bbox[0][1] + bbox[2][1]) / 2 + ty
                 t = text.strip()
                 all_results.append({'x': gx, 'y': gy, 'text': t, 'conf': conf})
 
@@ -298,7 +378,7 @@ def ocr_tiled(img_path, reader, room_prefix=None):
     for r in all_results:
         dup = False
         for i, u in enumerate(unique):
-            if abs(r['x'] - u['x']) < 40 and abs(r['y'] - u['y']) < 40:
+            if abs(r['x'] - u['x']) < 60 and abs(r['y'] - u['y']) < 60:
                 if r['text'] == u['text']:
                     if r['conf'] > u['conf']:
                         unique[i] = r
@@ -308,7 +388,7 @@ def ocr_tiled(img_path, reader, room_prefix=None):
             unique.append(r)
 
     print(f"  Nach Deduplizierung: {len(unique)} eindeutige Textblöcke")
-    return unique
+    return unique, live_rooms
 
 
 def classify_texts(ocr_results, room_prefix=None):
@@ -509,7 +589,56 @@ def etage_to_room_prefix(etage):
     return None
 
 
-def process_single_pdf(pdf_file, reader):
+def _retry_assignment_relaxed(rooms, barcodes, areas, nutzungen, hnf_markers, room_data):
+    """Zweiter Durchlauf mit 1.5x größeren Distanzen für schlecht erkannte Pläne."""
+    MAX_DIST_BARCODE = int(350 * 1.5)
+    MAX_DIST_AREA = int(350 * 1.5)
+    MAX_DIST_NUTZUNG = int(300 * 1.5)
+
+    room_list = list(room_data.values())
+
+    def find_nearest_room(x, y, max_dist, max_dy=None):
+        best, best_dist = None, max_dist
+        for r in room_list:
+            dy = y - r['y']
+            if dy < 0:
+                continue
+            if max_dy and dy > max_dy:
+                continue
+            d = weighted_distance(x, y, r['x'], r['y'])
+            if d < best_dist:
+                best_dist = d
+                best = r
+        return best
+
+    assigned = 0
+    for area in areas:
+        has_hnf = any(distance(area['x'], area['y'], h['x'], h['y']) < 200 for h in hnf_markers)
+        if not has_hnf:
+            continue
+        room = find_nearest_room(area['x'], area['y'], MAX_DIST_AREA, max_dy=375)
+        if room and not room['flaeche']:
+            room['flaeche'] = area['area']
+            assigned += 1
+
+    for nutz in nutzungen:
+        room = find_nearest_room(nutz['x'], nutz['y'], MAX_DIST_NUTZUNG, max_dy=525)
+        if room and not room['nutzung']:
+            room['nutzung'] = nutz['nutzung']
+            assigned += 1
+
+    for bc in barcodes:
+        room = find_nearest_room(bc['x'], bc['y'], MAX_DIST_BARCODE, max_dy=675)
+        if room and not room['barcode']:
+            room['barcode'] = bc['code']
+            assigned += 1
+
+    if assigned > 0:
+        print(f"  Adaptive Zuordnung (1.5x): {assigned} weitere Zuordnungen")
+    return room_data
+
+
+def process_single_pdf(pdf_file, reader, debug=False, do_preprocess=True):
     """Verarbeitet eine einzelne PDF und gibt (gebaeude, etage, rooms) zurück."""
     print(f"\n{'='*60}")
     print(f"Verarbeite: {pdf_file}")
@@ -531,15 +660,26 @@ def process_single_pdf(pdf_file, reader):
     img_path = "_temp_plan_ocr.png"
     pix.save(img_path)
 
+    # Vorverarbeitung (Kontrast, Schärfe)
+    if do_preprocess:
+        preprocess_image(img_path)
+
     # OCR
     print(f"  Starte Kachel-OCR...")
-    ocr_results = ocr_tiled(img_path, reader, room_prefix=room_prefix)
+    ocr_results, live_rooms = ocr_tiled(img_path, reader, room_prefix=room_prefix)
 
     # Klassifizieren (mit Etagen-Prefix-Filter)
     rooms, barcodes, areas, nutzungen, hnf_markers = classify_texts(ocr_results, room_prefix=room_prefix)
 
     # Zuordnen
     room_data = assign_to_rooms(rooms, barcodes, areas, nutzungen, hnf_markers)
+
+    # Adaptive Zuordnung bei schlechter Erkennung
+    total = len(room_data)
+    if total > 3:
+        with_area = sum(1 for r in room_data.values() if r['flaeche'])
+        if with_area / total < 0.5:
+            room_data = _retry_assignment_relaxed(rooms, barcodes, areas, nutzungen, hnf_markers, room_data)
 
     # Ergebnis anzeigen
     sorted_rooms = sorted(room_data.values(), key=sort_key)
@@ -553,6 +693,15 @@ def process_single_pdf(pdf_file, reader):
     with_nutzung = sum(1 for r in sorted_rooms if r['nutzung'])
     print(f"\n  Statistik: {len(sorted_rooms)} Räume, "
           f"{with_barcode} Barcodes, {with_area} Flächen, {with_nutzung} Nutzungen")
+
+    # Qualitätsreport
+    print_quality_report(room_data)
+
+    # Debug-Bild erzeugen
+    if debug:
+        basename = os.path.splitext(os.path.basename(pdf_file))[0]
+        debug_path = f"_debug_{basename}.png"
+        save_debug_image(img_path, live_rooms, ocr_results, debug_path)
 
     return gebaeude, etage, room_data
 
@@ -691,6 +840,8 @@ def main():
     pdf_files = []
     max_cpu = 90
     append = False
+    debug = False
+    do_preprocess = True
 
     i = 0
     while i < len(args):
@@ -702,6 +853,12 @@ def main():
             i += 2
         elif args[i] == '--append':
             append = True
+            i += 1
+        elif args[i] == '--debug':
+            debug = True
+            i += 1
+        elif args[i] == '--no-preprocess':
+            do_preprocess = False
             i += 1
         else:
             pdf_files.append(args[i])
@@ -760,7 +917,7 @@ def main():
         if len(pdf_files) > 1:
             print(f"\n  >>> PDF {pi+1}/{len(pdf_files)} <<<")
 
-        gebaeude, etage, rooms = process_single_pdf(pdf_file, reader)
+        gebaeude, etage, rooms = process_single_pdf(pdf_file, reader, debug=debug, do_preprocess=do_preprocess)
 
         t_pdf_elapsed = time.time() - t_pdf_start
         print(f"  Dauer für diesen Plan: {_format_duration(t_pdf_elapsed)}")
@@ -785,10 +942,14 @@ def main():
     # Schreiben
     write_xlsx(all_pdf_data, output, append=append)
 
-    # Aufräumen
-    for f in ['_temp_plan_ocr.png', '_temp_tile.png']:
-        if os.path.exists(f):
-            os.remove(f)
+    # Aufräumen (Debug-Bilder behalten)
+    if not debug:
+        for f in ['_temp_plan_ocr.png', '_temp_tile.png']:
+            if os.path.exists(f):
+                os.remove(f)
+    else:
+        if os.path.exists('_temp_tile.png'):
+            os.remove('_temp_tile.png')
 
 
 if __name__ == '__main__':
