@@ -1,18 +1,54 @@
-Offene Punkte
+Oberhalb der gepunkteten Linie dürften stets nur die offenen Aufgaben stehen!!
+Offene Punkte:
 
-* Einige Räume haben scheinbar QR-Codes an den Türen. Mach es möglich, dass diese mit der Kamera abfotografiert werden können und versuche dann, den ausgelesenen Code mit der Raumlsite aus Gebäudedaten verschränkt zu bekommen. Das würde bedeuten: Wenn der Barcode erkannt wird, werden die Raumnummer und -bezeichnung sofort in die Eingabemaske übernommen.
+* Es gibt Pläne, die sehr gut erkannt werden (z.B. der erste) und andere, die sehr schlecht erkannt
+  werden. woran liegt das?
 
-* ~~Wir müssen noch etwas Hilfestellung bieten. Es gibt ja eine Vielzahl an verschiendenen Heizkörpertypen oder Ventiltypen. Dazu möchte ich an relevanten Stellen kleine "Hilfe"- oder "Info"- oder "?"-Buttons haben, bei deren Klick sich Bilddateien öffnen. Diese habe ich im Ordner /hilfe abgelegt: ventiltypen.png und hk-typen.png und hilfe_kompakt.jpg~~ **erledigt v2.3** (btn-help-inline "?"-Buttons an Section-Titles Heizkörper/Ventil/Einbau, openHelpImage()-Modal in app.js, Bilder im SW-Cache)
+* Wenn ich ein Foto hinzufüge, wird zunächst eine Downloadabfrage eingeblendet. beim Zweiten Bild nervt im oberen Bereich die Downloadanzeige. Beides stört. kann das nicht im Hintergrund laufen? Können nicht die Fotos wie normale Handy-Fotos abgelegt werden, mit den aufgenommenen räumen referenziert werden und erst beim versenden komprimiert und gezippt werden?
 
-* ~~Eine Strangzuordnung muss möglich sein (Eingabefeld: "Strang:"). Freie Eingabe ermöglichen.~~ **erledigt v2.3** (f-strang Freitext-Feld in Einbau/Sonstiges, in db.js/app.js/export.js, wird als Standard übernommen)
 
--------------------------------------------------------------------------------------------
+
+………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
 
 IMMER:
 * Bei relevanten Änderungen Version hochzählen
 * Immer Zeitstempel "letzte Änderung" aktualisieren, damit ist das letzte änderungsdatum egal welcher datei gemeint.
 * Aktuellen Code immer in Github-Repo hochladen.
 * Alle erledigten Punkte als "erledigt" markieren, Version in der sie umgesetzt wurden, ergänzen und dann von oben in den folgenden Abschnitt verschieben, aber nicht löschen! Oberhalb der gestrichelten Linie dürften stets nur die offenen Aufgaben stehen.
+
+* ~~Nicht "Heizkörper" soll den Info-Button haben, sondern "Heizkörper-Typ" (statt "Typ")~~ **erledigt v2.10** (Label "Typ" → "Heizkörper-Typ" mit ?-Button, Section-Title ohne Button)
+
+* ~~Bei Dropdown: defaultwert: "Bitte wählen"~~ **erledigt v2.10** (fillSelect() gibt einheitlich "Bitte wählen" aus)
+
+* ~~Bei Einbausituation: Gleiche Checkboxen wie z.B. Hahnblock. Es können auch mehrere Einbausituationen zutreffen.~~ **erledigt v2.10** (Einbau-Checkboxen in gleicher checkbox-grid wie Hahnblock, gleicher Stil)
+
+* ~~DN Ventil: Nicht Dropdown, sondern freies Eingabefeld mit den Vorschlägen, die bisher in der Liste standen. Es müssen aber auch freie Einträge möglich sein.~~ **erledigt v2.10** (select → input+datalist mit DN10/15/20/25 als Vorschläge)
+
+* ~~Ich will die Hauptkamera nutzen, NIE die Selfie-Cam. Wenn ich das Foto beim Tablet speichern möchte, kommt eine Meldung dass angeblich zu wenig Speicherplatz zur Verfügung steht. Danach sind die Foto-Buttons weg.~~ **erledigt v2.10** (getUserMedia mit facingMode: environment, Fallback auf input capture; Fehlerbehandlung in compressImage mit img.onerror/reader.onerror + showToast + renderPhotoSlots)
+
+* ~~Heizkörper als Standard definiert: Maße sollen nicht übernommen werden, nur Typ, ggf. Subtyp und Einbausituation. Die Maße werden sich ja in jedem Raum ändern. Außerdem sollen default nur 2 Plätze für Fotos angezeigt werden und als drittes das "+"-Symbol. Außerdem ist immer noch die Selfie-Cam aktiv, es muss immer die Hauptkamera angewählt werden!~~ **erledigt v2.9** (Maße nicht übernommen, 2 Foto-Slots default, Hauptkamera via facingMode: environment)
+
+* ~~Wenn ich ein Foto hinzufüge, wird zunächst eine Downloadabfrage eingeblendet. Beides stört.~~ **teilweise erledigt v2.9** (Auto-Download deaktiviert, Foto-Speicherung noch offen)
+
+* ~~Mach die Einbausituation nicht mehr mit Dropdown, sondern mit Checkboxen, weil auch Kombinationen vorkommen können. Es soll dann "besondere Einbausituation?" heißen und die Optionen "hinter Verkleidung", "unter Brüstung/Fensterbank", "hinter Möbeln", "Sonstige -> Foto!" geben. Außerdem Hilfesymbol und einbausituation.jpg einbinden.~~ **erledigt v2.9** (Checkboxen statt Dropdown, Hilfe-Bild eingebunden)
+
+* ~~Bei Thermostatköpfen die Optionen "Fernversteller" und "fehlt" und "Sonstiges -> Foto!" anbieten und thermostatkoepfe.jpg hinter ?-Symbol einbinden.~~ **erledigt v2.9** (Optionen + Hilfe-Bild im ?-Modal)
+
+* ~~Unterscheidung "Winkeleck li/re" kann entfallen. "Winkeleck" reicht.~~ **erledigt v2.9** (Winkeleck ohne li./re.)
+
+* ~~Bei "Neuer Heizkörper" reicht die Nennung ganz oben in der blauen Zeile. Im Eingabebereich muss das dann nicht nochmal stehen.~~ **erledigt v2.9** (Titel nur noch in Header-Leiste)
+
+* ~~Wenn erst eine hinterlegte Raumnummer eingegeben wird und dann eine andere, nicht hinterlegte, dann muss die Raumbezeichnung auch wieder entfernt werden aus dem Nachbarfeld.~~ **erledigt v2.9** (Bezeichnung wird immer überschrieben/geleert)
+
+* ~~Verschiebe Hahnblock, Entlüftung, RL-Verschraubung, voreinstellbar, Entleerung nach Einbau/Sonstiges~~ **erledigt v2.9** (nach Einbau/Sonstiges verschoben, mit Hilfe-Bildern)
+
+* ~~Mache alle Hilfe-Symbole einen Deut kleiner~~ **erledigt v2.9** (Hilfe-Buttons verkleinert)
+
+* ~~Es gibt Pläne, die sehr gut erkannt werden und andere, die sehr schlecht erkannt werden. Nach Durchlauf des Parsens soll Shell außerdem geöffnet bleiben.~~ **teilweise erledigt v2.9** (Shell bleibt offen via input() am Ende; OCR-Qualitätsunterschiede noch offen)
+
+* ~~Wir müssen noch etwas Hilfestellung bieten. Es gibt ja eine Vielzahl an verschiendenen Heizkörpertypen oder Ventiltypen. Dazu möchte ich an relevanten Stellen kleine "Hilfe"- oder "Info"- oder "?"-Buttons haben, bei deren Klick sich Bilddateien öffnen. Diese habe ich im Ordner /hilfe abgelegt: ventiltypen.png und hk-typen.png und hilfe_kompakt.jpg~~ **erledigt v2.3** (btn-help-inline "?"-Buttons an Section-Titles Heizkörper/Ventil/Einbau, openHelpImage()-Modal in app.js, Bilder im SW-Cache)
+
+* ~~Eine Strangzuordnung muss möglich sein (Eingabefeld: "Strang:"). Freie Eingabe ermöglichen.~~ **erledigt v2.3** (f-strang Freitext-Feld in Einbau/Sonstiges, in db.js/app.js/export.js, wird als Standard übernommen)
 
 * ~~Wenn ein Raum gespeichert ist und man auf der Übersichtsseite dann "+" drückt, wird die Vorlage für einen zusätzlichen Raum angezeigt. FÜge oben einen Schalter ein: "neuer HK im Raum" <> "neuer Raum". Die vorausfüllung der Felder ändert sich entsprechend.~~ **erledigt v2.2** (setNewHkMode() in app.js, Mode-Toggle in index.html/style.css)
 

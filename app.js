@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.9';
-const APP_BUILD_DATE = '04.03.2026 16:48'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.10';
+const APP_BUILD_DATE = '05.03.2026 08:09'; // wird automatisch vom pre-commit Hook aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -671,10 +671,59 @@ function checkSonstigeHinweis() {
   hinweis.style.display = (typ === 'Sonstige' || einbauIsSonstige || thermo === 'Sonstiges') ? 'block' : 'none';
 }
 
-function triggerPhoto(index) {
+let _cameraStream = null;
+let _cameraIndex = 0;
+
+async function triggerPhoto(index) {
+  _cameraIndex = index;
+  // Versuche getUserMedia für explizite Rückkamera
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } }
+      });
+      openCameraModal(stream);
+      return;
+    } catch (e) {
+      // Fallback auf <input capture>
+    }
+  }
   const input = document.getElementById('photo-input');
   input.dataset.index = index;
   input.click();
+}
+
+function openCameraModal(stream) {
+  _cameraStream = stream;
+  const modal = document.getElementById('camera-modal');
+  const video = document.getElementById('camera-preview');
+  video.srcObject = stream;
+  modal.style.display = 'flex';
+}
+
+function closeCameraModal() {
+  if (_cameraStream) {
+    _cameraStream.getTracks().forEach(t => t.stop());
+    _cameraStream = null;
+  }
+  const modal = document.getElementById('camera-modal');
+  modal.style.display = 'none';
+  const video = document.getElementById('camera-preview');
+  video.srcObject = null;
+}
+
+function captureFromStream() {
+  const video = document.getElementById('camera-preview');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  closeCameraModal();
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  compressImage(null, (compressed) => {
+    formPhotos[_cameraIndex] = compressed;
+    renderPhotoSlots();
+  }, dataUrl);
 }
 
 function handlePhotoInput(input) {
@@ -693,6 +742,10 @@ function compressImage(file, callback, directDataUrl) {
 
   function processImage(src) {
     const img = new Image();
+    img.onerror = () => {
+      showToast('Foto konnte nicht geladen werden');
+      renderPhotoSlots();
+    };
     img.onload = () => {
       const canvas = document.createElement('canvas');
       let w = img.width, h = img.height;
@@ -721,6 +774,10 @@ function compressImage(file, callback, directDataUrl) {
     processImage(directDataUrl);
   } else {
     const reader = new FileReader();
+    reader.onerror = () => {
+      showToast('Fehler beim Laden des Fotos');
+      renderPhotoSlots();
+    };
     reader.onload = (e) => processImage(e.target.result);
     reader.readAsDataURL(file);
   }
@@ -959,7 +1016,7 @@ async function exportData(format) {
 function populateDropdowns() {
   fillSelect('f-typ', CONFIG.typ, 'Typ');
   fillSelect('f-anzahlRoehren', CONFIG.anzahlRoehren.map(String), 'Anz. Röhren');
-  fillSelect('f-dnVentil', CONFIG.dnVentil, 'DN Ventil');
+  fillDatalist('dl-dnVentil', CONFIG.dnVentil);
   fillSelect('f-ventilform', CONFIG.ventilform, 'Ventilform');
   fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf, 'Thermostatkopf');
   // Datalists werden in updateTypFields befüllt
@@ -969,8 +1026,7 @@ function populateDropdowns() {
 
 function fillSelect(id, options, label) {
   const sel = document.getElementById(id);
-  const placeholder = label ? `-- ${label} --` : '-- Auswahl --';
-  sel.innerHTML = `<option value="">${placeholder}</option>`;
+  sel.innerHTML = `<option value="">Bitte wählen</option>`;
   for (const opt of options) {
     sel.innerHTML += `<option value="${esc(opt)}">${esc(opt)}</option>`;
   }
