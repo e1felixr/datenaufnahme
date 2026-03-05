@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.12';
-const APP_BUILD_DATE = '05.03.2026 10:07'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 10:09'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -213,10 +213,12 @@ async function renderHkList() {
       <div class="room-hks">`;
     for (const hk of room.hks) {
       const chipTyp = typen.length > 1 && hk.typ ? `<span class="badge">${esc(hk.typ)}</span>` : '';
+      const fotoCount = hk.fotos ? hk.fotos.filter(Boolean).length : 0;
+      const chipFotos = fotoCount > 0 ? `<span class="chip-fotos">${'📷'.repeat(fotoCount)}</span>` : '';
       html += `
         <div class="room-hk-chip" onclick="openHkForm('${hk.id}')">
           <span class="room-hk-nr">HK ${esc(String(hk.hkNr || '-'))}</span>
-          ${chipTyp}
+          ${chipTyp}${chipFotos}
           <button class="room-hk-del" onclick="event.stopPropagation();confirmDeleteHk('${hk.id}')" title="Löschen">&times;</button>
         </div>`;
     }
