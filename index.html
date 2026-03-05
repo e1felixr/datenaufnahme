@@ -59,7 +59,7 @@
   </div>
 
   <!-- Ort -->
-  <div class="section-title">Standort</div>
+  <div class="section-title">Raum</div>
   <div class="form-row">
     <div class="form-group">
       <label>Gebäude</label>
@@ -246,8 +246,8 @@
     <div class="section-title section-title-bel" id="section-title-bel">Beleuchtung</div>
     <input type="hidden" id="f-gruppenNr" value="">
 
-    <!-- Rauminfo -->
-    <div class="section-title section-title-bel">Rauminfo <button class="btn-help-inline" onclick="openHelpImage('hilfe/raumdecken.jpg','Deckentypen')" title="Hilfe: Deckentypen">?</button></div>
+    <!-- Installation -->
+    <div class="section-title section-title-bel">Installation <button class="btn-help-inline" onclick="openHelpImage('hilfe/raumdecken.jpg','Deckentypen')" title="Hilfe: Deckentypen">?</button></div>
     <div class="form-row">
       <div class="form-group">
         <label>Raumdecke</label>
@@ -292,12 +292,13 @@
         <option value="Spot">Spot</option>
         <option value="Strahler">Strahler</option>
         <option value="Stehleuchte">Stehleuchte</option>
+        <option value="Tafelbeleuchtung">Tafelbeleuchtung</option>
         <option value="Sonstige">Sonstige &rarr; Foto!</option>
       </select>
     </div>
 
-    <!-- Leuchten-Anordnung -->
-    <div class="section-title section-title-bel">Leuchten-Anordnung</div>
+    <!-- Leuchteninfo -->
+    <div class="section-title section-title-bel">Leuchteninfo</div>
     <div class="form-row-3">
       <div class="form-group">
         <label>Anz. Reihen</label>
@@ -319,38 +320,31 @@
       </div>
     </div>
 
-    <!-- Vorschaltgerät -->
-    <div class="section-title section-title-bel">Vorschaltgerät / Leuchtmittel</div>
-    <div class="form-group">
-      <label>Vorschaltgerät <button class="btn-help-inline" onclick="event.stopPropagation();alert('Tipp: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\n\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: Vorschaltgerät erkennen">?</button></label>
-      <select id="f-vorschaltgeraet" onchange="updateLeuchtmittelFields()">
-        <option value="">Bitte wählen</option>
-        <option value="KVG/VVG">KVG/VVG (konventionell)</option>
-        <option value="EVG">EVG (elektronisch)</option>
-      </select>
-    </div>
-
-    <!-- Leuchtmittel Kategorie -->
-    <div class="form-group">
-      <label>Leuchtmittel-Kategorie</label>
-      <select id="f-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()">
-        <option value="">Bitte wählen</option>
-        <option value="linear">Leuchtstoffröhre (T5/T8/T12)</option>
-        <option value="dulux">Kompakt (Dulux)</option>
-        <option value="spot">Spot / Reflektor</option>
-        <option value="sq28">SQ28</option>
-        <option value="led">LED / Sonstige</option>
-      </select>
-    </div>
-
-    <!-- Linear Sub-Felder -->
-    <div id="lm-linear-fields" style="display:none">
+    <!-- VSG + Leuchtmittel -->
+    <div class="form-row">
       <div class="form-group">
-        <label>Typ</label>
-        <select id="f-lm-linear-typ" onchange="onLinearFieldChange('typ')">
+        <label>VSG <button class="btn-help-inline" onclick="event.stopPropagation();alert('VSG = Vorschaltgerät\n\nTipp: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\n\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: VSG erkennen">?</button></label>
+        <select id="f-vorschaltgeraet" onchange="updateLeuchtmittelFields()">
           <option value="">Bitte wählen</option>
+          <option value="KVG/VVG">KVG/VVG</option>
+          <option value="EVG">EVG</option>
         </select>
       </div>
+      <div class="form-group">
+        <label>Leuchtmittel</label>
+        <select id="f-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()">
+          <option value="">Bitte wählen</option>
+          <option value="t5">T5</option>
+          <option value="t8">T8</option>
+          <option value="dulux">Dulux</option>
+          <option value="led">LED</option>
+          <option value="sonstige">Sonstige</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- T5/T8 Sub-Felder (Länge + Wattage direkt) -->
+    <div id="lm-linear-fields" style="display:none">
       <div class="form-row">
         <div class="form-group">
           <label>Länge [mm]</label>
@@ -388,38 +382,25 @@
       </div>
     </div>
 
-    <!-- Spot Sub-Felder -->
-    <div id="lm-spot-fields" style="display:none">
+    <!-- Sonstige Sub-Felder (T5 Ring, Spot, SQ28) -->
+    <div id="lm-sonstige-fields" style="display:none">
       <div class="form-row">
         <div class="form-group">
           <label>Typ</label>
-          <select id="f-lm-spot-typ" onchange="updateLeuchtmittelFields()">
+          <select id="f-lm-sonstige-typ" onchange="updateSonstigeLmFields()">
             <option value="">Bitte wählen</option>
           </select>
         </div>
         <div class="form-group">
           <label>Wattage [W]</label>
-          <select id="f-lm-spot-wattage">
+          <select id="f-lm-sonstige-wattage">
             <option value="">Bitte wählen</option>
           </select>
         </div>
       </div>
     </div>
 
-    <!-- SQ28 Sub-Felder -->
-    <div id="lm-sq28-fields" style="display:none">
-      <div class="form-group">
-        <label>Wattage [W]</label>
-        <select id="f-lm-sq28-wattage">
-          <option value="">Bitte wählen</option>
-          <option value="21">21 W</option>
-          <option value="28">28 W</option>
-          <option value="38">38 W</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- LED/Sonstige Sub-Felder -->
+    <!-- LED Sub-Felder -->
     <div id="lm-led-fields" style="display:none">
       <div class="form-group">
         <label>Beschreibung</label>
