@@ -1,7 +1,21 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v3.6.2';
-const APP_BUILD_DATE = '05.03.2026 22:48'; // wird nach Commit aktualisiert
+// Globaler Error-Handler: fängt alle unbehandelten Fehler ab
+window.addEventListener('error', (e) => {
+  const msg = `JS-Fehler: ${e.message} (${e.filename}:${e.lineno})`;
+  console.error(msg, e.error);
+  const t = document.getElementById('toast');
+  if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
+});
+window.addEventListener('unhandledrejection', (e) => {
+  const msg = `Async-Fehler: ${e.reason}`;
+  console.error(msg, e.reason);
+  const t = document.getElementById('toast');
+  if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
+});
+
+const APP_VERSION = 'v3.6.3';
+const APP_BUILD_DATE = '05.03.2026 22:50'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
