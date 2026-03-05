@@ -31,9 +31,16 @@ function fotoFilename(hk, index) {
   return `Fotos/${parts.join('_')}${suffix}.jpg`;
 }
 
+function formatErstelltAm(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  return d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 function hkToRow(hk) {
   const row = EXPORT_FIELDS.map(f => {
     const val = hk[f];
+    if (f === 'erstelltAm') return formatErstelltAm(val);
     if (typeof val === 'boolean') return val ? 'Ja' : 'Nein';
     return val != null ? String(val) : '';
   });
@@ -77,6 +84,7 @@ function belFotoFilename(bel, index) {
 function belToRow(bel) {
   const row = BEL_EXPORT_FIELDS.map(f => {
     const val = bel[f];
+    if (f === 'erstelltAm') return formatErstelltAm(val);
     return val != null ? String(val) : '';
   });
   for (let i = 0; i < 3; i++) {
