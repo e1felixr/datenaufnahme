@@ -1,10 +1,9 @@
 Oberhalb der gepunkteten Linie dürften stets nur die offenen Aufgaben stehen!!
 Offene Punkte:
 
-* Es gibt Pläne, die sehr gut erkannt werden (z.B. der erste) und andere, die sehr schlecht erkannt
-  werden. woran liegt das?
+* Die Hilfe-Fotos sollen mit den Fingern zoombar sein!
 
-* Wenn ich ein Foto hinzufüge, wird zunächst eine Downloadabfrage eingeblendet. beim Zweiten Bild nervt im oberen Bereich die Downloadanzeige. Beides stört. kann das nicht im Hintergrund laufen? Können nicht die Fotos wie normale Handy-Fotos abgelegt werden, mit den aufgenommenen räumen referenziert werden und erst beim versenden komprimiert und gezippt werden?
+* Funktionen export csv und export xlsx können entfallen
 
 
 
@@ -16,6 +15,16 @@ IMMER:
 * Aktuellen Code immer in Github-Repo hochladen.
 * Alle erledigten Punkte als "erledigt" markieren, Version in der sie umgesetzt wurden, ergänzen und dann von oben in den folgenden Abschnitt verschieben, aber nicht löschen! Oberhalb der gestrichelten Linie dürften stets nur die offenen Aufgaben stehen.
 
+---
+
+### v2.11
+
+* ~~Es gibt Pläne, die sehr gut erkannt werden (z.B. der erste) und andere, die sehr schlecht erkannt werden. Woran liegt das?~~ **erledigt v2.11** (OCR-Verbesserungen in parse_gebaeudeplan.py: --debug Flag mit annotiertem Debug-Bild, Bild-Vorverarbeitung mit Kontrast/Schärfe, Qualitätsreport pro Plan, Bounding-Box-Mitte statt Ecke, größere Kachelüberlappung 300px, Deduplizierungsradius 60px, adaptive Zuordnung bei <50% Erkennungsrate)
+
+* ~~Wenn ich ein Foto hinzufüge, wird zunächst eine Downloadabfrage eingeblendet. Beim Zweiten Bild nervt im oberen Bereich die Downloadanzeige. Kann das nicht im Hintergrund laufen? Fotos sollen erst beim Versenden komprimiert und gezippt werden.~~ **erledigt v2.11** (capture="environment" aus File-Input entfernt → kein Download-Dialog mehr; getUserMedia mit höherer Auflösung 4096px + bessere Fehlerbehandlung; Fotos werden in hoher Qualität in IndexedDB gespeichert, max 2560px/3MB; Komprimierung auf 800KB erst beim Export/Versenden via compressForExport())
+
+### v2.10
+
 * ~~Nicht "Heizkörper" soll den Info-Button haben, sondern "Heizkörper-Typ" (statt "Typ")~~ **erledigt v2.10** (Label "Typ" → "Heizkörper-Typ" mit ?-Button, Section-Title ohne Button)
 
 * ~~Bei Dropdown: defaultwert: "Bitte wählen"~~ **erledigt v2.10** (fillSelect() gibt einheitlich "Bitte wählen" aus)
@@ -26,9 +35,11 @@ IMMER:
 
 * ~~Ich will die Hauptkamera nutzen, NIE die Selfie-Cam. Wenn ich das Foto beim Tablet speichern möchte, kommt eine Meldung dass angeblich zu wenig Speicherplatz zur Verfügung steht. Danach sind die Foto-Buttons weg.~~ **erledigt v2.10** (getUserMedia mit facingMode: environment, Fallback auf input capture; Fehlerbehandlung in compressImage mit img.onerror/reader.onerror + showToast + renderPhotoSlots)
 
+### v2.9
+
 * ~~Heizkörper als Standard definiert: Maße sollen nicht übernommen werden, nur Typ, ggf. Subtyp und Einbausituation. Die Maße werden sich ja in jedem Raum ändern. Außerdem sollen default nur 2 Plätze für Fotos angezeigt werden und als drittes das "+"-Symbol. Außerdem ist immer noch die Selfie-Cam aktiv, es muss immer die Hauptkamera angewählt werden!~~ **erledigt v2.9** (Maße nicht übernommen, 2 Foto-Slots default, Hauptkamera via facingMode: environment)
 
-* ~~Wenn ich ein Foto hinzufüge, wird zunächst eine Downloadabfrage eingeblendet. Beides stört.~~ **teilweise erledigt v2.9** (Auto-Download deaktiviert, Foto-Speicherung noch offen)
+* ~~Wenn ich ein Foto hinzufüge, wird zunächst eine Downloadabfrage eingeblendet. Beides stört.~~ **teilweise erledigt v2.9, vollständig v2.11** (Auto-Download deaktiviert; ab v2.11: capture-Attribut entfernt, Komprimierung beim Export)
 
 * ~~Mach die Einbausituation nicht mehr mit Dropdown, sondern mit Checkboxen, weil auch Kombinationen vorkommen können. Es soll dann "besondere Einbausituation?" heißen und die Optionen "hinter Verkleidung", "unter Brüstung/Fensterbank", "hinter Möbeln", "Sonstige -> Foto!" geben. Außerdem Hilfesymbol und einbausituation.jpg einbinden.~~ **erledigt v2.9** (Checkboxen statt Dropdown, Hilfe-Bild eingebunden)
 
@@ -44,15 +55,21 @@ IMMER:
 
 * ~~Mache alle Hilfe-Symbole einen Deut kleiner~~ **erledigt v2.9** (Hilfe-Buttons verkleinert)
 
-* ~~Es gibt Pläne, die sehr gut erkannt werden und andere, die sehr schlecht erkannt werden. Nach Durchlauf des Parsens soll Shell außerdem geöffnet bleiben.~~ **teilweise erledigt v2.9** (Shell bleibt offen via input() am Ende; OCR-Qualitätsunterschiede noch offen)
+* ~~Es gibt Pläne, die sehr gut erkannt werden und andere, die sehr schlecht erkannt werden. Nach Durchlauf des Parsens soll Shell außerdem geöffnet bleiben.~~ **teilweise erledigt v2.9, vollständig v2.11** (Shell bleibt offen via input(); ab v2.11: OCR-Verbesserungen mit Debug-Modus, Vorverarbeitung, adaptiver Zuordnung)
+
+### v2.3
 
 * ~~Wir müssen noch etwas Hilfestellung bieten. Es gibt ja eine Vielzahl an verschiendenen Heizkörpertypen oder Ventiltypen. Dazu möchte ich an relevanten Stellen kleine "Hilfe"- oder "Info"- oder "?"-Buttons haben, bei deren Klick sich Bilddateien öffnen. Diese habe ich im Ordner /hilfe abgelegt: ventiltypen.png und hk-typen.png und hilfe_kompakt.jpg~~ **erledigt v2.3** (btn-help-inline "?"-Buttons an Section-Titles Heizkörper/Ventil/Einbau, openHelpImage()-Modal in app.js, Bilder im SW-Cache)
 
 * ~~Eine Strangzuordnung muss möglich sein (Eingabefeld: "Strang:"). Freie Eingabe ermöglichen.~~ **erledigt v2.3** (f-strang Freitext-Feld in Einbau/Sonstiges, in db.js/app.js/export.js, wird als Standard übernommen)
 
+### v2.2
+
 * ~~Wenn ein Raum gespeichert ist und man auf der Übersichtsseite dann "+" drückt, wird die Vorlage für einen zusätzlichen Raum angezeigt. FÜge oben einen Schalter ein: "neuer HK im Raum" <> "neuer Raum". Die vorausfüllung der Felder ändert sich entsprechend.~~ **erledigt v2.2** (setNewHkMode() in app.js, Mode-Toggle in index.html/style.css)
 
 * ~~Das Autovervollständigen klappt nicht. wenn ich z.B. bei Baulänge "2" eintippe, will ich schon "2000" angezeigt bekommen, weil das in der liste steht.~~ **erledigt v2.2** (setupDatalistFilters() in app.js: Substring-Filter auf Datalist bei Eingabe)
+
+### v2.1
 
 * ~~die github-Readme soll auch in der App angezeigt werden. links neben dem einstellungen-rädchen~~ **erledigt v2.1** (openHelp()/fetchReadme()/renderReadme() in app.js, ℹ-Button im Header, Markdown-Renderer)
 
@@ -74,6 +91,16 @@ IMMER:
 
 * ~~Bauhöhen als Autocomplete mit typabhängigen Optionen; Nabenabstand↔Bauhöhe Verknüpfung für Guss-/Stahlglieder~~ **erledigt v2.1** (CONFIG.bauhoeheXxx, CONFIG.gussNaBA/gussBANA etc., onBauhoeheChange()/onNabenabstandChange(), text+datalist statt select)
 
+### v1.8
+
+* ~~Der Zeitstempel "letzte Änderung" muss korrekt sein, darf nicht erfunden sein und nicht in der Zukunft liegen!!~~ **erledigt v1.8** (APP_BUILD_DATE wird bei jeder Änderung manuell aktualisiert)
+
+* ~~Mach die "Ja"/"Nein"-Buttons nicht so riesig! "J" und "N" reicht!~~ **erledigt v1.8** (Toggle-Buttons auf J/N, 40px breit, reduzierte Abstände)
+
+* ~~Versenden: Anhang muss auch wirklich angehängt, nicht nur im mailtext erwähnt werden!~~ **erledigt v1.8** (Web Share API sendet ZIP als echten Anhang; Fallback: ZIP-Download + Hinweis)
+
+### v1.7
+
 * ~~Passe die Dropdownauswahl "Typ" an: Kompakt-HK, Stahlröhren-HK, Stahlglieder-HK, Gussglieder-HK, Konvektoren, Stahlplatte, Sonstige~~ **erledigt v1.7** (CONFIG.typ in app.js)
 
 * ~~Je nach Auswahl des Typs sollen dann nur die folgende Parameter abgefragt werden (also bei Kompakt: Typen 10 bis 33, Bauhöhe und Baulänge). Die anderen sollen ausgegraut oder gar nicht angezeigt werden. Alle anderen Parameter (z.B. Nabenabstand, RL-Verschraubung, ...) sollen für jeden Heizkörper abgefragt werden.~~ **erledigt v1.7** (updateTypFields() in app.js: Subtyp, Röhren/Glieder, Baulänge/Bauhöhe je nach Typ ein-/ausgeblendet)
@@ -84,17 +111,13 @@ IMMER:
     ~~- Art Thermostatkopf: Auswahlmöglichkeit: "nur auf/zu", "analog", "digital", "Behörde"~~
     **erledigt v1.7** (Toggle-Buttons für Entlüftung/Entleerung + Dropdown artThermostatkopf in index.html/app.js)
 
-* ~~Der Zeitstempel "letzte Änderung" muss korrekt sein, darf nicht erfunden sein und nicht in der Zukunft liegen!!~~ **erledigt v1.8** (APP_BUILD_DATE wird bei jeder Änderung manuell aktualisiert)
-
 * ~~Ein Upload der erhobenen Daten in die Guthub-Repo erfordert je Gerät einen Zugangstoken, richtig? Ich will Verwaltugnsaufwand vermeiden. Implementiere einen Button "Daten versenden"...~~ **erledigt v1.7** (sendData() mit Web Share API + mailto-Fallback, Empfänger-Checkboxen im Modal)
 
 * ~~Foto-Benennung: [Geschoss]_[Raumnr]_HK[Nr].jpg statt [Geschoss]_[Raumnr]_HK[Nr]_1.jpg~~ **erledigt v1.7** (fotoFilename() in export.js: erstes Foto ohne Suffix, ab 2. Foto _2, _3)
 
 * ~~Nutzung per Chrome, Edge oder Firefox. Optimiere App auf diese Browser.~~ **erledigt v1.7** (Standard-Webtechnologien, PWA-Manifest, responsive CSS)
 
-* ~~Mach die "Ja"/"Nein"-Buttons nicht so riesig! "J" und "N" reicht!~~ **erledigt v1.8** (Toggle-Buttons auf J/N, 40px breit, reduzierte Abstände)
-
-* ~~Versenden: Anhang muss auch wirklich angehängt, nicht nur im mailtext erwähnt werden!~~ **erledigt v1.8** (Web Share API sendet ZIP als echten Anhang; Fallback: ZIP-Download + Hinweis)
+### v1.0 (Grundfunktionen)
 
 * ~~Ich möchte eine kleine "App" bauen, mit der die Aufnahme von Heizkörpern und sämtlicher relevanter Eigenschaften erleichtert werden soll.~~ **erledigt** (PWA erstellt)
 * ~~In der xlsx siehst du unter "Tabelle", welche Daten je Heizkörper erfasst werden sollen.~~ **erledigt** (alle Felder und Dropdowns aus Vorlage übernommen)

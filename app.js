@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.10';
-const APP_BUILD_DATE = '05.03.2026 08:09'; // wird automatisch vom pre-commit Hook aktualisiert
+const APP_VERSION = 'v2.11';
+const APP_BUILD_DATE = '05.03.2026 08:26'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -676,16 +676,20 @@ let _cameraIndex = 0;
 
 async function triggerPhoto(index) {
   _cameraIndex = index;
-  // Versuche getUserMedia für explizite Rückkamera
+  // Versuche getUserMedia für explizite Rückkamera (höhere Auflösung)
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } }
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 4096 }, height: { ideal: 3072 } }
       });
       openCameraModal(stream);
       return;
     } catch (e) {
-      // Fallback auf <input capture>
+      if (e.name === 'NotAllowedError') {
+        showToast('Kamera-Berechtigung benötigt');
+        return;
+      }
+      // Andere Fehler: Fallback auf File-Input (ohne capture-Attribut)
     }
   }
   const input = document.getElementById('photo-input');
@@ -738,7 +742,8 @@ function handlePhotoInput(input) {
 }
 
 function compressImage(file, callback, directDataUrl) {
-  const MAX_BYTES = 800_000;
+  // Speicherung in hoher Qualität — Komprimierung erst beim Export/Versenden
+  const MAX_BYTES = 3_000_000;  // 3 MB für Speicherung (statt 800KB)
 
   function processImage(src) {
     const img = new Image();
@@ -749,19 +754,19 @@ function compressImage(file, callback, directDataUrl) {
     img.onload = () => {
       const canvas = document.createElement('canvas');
       let w = img.width, h = img.height;
-      const maxW = 1920;
+      const maxW = 2560;  // Höhere Auflösung für Speicherung
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       canvas.width = w;
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
-      // Iterativ Qualität senken bis unter 800KB
-      let quality = 0.85;
+      // Leichte Komprimierung für Speicherung (hohe Qualität beibehalten)
+      let quality = 0.92;
       let dataUrl = canvas.toDataURL('image/jpeg', quality);
       let bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
 
-      while (bytes > MAX_BYTES && quality > 0.3) {
-        quality -= 0.1;
+      while (bytes > MAX_BYTES && quality > 0.5) {
+        quality -= 0.05;
         dataUrl = canvas.toDataURL('image/jpeg', quality);
         bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
       }
@@ -936,8 +941,8 @@ async function sendData() {
   const r3val = document.getElementById('send-r3').value.trim();
   if (r3check && r3check.checked && r3val) recipients.push(r3val);
 
-  // ZIP erstellen
-  const zipBlob = buildExportZip(hks, safeName);
+  // ZIP erstellen (Fotos werden beim Export komprimiert)
+  const zipBlob = await buildExportZip(hks, safeName);
   const zipFile = new File([zipBlob], zipFileName, { type: 'application/zip' });
 
   // Web Share API: Datei wird tatsächlich als Anhang geteilt
@@ -968,7 +973,7 @@ async function sendData() {
   showToast('ZIP heruntergeladen – bitte manuell an E-Mail anhängen');
 }
 
-function buildExportZip(hks, safeName) {
+async function buildExportZip(hks, safeName) {
   const data = [EXPORT_HEADERS, ...hks.map(hkToRow)];
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws['!cols'] = EXPORT_HEADERS.map((h, i) => ({
@@ -983,7 +988,8 @@ function buildExportZip(hks, safeName) {
     if (!hk.fotos) continue;
     for (let i = 0; i < hk.fotos.length; i++) {
       if (hk.fotos[i]) {
-        zipFiles.push({ name: fotoFilename(hk, i), data: base64ToBytes(hk.fotos[i]) });
+        const compressed = await compressForExport(hk.fotos[i]);
+        zipFiles.push({ name: fotoFilename(hk, i), data: compressed });
       }
     }
   }
@@ -1005,7 +1011,7 @@ async function exportData(format) {
   );
 
   if (format === 'xlsx') {
-    exportXlsx(hks, projekt.name);
+    await exportXlsx(hks, projekt.name);
   } else {
     exportCsv(hks, projekt.name);
   }
