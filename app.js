@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.12';
-const APP_BUILD_DATE = '05.03.2026 10:06'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 10:07'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
