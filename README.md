@@ -153,31 +153,19 @@ Die Datei muss folgende Spaltenstruktur haben (Zeile 1 = Überschrift, wird übe
 - Ein manueller Import über den Button überschreibt die zentrale Datei lokal
 - Nach erfolgreichem Import erscheint ein Toast mit der Anzahl der importierten Einträge
 
-## Features
-
-- Projekte anlegen und verwalten (HK, Beleuchtung oder Beides)
-- **Heizkörper:** Standort, Typ, Maße, Ventil- und Einbaudaten, Fotos
-- **Beleuchtung:** Raumdecke, Installationsart, Leuchtenart, Leuchtmittel mit Smart-Lookup (bidirektional: Typ/Länge/Wattage), Vorschaltgerät (EVG/VVG-Erkennung)
-- Raumweise Übersicht: Einträge gruppiert nach Raum
-- Fotos direkt über die Kamera aufnehmen (unbegrenzte Anzahl)
-- Hilfe-Bilder zu Heizkörpertypen, Ventiltypen etc. direkt im Formular
-- Gebäudedaten aus xlsx-Datei importieren (Autovervollständigung, Geschoss-Raum-Filterung)
-- Export als ZIP (xlsx + Fotos), Multi-Sheet bei "Beides"
-- Daten versenden per Web Share API (ZIP als echter Anhang)
-- Offline-fähig
-- Optimiert für Chrome und Edge (empfohlen)
-
 ## Technischer Aufbau
 
 ```
-index.html          Haupt-HTML mit allen Screens
-app.js              Hauptlogik, Navigation, Event-Handling
-db.js               IndexedDB-Wrapper (Projekte, HK & Beleuchtung)
-export.js           Export-Funktionen (xlsx, ZIP)
-style.css           Mobile-first CSS
-sw.js               Service Worker (Offline-Cache)
-manifest.json       PWA-Manifest
+index.html            Haupt-HTML mit allen Screens
+js/app.js             Hauptlogik, Navigation, Event-Handling
+js/db.js              IndexedDB-Wrapper (Projekte, HK & Beleuchtung)
+js/export.js          Export-Funktionen (xlsx, ZIP)
+css/style.css         Mobile-first CSS
+sw.js                 Service Worker (Offline-Cache)
+manifest.json         PWA-Manifest
 lib/xlsx.mini.min.js  SheetJS für xlsx-Import/Export
+hilfe/                Hilfe-Bilder für Formular
+icons/                PWA-Icons
 ```
 
 ## Hilfe / Probleme

@@ -1,6 +1,6 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v3.1';
+const APP_VERSION = 'v3.2';
 const APP_BUILD_DATE = '05.03.2026 14:44'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
