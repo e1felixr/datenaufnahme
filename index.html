@@ -699,7 +699,7 @@
     'screen-help': { title: 'Hilfe & Anleitung', back: true }
   };
 
-  const defaultHeaderHTML = document.getElementById('header-title').innerHTML;
+  const defaultHeaderHTML = '<span class="header-main">Erfassung <span id="header-version"></span></span><span class="header-sub" id="header-timestamp"></span>';
 
   const origNavigate = navigate;
   navigate = function(screen, pushState) {
@@ -710,6 +710,8 @@
     btnBack.style.display = cfg.back ? 'flex' : 'none';
     if (screen === 'screen-projekte') {
       headerTitle.innerHTML = defaultHeaderHTML;
+      document.getElementById('header-version').textContent = APP_VERSION;
+      document.getElementById('header-timestamp').textContent = 'letzte Änderung: ' + APP_BUILD_DATE;
     } else if (screen === 'screen-hk-list') {
       headerTitle.textContent = document.getElementById('header-projekt-name').textContent;
     } else if (screen === 'screen-form') {
