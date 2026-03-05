@@ -109,8 +109,8 @@ body {
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
   cursor: pointer;
   border-left: 4px solid transparent;
   transition: border-color .15s;
@@ -428,31 +428,33 @@ body {
 /* ── Room-based HK list ── */
 .room-card {
   cursor: default;
+  padding: 8px 12px;
+  margin-bottom: 6px;
 }
 
 .room-header {
   font-weight: 600;
-  font-size: .9rem;
-  margin-bottom: 8px;
+  font-size: .82rem;
+  margin-bottom: 4px;
   color: var(--text);
 }
 
 .room-hks, .room-bels, .room-items {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px;
 }
 
 .room-hk-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
+  gap: 4px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   background: #FFF3E0;
   cursor: pointer;
-  font-size: .82rem;
+  font-size: .78rem;
   transition: border-color .15s;
   position: relative;
 }
@@ -464,13 +466,13 @@ body {
 .room-bel-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
+  gap: 4px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   background: #FFF9C4;
   cursor: pointer;
-  font-size: .82rem;
+  font-size: .78rem;
   transition: border-color .15s;
   position: relative;
 }
@@ -485,7 +487,7 @@ body {
 }
 
 .chip-fotos {
-  font-size: .75rem;
+  font-size: .7rem;
   letter-spacing: -2px;
 }
 
@@ -493,7 +495,7 @@ body {
   background: none;
   border: none;
   color: var(--danger);
-  font-size: 1.1rem;
+  font-size: .9rem;
   font-weight: 700;
   cursor: pointer;
   padding: 0 2px;
