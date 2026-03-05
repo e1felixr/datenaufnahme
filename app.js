@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v2.12';
-const APP_BUILD_DATE = '05.03.2026 10:02'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 10:06'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration ──
 const CONFIG = {
@@ -1001,21 +1001,22 @@ async function buildExportZip(hks, safeName) {
 // ── Dropdown füllen ──
 
 function populateDropdowns() {
-  fillSelect('f-typ', CONFIG.typ, 'Typ');
+  fillSelect('f-typ', CONFIG.typ, 'Typ', { 'Sonstige': 'Sonstige → Foto!' });
   fillSelect('f-anzahlRoehren', CONFIG.anzahlRoehren.map(String), 'Anz. Röhren');
   fillDatalist('dl-dnVentil', CONFIG.dnVentil);
   fillSelect('f-ventilform', CONFIG.ventilform, 'Ventilform');
-  fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf, 'Thermostatkopf');
+  fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf, 'Thermostatkopf', { 'Sonstiges': 'Sonstiges → Foto!' });
   // Datalists werden in updateTypFields befüllt
   fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
   fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
 }
 
-function fillSelect(id, options, label) {
+function fillSelect(id, options, label, labelMap = {}) {
   const sel = document.getElementById(id);
   sel.innerHTML = `<option value="">Bitte wählen</option>`;
   for (const opt of options) {
-    sel.innerHTML += `<option value="${esc(opt)}">${esc(opt)}</option>`;
+    const display = labelMap[opt] || opt;
+    sel.innerHTML += `<option value="${esc(opt)}">${esc(display)}</option>`;
   }
 }
 
