@@ -1,9 +1,9 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v2.13';
-const APP_BUILD_DATE = '05.03.2026 10:23'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.0';
+const APP_BUILD_DATE = '05.03.2026 13:13'; // wird nach Commit aktualisiert
 
-// ── Dropdown-Konfiguration ──
+// ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
   typ: ['Kompakt-HK', 'Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Sonstige'],
   subtypKompakt: ['10', '11', '20', '21', '22', '30', '33'],
@@ -15,7 +15,6 @@ const CONFIG = {
   bauhoeheRoehren: [190,300,350,400,450,500,550,600,750,900,1000,1100,1200,1500,1800,2000,2500,2800],
   bauhoeheGuss:    [280,430,580,680,980],
   bauhoeheStahl:   [300,400,600,1000],
-  // Nabenabstand↔Bauhöhe Mapping für Gussglieder und Stahlglieder
   gussNaBA: { 280:200, 430:350, 580:500, 680:600, 980:900 },
   gussBANA: { 200:280, 350:430, 500:580, 600:680, 900:980 },
   stahlNaBA: { 300:200, 400:350, 600:500, 1000:900 },
@@ -27,14 +26,56 @@ const CONFIG = {
   einbausituationCheckboxes: ['verkleidung', 'bruestung', 'moebel', 'sonstige']
 };
 
+// ── Leuchtmittel-Datenbank ──
+const LEUCHTMITTEL_DB = {
+  linear: {
+    'T5': [
+      { w: 8, mm: 288 }, { w: 14, mm: 549 }, { w: 21, mm: 849 }, { w: 24, mm: 549 },
+      { w: 28, mm: 1149 }, { w: 35, mm: 1449 }, { w: 39, mm: 849 },
+      { w: 49, mm: 1149 }, { w: 54, mm: 1149 }, { w: 80, mm: 1449 }
+    ],
+    'T5 Ring': [
+      { w: 22, mm: 216 }, { w: 40, mm: 300 }
+    ],
+    'T8': [
+      { w: 18, mm: 604 }, { w: 30, mm: 909 }, { w: 36, mm: 1213 },
+      { w: 38, mm: 1047 }, { w: 58, mm: 1514 }
+    ],
+    'T12': [
+      { w: 65, mm: 1514 }
+    ]
+  },
+  spot: {
+    'MR11': [20, 35],
+    'MR16': [20, 35, 50],
+    'GU10': [35, 50],
+    'AR111': [35, 50, 75]
+  },
+  dulux: {
+    'Dulux S':   { wendel: 'S', evg: false, wattages: [5, 7, 9, 11] },
+    'Dulux S/E': { wendel: 'S', evg: true,  wattages: [5, 7, 9, 11] },
+    'Dulux D':   { wendel: 'D', evg: false, wattages: [10, 13, 18, 26] },
+    'Dulux D/E': { wendel: 'D', evg: true,  wattages: [10, 13, 18, 26] },
+    'Dulux T':   { wendel: 'T', evg: false, wattages: [13, 18, 26] },
+    'Dulux T/E': { wendel: 'T', evg: true,  wattages: [13, 18, 26, 32, 42] },
+    'Dulux F':   { wendel: null, evg: false, wattages: [18, 24, 36] },
+    'Dulux L':   { wendel: null, evg: false, wattages: [18, 24, 36, 40, 55] }
+  },
+  sq28: [21, 28, 38]
+};
+
 let currentProjektId = null;
+let currentProjektModul = 'beleuchtung'; // 'hk' | 'beleuchtung' | 'beides'
 let currentHkId = null;
+let currentBelId = null;
 let formPhotos = [null, null];
+let belFormPhotos = [null, null];
 let settingsReady = false;
-let allGebaeudeDaten = {}; // Key=Liegenschaft, Value={gebaeude,geschoss,raum,raumDetails}
+let allGebaeudeDaten = {};
 let currentLiegenschaft = null;
-let newHkBaseData = null; // Basisdaten für Mode-Toggle (neuer HK)
-const DATALIST_OPTS = {}; // Volle Optionslisten für Autocomplete-Filter
+let newHkBaseData = null;
+let newBelBaseData = null;
+const DATALIST_OPTS = {};
 
 // ── Navigation ──
 
@@ -65,6 +106,46 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+// ── Theme Switching ──
+
+function applyModuleTheme(modulType) {
+  const html = document.documentElement;
+  if (modulType === 'hk') {
+    html.style.setProperty('--module-color', '#FF6633');
+    html.style.setProperty('--module-color-light', '#FFF3E0');
+    html.style.setProperty('--module-color-dark', '#E65100');
+    html.style.setProperty('--module-text', '#fff');
+    html.dataset.theme = 'hk';
+  } else if (modulType === 'beleuchtung') {
+    html.style.setProperty('--module-color', '#FFCC00');
+    html.style.setProperty('--module-color-light', '#FFF9C4');
+    html.style.setProperty('--module-color-dark', '#B8860B');
+    html.style.setProperty('--module-text', '#000');
+    html.dataset.theme = 'bel';
+  } else {
+    // beides: orange
+    html.style.setProperty('--module-color', '#FF8C00');
+    html.style.setProperty('--module-color-light', '#FFF3E0');
+    html.style.setProperty('--module-color-dark', '#E65100');
+    html.style.setProperty('--module-text', '#fff');
+    html.dataset.theme = 'beides';
+  }
+}
+
+// ── Modul-Toggle im Projekt-Dialog ──
+
+function setModulToggle(val) {
+  document.getElementById('input-projekt-modul').value = val;
+  document.querySelectorAll('.modul-toggle-btn').forEach(btn => {
+    btn.className = 'modul-toggle-btn';
+    if (btn.dataset.modul === val) {
+      if (val === 'hk') btn.classList.add('active-hk');
+      else if (val === 'beleuchtung') btn.classList.add('active-bel');
+      else btn.classList.add('active-beides');
+    }
+  });
+}
+
 // ── Projektliste ──
 
 async function renderProjekte() {
@@ -82,14 +163,21 @@ async function renderProjekte() {
   let html = '';
   for (const p of projekte) {
     const hks = await getHeizkoerperByProjekt(p.id);
+    const bels = await getBeleuchtungByProjekt(p.id);
     const datum = new Date(p.erstelltAm).toLocaleDateString('de-DE');
     const liegBadge = p.liegenschaft ? ` <span class="badge">${esc(p.liegenschaft)}</span>` : '';
+    const modul = p.modulType || 'hk';
+    const modulLabel = modul === 'hk' ? 'HK' : modul === 'beleuchtung' ? 'BEL' : 'HK+BEL';
+    let countInfo = '';
+    if (modul === 'hk') countInfo = `${hks.length} HK`;
+    else if (modul === 'beleuchtung') countInfo = `${bels.length} Leuchtengruppen`;
+    else countInfo = `${hks.length} HK, ${bels.length} BEL`;
     html += `
       <div class="card" data-id="${p.id}">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="flex:1;cursor:pointer" onclick="openProjekt('${p.id}')">
-            <div class="card-title">${esc(p.name)}${liegBadge}</div>
-            <div class="card-sub">${datum} &middot; ${hks.length} HK</div>
+            <div class="card-title">${esc(p.name)}${liegBadge} <span class="badge">${modulLabel}</span></div>
+            <div class="card-sub">${datum} &middot; ${countInfo}</div>
           </div>
           <button class="btn-icon btn-icon-danger" onclick="event.stopPropagation();confirmDeleteProjekt('${p.id}')" title="Löschen">&#128465;</button>
         </div>
@@ -102,12 +190,12 @@ function showNewProjektDialog() {
   document.getElementById('modal-new-projekt').style.display = 'flex';
   const inp = document.getElementById('input-projekt-name');
   inp.value = '';
-  // Liegenschaft-Select befüllen
   const sel = document.getElementById('input-projekt-liegenschaft');
   const keys = Object.keys(allGebaeudeDaten);
   sel.innerHTML = '<option value="">-- Liegenschaft --</option>' +
     keys.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
   if (keys.length === 1) sel.value = keys[0];
+  setModulToggle('beleuchtung');
   inp.focus();
 }
 
@@ -119,7 +207,8 @@ async function createNewProjekt() {
   const name = document.getElementById('input-projekt-name').value.trim();
   if (!name) return;
   const liegenschaft = document.getElementById('input-projekt-liegenschaft').value;
-  await createProjekt(name, liegenschaft);
+  const modulType = document.getElementById('input-projekt-modul').value || 'beleuchtung';
+  await createProjekt(name, liegenschaft, modulType);
   closeNewProjektDialog();
   await renderProjekte();
   showToast('Projekt erstellt');
@@ -132,9 +221,10 @@ async function openProjekt(id) {
   }
   currentProjektId = id;
   const p = await getProjekt(id);
+  currentProjektModul = p.modulType || 'hk';
   document.getElementById('header-projekt-name').textContent = p.name;
-  // Liegenschaft setzen und Datalists aktualisieren
   currentLiegenschaft = p.liegenschaft || null;
+  applyModuleTheme(currentProjektModul);
   renderDatalists();
   await renderHkList();
   navigate('screen-hk-list');
@@ -142,105 +232,155 @@ async function openProjekt(id) {
 
 async function confirmDeleteProjekt(id) {
   const p = await getProjekt(id);
-  if (confirm(`Projekt "${p.name}" und alle Heizkörper wirklich löschen?`)) {
+  if (confirm(`Projekt "${p.name}" und alle Daten wirklich löschen?`)) {
     await deleteProjekt(id);
     await renderProjekte();
     showToast('Projekt gelöscht');
   }
 }
 
-// ── Heizkörper-Liste ──
+// ── FAB Button ──
+
+function onFabAdd() {
+  if (currentProjektModul === 'hk') {
+    openHkForm();
+  } else if (currentProjektModul === 'beleuchtung') {
+    openBelForm();
+  } else {
+    // beides: Auswahl-Dialog
+    document.getElementById('modal-fab-choice').style.display = 'flex';
+  }
+}
+
+// ── Liste (HK + Beleuchtung) ──
 
 async function renderHkList() {
   const list = document.getElementById('hk-list');
-  let hks = await getHeizkoerperByProjekt(currentProjektId);
+  const showHk = currentProjektModul === 'hk' || currentProjektModul === 'beides';
+  const showBel = currentProjektModul === 'beleuchtung' || currentProjektModul === 'beides';
 
-  // Filter
+  let hks = showHk ? await getHeizkoerperByProjekt(currentProjektId) : [];
+  let bels = showBel ? await getBeleuchtungByProjekt(currentProjektId) : [];
+
   const filterText = document.getElementById('filter-text')?.value?.toLowerCase() || '';
+  const filterFn = item =>
+    (item.gebaeude || '').toLowerCase().includes(filterText) ||
+    (item.geschoss || '').toLowerCase().includes(filterText) ||
+    (item.raumnr || '').toLowerCase().includes(filterText) ||
+    (item.raumbezeichnung || '').toLowerCase().includes(filterText);
+
   if (filterText) {
-    hks = hks.filter(hk =>
-      (hk.gebaeude || '').toLowerCase().includes(filterText) ||
-      (hk.geschoss || '').toLowerCase().includes(filterText) ||
-      (hk.raumnr || '').toLowerCase().includes(filterText) ||
-      (hk.raumbezeichnung || '').toLowerCase().includes(filterText)
-    );
+    hks = hks.filter(filterFn);
+    bels = bels.filter(filterFn);
   }
 
-  // Sortierung: Gebäude > Geschoss > Raum > HK-Nr
-  hks.sort((a, b) =>
+  const sortFn = (a, b) =>
     (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
     (a.geschoss || '').localeCompare(b.geschoss || '') ||
-    (a.raumnr || '').localeCompare(b.raumnr || '') ||
-    (Number(a.hkNr) || 0) - (Number(b.hkNr) || 0)
-  );
+    (a.raumnr || '').localeCompare(b.raumnr || '');
 
-  const raumCount = new Set(hks.map(hk => `${hk.gebaeude}|${hk.geschoss}|${hk.raumnr}`)).size;
-  document.getElementById('hk-count').textContent = `${raumCount} Räume, ${hks.length} HK erfasst`;
+  hks.sort((a, b) => sortFn(a, b) || (Number(a.hkNr) || 0) - (Number(b.hkNr) || 0));
+  bels.sort((a, b) => sortFn(a, b) || (Number(a.gruppenNr) || 0) - (Number(b.gruppenNr) || 0));
 
-  if (hks.length === 0) {
+  // Count
+  const allItems = [...hks, ...bels];
+  const raumCount = new Set(allItems.map(i => `${i.gebaeude}|${i.geschoss}|${i.raumnr}`)).size;
+  let countText = `${raumCount} Räume`;
+  if (showHk) countText += `, ${hks.length} HK`;
+  if (showBel) countText += `, ${bels.length} Leuchtengruppen`;
+  document.getElementById('hk-count').textContent = countText;
+
+  if (allItems.length === 0) {
+    const icon = showBel ? '&#128161;' : '&#128293;';
+    const label = showBel ? 'Leuchtengruppen' : 'Heizkörper';
     list.innerHTML = `
       <div class="empty-state">
-        <div class="icon">&#128293;</div>
-        <p>Noch keine Heizkörper erfasst.<br>Tippen Sie auf + um einen hinzuzufügen.</p>
+        <div class="icon">${icon}</div>
+        <p>Noch keine ${label} erfasst.<br>Tippen Sie auf + um einen hinzuzufügen.</p>
       </div>`;
     return;
   }
 
-  // Nach Raum gruppieren
+  // Nach Raum gruppieren (HK + BEL zusammen)
   const rooms = [];
   const roomMap = new Map();
-  for (const hk of hks) {
-    const key = `${hk.gebaeude || ''}|${hk.geschoss || ''}|${hk.raumnr || ''}`;
+  for (const item of [...hks.map(h => ({...h, _type: 'hk'})), ...bels.map(b => ({...b, _type: 'bel'}))]) {
+    const key = `${item.gebaeude || ''}|${item.geschoss || ''}|${item.raumnr || ''}`;
     if (!roomMap.has(key)) {
-      const room = { gebaeude: hk.gebaeude, geschoss: hk.geschoss, raumnr: hk.raumnr, raumbezeichnung: hk.raumbezeichnung, hks: [] };
+      const room = { gebaeude: item.gebaeude, geschoss: item.geschoss, raumnr: item.raumnr, raumbezeichnung: item.raumbezeichnung, hks: [], bels: [] };
       roomMap.set(key, room);
       rooms.push(room);
     }
     const room = roomMap.get(key);
-    room.hks.push(hk);
-    if (hk.raumbezeichnung && !room.raumbezeichnung) room.raumbezeichnung = hk.raumbezeichnung;
+    if (item._type === 'hk') room.hks.push(item);
+    else room.bels.push(item);
+    if (item.raumbezeichnung && !room.raumbezeichnung) room.raumbezeichnung = item.raumbezeichnung;
   }
+
+  // Rooms sortieren
+  rooms.sort((a, b) =>
+    (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
+    (a.geschoss || '').localeCompare(b.geschoss || '') ||
+    (a.raumnr || '').localeCompare(b.raumnr || '')
+  );
 
   let html = '';
   for (const room of rooms) {
     const info = [room.gebaeude, room.geschoss, room.raumnr ? 'Raum ' + room.raumnr : ''].filter(Boolean).join(' / ');
     const label = room.raumbezeichnung ? ' · ' + esc(room.raumbezeichnung) : '';
-    // Typ einmal auf Raumebene zeigen, falls alle HK denselben Typ haben
-    const typen = [...new Set(room.hks.map(h => h.typ).filter(Boolean))];
-    const roomTyp = typen.length === 1 ? typen[0] : '';
     html += `<div class="card room-card">
-      <div class="room-header">${esc(info)}${label}${roomTyp ? ` <span class="badge">${esc(roomTyp)}</span>` : ''}</div>
-      <div class="room-hks">`;
+      <div class="room-header">${esc(info)}${label}</div>
+      <div class="room-items">`;
+
+    // HK Chips
     for (const hk of room.hks) {
-      const chipTyp = typen.length > 1 && hk.typ ? `<span class="badge">${esc(hk.typ)}</span>` : '';
       const fotoCount = hk.fotos ? hk.fotos.filter(Boolean).length : 0;
       const chipFotos = fotoCount > 0 ? `<span class="chip-fotos">${'📷'.repeat(fotoCount)}</span>` : '';
       html += `
         <div class="room-hk-chip" onclick="openHkForm('${hk.id}')">
           <span class="room-hk-nr">HK ${esc(String(hk.hkNr || '-'))}</span>
-          ${chipTyp}${chipFotos}
+          ${hk.typ ? `<span class="badge" style="background:#FFF3E0;color:#E65100">${esc(hk.typ)}</span>` : ''}
+          ${chipFotos}
           <button class="room-hk-del" onclick="event.stopPropagation();confirmDeleteHk('${hk.id}')" title="Löschen">&times;</button>
         </div>`;
     }
+
+    // BEL Chips
+    for (const bel of room.bels) {
+      const fotoCount = bel.fotos ? bel.fotos.filter(Boolean).length : 0;
+      const chipFotos = fotoCount > 0 ? `<span class="chip-fotos">${'📷'.repeat(fotoCount)}</span>` : '';
+      const lmInfo = bel.leuchtmittelTyp || bel.leuchtmittelKategorie || '';
+      html += `
+        <div class="room-bel-chip" onclick="openBelForm('${bel.id}')">
+          <span class="room-bel-nr">BEL ${esc(String(bel.gruppenNr || '-'))}</span>
+          ${lmInfo ? `<span class="badge" style="background:#FFF9C4;color:#B8860B">${esc(lmInfo)}</span>` : ''}
+          ${chipFotos}
+          <button class="room-bel-del" onclick="event.stopPropagation();confirmDeleteBel('${bel.id}')" title="Löschen">&times;</button>
+        </div>`;
+    }
+
     html += `</div></div>`;
   }
   list.innerHTML = html;
 }
 
-// ── Erfassungsformular ──
+// ── HK Erfassungsformular ──
 
 async function openHkForm(hkId) {
   currentHkId = hkId || null;
+  currentBelId = null;
   let hk;
 
+  // Sektionen anzeigen/verstecken
+  document.getElementById('hk-form-section').style.display = 'block';
+  document.getElementById('bel-form-section').style.display = 'none';
+
   if (hkId) {
-    // Bearbeiten
     hk = await getHeizkoerper(hkId);
     document.getElementById('header-form-title').textContent = 'HK bearbeiten';
     document.getElementById('btn-delete-hk').style.display = 'inline-flex';
     document.getElementById('new-hk-mode-toggle').style.display = 'none';
   } else {
-    // Neu: Smart-Defaults aus Standard oder letztem Eintrag
     const std = getHkStandard();
     const last = await getLastHeizkoerper(currentProjektId);
     const defaults = std || last;
@@ -249,20 +389,17 @@ async function openHkForm(hkId) {
       geschoss: defaults.geschoss,
       raumnr: last ? last.raumnr : ''
     } : null);
-    // HK-Typ und technische Daten übernehmen
     if (defaults) {
       for (const f of STANDARD_FIELDS) {
         hk[f] = defaults[f] || '';
       }
     }
-    // Nächste HK-Nr ermitteln
     const all = await getHeizkoerperByProjekt(currentProjektId);
     const maxNr = all.reduce((max, h) => Math.max(max, Number(h.hkNr) || 0), 0);
     hk.hkNr = maxNr + 1;
     document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
     document.getElementById('btn-delete-hk').style.display = 'none';
 
-    // Mode-Toggle vorbereiten
     newHkBaseData = {
       lastRaumnr: last ? (last.raumnr || '') : '',
       lastRaumbezeichnung: last ? (last.raumbezeichnung || '') : '',
@@ -319,7 +456,6 @@ function fillForm(hk) {
   document.getElementById('f-raumbezeichnung').value = hk.raumbezeichnung || '';
   document.getElementById('f-hkNr').value = hk.hkNr || '';
 
-  // Typ: Alte Werte migrieren
   let typ = hk.typ || '';
   if (typ === 'Flach-HK profiliert' || typ === 'Flach-HK glatt') typ = 'Kompakt-HK';
   else if (typ === 'Glieder') typ = 'Stahlglieder-HK';
@@ -327,7 +463,6 @@ function fillForm(hk) {
   else if (typ === 'Bad') typ = 'Stahlröhren-HK';
   document.getElementById('f-typ').value = typ;
 
-  // Subtyp: Alte artFlach-Werte übernehmen
   document.getElementById('f-subtyp').value = hk.subtyp || hk.artFlach || '';
   document.getElementById('f-konvektorBauart').value = hk.konvektorBauart || '';
   document.getElementById('f-baulaenge').value = hk.baulaenge || '';
@@ -340,7 +475,6 @@ function fillForm(hk) {
   if (vf === 'Winkeleck li.' || vf === 'Winkeleck re.') vf = 'Winkeleck';
   document.getElementById('f-ventilform').value = vf;
   document.getElementById('f-artThermostatkopf').value = hk.artThermostatkopf || '';
-  // Einbausituation: String → Checkboxen (mit Migration: "zugestellt"→"hinter Möbeln")
   const einbauStr = (hk.einbausituation || '').replace('zugestellt', 'hinter Möbeln');
   document.getElementById('f-einbau-verkleidung').checked = einbauStr.includes('hinter Verkleidung');
   document.getElementById('f-einbau-bruestung').checked = einbauStr.includes('unter Brüstung');
@@ -357,10 +491,8 @@ function fillForm(hk) {
   document.getElementById('f-ventilVoreinstellbarWert').value = hk.ventilVoreinstellbarWert || '';
   document.getElementById('group-ventilWert').style.display = hk.ventilVoreinstellbar ? 'block' : 'none';
 
-  // Typabhängige Felder (inkl. Bauhöhen-Datalist)
   updateTypFields();
 
-  // Fotos (dynamisch, min. 2 Slots)
   formPhotos = [null, null];
   if (hk.fotos && hk.fotos.length > 0) {
     formPhotos = hk.fotos.map(f => f || null);
@@ -377,7 +509,6 @@ function updateTypFields() {
   const groupRoehrenGlieder = document.getElementById('group-roehrenGlieder');
   const groupBaulaenge = document.getElementById('group-baulaenge');
 
-  // Subtyp-Optionen je nach Typ füllen
   let subtypOptions = [];
   if (typ === 'Kompakt-HK') subtypOptions = CONFIG.subtypKompakt;
   else if (typ === 'Konvektoren') subtypOptions = CONFIG.subtypKonvektoren;
@@ -393,7 +524,6 @@ function updateTypFields() {
     groupSubtyp.style.display = 'none';
   }
 
-  // Konvektor-Bauart: nur für Konvektoren
   if (typ === 'Konvektoren') {
     groupKonvektorBauart.style.display = 'block';
   } else {
@@ -401,7 +531,6 @@ function updateTypFields() {
     groupKonvektorBauart.style.display = 'none';
   }
 
-  // Röhren/Glieder: nur für Stahlröhren, Stahlglieder, Gussglieder
   const hasRoehren = ['Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK'].includes(typ);
   groupRoehrenGlieder.style.display = hasRoehren ? 'grid' : 'none';
   if (!hasRoehren) {
@@ -409,12 +538,10 @@ function updateTypFields() {
     document.getElementById('f-anzahlGlieder').value = '';
   }
 
-  // Baulänge: ausblenden für Röhren-/Glieder-Typen (dort Gliederanzahl statt Länge)
   const hasBaulaenge = !hasRoehren;
   groupBaulaenge.style.display = hasBaulaenge ? 'block' : 'none';
   if (!hasBaulaenge) document.getElementById('f-baulaenge').value = '';
 
-  // Bauhöhen-Datalist je nach Typ
   let bauhoeheOpts;
   if (typ === 'Kompakt-HK' || typ === 'Konvektoren') bauhoeheOpts = CONFIG.bauhoeheKompakt;
   else if (typ === 'Stahlröhren-HK') bauhoeheOpts = CONFIG.bauhoeheRoehren;
@@ -422,18 +549,14 @@ function updateTypFields() {
   else if (typ === 'Stahlglieder-HK') bauhoeheOpts = CONFIG.bauhoeheStahl;
   else bauhoeheOpts = [...CONFIG.bauhoeheKompakt, ...CONFIG.bauhoeheRoehren];
   fillDatalist('dl-bauhoehe', bauhoeheOpts);
-
-  // Baulängen-Datalist
   fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
-
-  // Nabenabstand-Datalist
   fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
 }
 
 function fillDatalist(id, opts) {
   const dl = document.getElementById(id);
   if (!dl) return;
-  DATALIST_OPTS[id] = opts.map(String); // für Autocomplete-Filter speichern
+  DATALIST_OPTS[id] = opts.map(String);
   dl.innerHTML = opts.map(v => `<option value="${v}">`).join('');
 }
 
@@ -471,7 +594,6 @@ function getToggleValue(name) {
   return el ? el.checked : false;
 }
 
-// Felder, die als Standard übernommen werden (ohne Standort/HK-Nr/Bemerkung/Fotos)
 const STANDARD_FIELDS = [
   'typ', 'subtyp', 'konvektorBauart',
   'nabenabstand', 'dnVentil', 'ventilform', 'einbausituation', 'strang',
@@ -501,7 +623,6 @@ function readFormIntoHk(hk) {
   hk.ventilVoreinstellbar = getToggleValue('f-ventilVoreinstellbar');
   hk.ventilVoreinstellbarWert = document.getElementById('f-ventilVoreinstellbarWert').value.trim();
   hk.artThermostatkopf = document.getElementById('f-artThermostatkopf').value;
-  // Einbausituation: Checkboxen → komma-separierter String
   const einbauParts = [];
   if (document.getElementById('f-einbau-verkleidung').checked) einbauParts.push('hinter Verkleidung');
   if (document.getElementById('f-einbau-bruestung').checked) einbauParts.push('unter Brüstung');
@@ -537,7 +658,6 @@ async function saveForm() {
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
-
   await saveHeizkoerper(hk);
   await renderHkList();
   navigate('screen-hk-list');
@@ -545,14 +665,12 @@ async function saveForm() {
 }
 
 async function saveAndNextRoom() {
-  // Aktuellen HK speichern
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
   await saveHeizkoerper(hk);
   await renderHkList();
 
-  // Neuer HK in neuem Raum: Standortdaten zurücksetzen, Typ/Daten behalten
   const nextHk = newHeizkoerper(currentProjektId);
   nextHk.gebaeude = hk.gebaeude;
   nextHk.geschoss = hk.geschoss;
@@ -580,14 +698,12 @@ async function saveAndNextRoom() {
 }
 
 async function saveAndNextHk() {
-  // Aktuellen HK speichern
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
   await saveHeizkoerper(hk);
   await renderHkList();
 
-  // Neuen HK im selben Raum anlegen mit gleichen Grunddaten
   const nextHk = newHeizkoerper(currentProjektId);
   nextHk.gebaeude = hk.gebaeude;
   nextHk.geschoss = hk.geschoss;
@@ -629,7 +745,481 @@ async function confirmDeleteHk(id) {
   }
 }
 
-// ── Fotos ──
+// ── Beleuchtungs-Formular ──
+
+async function openBelForm(belId) {
+  currentBelId = belId || null;
+  currentHkId = null;
+  let bel;
+
+  document.getElementById('hk-form-section').style.display = 'none';
+  document.getElementById('bel-form-section').style.display = 'block';
+
+  if (belId) {
+    bel = await getBeleuchtung(belId);
+    document.getElementById('header-form-title').textContent = 'Beleuchtung bearbeiten';
+    document.getElementById('btn-delete-bel').style.display = 'inline-flex';
+    document.getElementById('new-hk-mode-toggle').style.display = 'none';
+  } else {
+    const last = await getLastBeleuchtung(currentProjektId);
+    const defaults = last ? {
+      gebaeude: last.gebaeude,
+      geschoss: last.geschoss,
+      raumnr: last.raumnr,
+      raumdecke: last.raumdecke,
+      installationsart: last.installationsart,
+      installationsartSub: last.installationsartSub,
+      leuchtenart: last.leuchtenart,
+      leuchtmittelKategorie: last.leuchtmittelKategorie
+    } : null;
+    bel = newBeleuchtung(currentProjektId, defaults);
+
+    const all = await getBeleuchtungByProjekt(currentProjektId);
+    const maxNr = all.reduce((max, b) => Math.max(max, Number(b.gruppenNr) || 0), 0);
+    bel.gruppenNr = maxNr + 1;
+    document.getElementById('header-form-title').textContent = 'Neue Leuchtengruppe';
+    document.getElementById('btn-delete-bel').style.display = 'none';
+
+    newBelBaseData = {
+      lastRaumnr: last ? (last.raumnr || '') : '',
+      lastRaumbezeichnung: last ? (last.raumbezeichnung || '') : '',
+      nextGruppenNr: maxNr + 1
+    };
+    const toggle = document.getElementById('new-hk-mode-toggle');
+    toggle.style.display = last ? 'block' : 'none';
+    document.getElementById('btn-mode-same-room').classList.add('active');
+    document.getElementById('btn-mode-new-room').classList.remove('active');
+  }
+
+  fillBelForm(bel);
+  navigate('screen-form');
+}
+
+function fillBelForm(bel) {
+  document.getElementById('f-gebaeude').value = bel.gebaeude || '';
+  document.getElementById('f-geschoss').value = bel.geschoss || '';
+  document.getElementById('f-raumnr').value = bel.raumnr || '';
+  document.getElementById('f-raumbezeichnung').value = bel.raumbezeichnung || '';
+  document.getElementById('f-gruppenNr').value = bel.gruppenNr || '';
+  document.getElementById('f-raumdecke').value = bel.raumdecke || '';
+  document.getElementById('f-anzahlReihen').value = bel.anzahlReihen || '';
+  document.getElementById('f-leuchtenJeReihe').value = bel.leuchtenJeReihe || '';
+  setLmToggle(Number(bel.leuchtmittelJeLeuchte) || 0);
+  document.getElementById('f-installationsart').value = bel.installationsart || '';
+  document.getElementById('f-installationsartSub').value = bel.installationsartSub || '';
+  updateInstallationsartFields();
+  document.getElementById('f-leuchtenart').value = bel.leuchtenart || '';
+  document.getElementById('f-leuchtmittelKategorie').value = bel.leuchtmittelKategorie || '';
+  document.getElementById('f-vorschaltgeraet').value = bel.vorschaltgeraet || '';
+
+  // Zustand checkboxen
+  const zustand = bel.zustand || '';
+  document.getElementById('f-zustand-defekt').checked = zustand.includes('defekt');
+  document.getElementById('f-zustand-beschaedigt').checked = zustand.includes('beschädigt');
+  document.getElementById('f-zustand-verschmutzt').checked = zustand.includes('stark verschmutzt');
+  document.getElementById('f-zustand-abgaengig').checked = zustand.includes('abgängig');
+
+  document.getElementById('f-bel-bemerkung').value = bel.bemerkung || '';
+
+  // Leuchtmittel Sub-Felder laden
+  updateLeuchtmittelFields();
+
+  // Sub-Felder nachsetzen (nach updateLeuchtmittelFields, das die Selects befüllt)
+  setTimeout(() => {
+    const kat = bel.leuchtmittelKategorie || '';
+    if (kat === 'linear') {
+      document.getElementById('f-lm-linear-typ').value = bel.leuchtmittelTyp || '';
+      document.getElementById('f-lm-linear-laenge').value = bel.leuchtmittelLaenge || '';
+      document.getElementById('f-lm-linear-wattage').value = bel.leuchtmittelWattage || '';
+    } else if (kat === 'dulux') {
+      document.getElementById('f-lm-dulux-wattage').value = bel.leuchtmittelWattage || '';
+      document.getElementById('f-lm-dulux-wendel').value = bel.wendelanzahl || '';
+      document.getElementById('f-lm-dulux-typ').value = bel.leuchtmittelTyp || '';
+    } else if (kat === 'spot') {
+      document.getElementById('f-lm-spot-typ').value = bel.leuchtmittelTyp || '';
+      updateLeuchtmittelFields(); // re-fill wattage options based on typ
+      setTimeout(() => {
+        document.getElementById('f-lm-spot-wattage').value = bel.leuchtmittelWattage || '';
+      }, 0);
+    } else if (kat === 'sq28') {
+      document.getElementById('f-lm-sq28-wattage').value = bel.leuchtmittelWattage || '';
+    } else if (kat === 'led') {
+      document.getElementById('f-lm-led-text').value = bel.leuchtmittelTyp || '';
+    }
+  }, 0);
+
+  // Fotos
+  belFormPhotos = [null, null];
+  if (bel.fotos && bel.fotos.length > 0) {
+    belFormPhotos = bel.fotos.map(f => f || null);
+    while (belFormPhotos.length < 2) belFormPhotos.push(null);
+  }
+  renderBelPhotoSlots();
+  checkBelSonstigeHinweis();
+}
+
+function readBelFormIntoObj(bel) {
+  bel.gebaeude = document.getElementById('f-gebaeude').value.trim();
+  bel.geschoss = document.getElementById('f-geschoss').value.trim();
+  bel.raumnr = document.getElementById('f-raumnr').value.trim();
+  bel.raumbezeichnung = document.getElementById('f-raumbezeichnung').value.trim();
+  bel.gruppenNr = document.getElementById('f-gruppenNr').value.trim();
+  bel.raumdecke = document.getElementById('f-raumdecke').value;
+  bel.anzahlReihen = document.getElementById('f-anzahlReihen').value.trim();
+  bel.leuchtenJeReihe = document.getElementById('f-leuchtenJeReihe').value.trim();
+  bel.leuchtmittelJeLeuchte = document.getElementById('f-leuchtmittelJeLeuchte').value;
+  bel.installationsart = document.getElementById('f-installationsart').value;
+  bel.installationsartSub = document.getElementById('f-installationsartSub').value;
+  bel.leuchtenart = document.getElementById('f-leuchtenart').value;
+  bel.leuchtmittelKategorie = document.getElementById('f-leuchtmittelKategorie').value;
+  bel.vorschaltgeraet = document.getElementById('f-vorschaltgeraet').value;
+
+  // Leuchtmittel aus aktiver Kategorie lesen
+  const kat = bel.leuchtmittelKategorie;
+  if (kat === 'linear') {
+    bel.leuchtmittelTyp = document.getElementById('f-lm-linear-typ').value;
+    bel.leuchtmittelLaenge = document.getElementById('f-lm-linear-laenge').value;
+    bel.leuchtmittelWattage = document.getElementById('f-lm-linear-wattage').value;
+    bel.wendelanzahl = '';
+  } else if (kat === 'dulux') {
+    bel.leuchtmittelTyp = document.getElementById('f-lm-dulux-typ').value;
+    bel.leuchtmittelWattage = document.getElementById('f-lm-dulux-wattage').value;
+    bel.wendelanzahl = document.getElementById('f-lm-dulux-wendel').value;
+    bel.leuchtmittelLaenge = '';
+  } else if (kat === 'spot') {
+    bel.leuchtmittelTyp = document.getElementById('f-lm-spot-typ').value;
+    bel.leuchtmittelWattage = document.getElementById('f-lm-spot-wattage').value;
+    bel.leuchtmittelLaenge = '';
+    bel.wendelanzahl = '';
+  } else if (kat === 'sq28') {
+    bel.leuchtmittelTyp = 'SQ28';
+    bel.leuchtmittelWattage = document.getElementById('f-lm-sq28-wattage').value;
+    bel.leuchtmittelLaenge = '';
+    bel.wendelanzahl = '';
+  } else if (kat === 'led') {
+    bel.leuchtmittelTyp = document.getElementById('f-lm-led-text').value.trim();
+    bel.leuchtmittelWattage = '';
+    bel.leuchtmittelLaenge = '';
+    bel.wendelanzahl = '';
+  } else {
+    bel.leuchtmittelTyp = '';
+    bel.leuchtmittelWattage = '';
+    bel.leuchtmittelLaenge = '';
+    bel.wendelanzahl = '';
+  }
+
+  // Zustand
+  const zustandParts = [];
+  if (document.getElementById('f-zustand-defekt').checked) zustandParts.push('defekt');
+  if (document.getElementById('f-zustand-beschaedigt').checked) zustandParts.push('beschädigt');
+  if (document.getElementById('f-zustand-verschmutzt').checked) zustandParts.push('stark verschmutzt');
+  if (document.getElementById('f-zustand-abgaengig').checked) zustandParts.push('abgängig');
+  bel.zustand = zustandParts.join(', ');
+
+  bel.bemerkung = document.getElementById('f-bel-bemerkung').value.trim();
+  bel.fotos = belFormPhotos.filter(Boolean);
+  bel.erfasser = localStorage.getItem('erfasser-name') || '';
+  return bel;
+}
+
+async function saveBelForm() {
+  const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
+  readBelFormIntoObj(bel);
+  await saveBeleuchtung(bel);
+  await renderHkList();
+  navigate('screen-hk-list');
+  showToast('Leuchtengruppe gespeichert');
+}
+
+async function saveBelAndNextGroup() {
+  const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
+  readBelFormIntoObj(bel);
+  await saveBeleuchtung(bel);
+  await renderHkList();
+
+  const nextBel = newBeleuchtung(currentProjektId, {
+    gebaeude: bel.gebaeude,
+    geschoss: bel.geschoss,
+    raumnr: bel.raumnr,
+    raumbezeichnung: bel.raumbezeichnung,
+    raumdecke: bel.raumdecke,
+    installationsart: bel.installationsart,
+    installationsartSub: bel.installationsartSub,
+    leuchtenart: bel.leuchtenart,
+    leuchtmittelKategorie: bel.leuchtmittelKategorie
+  });
+  nextBel.gruppenNr = (Number(bel.gruppenNr) || 0) + 1;
+
+  currentBelId = null;
+  document.getElementById('header-form-title').textContent = 'Neue Leuchtengruppe';
+  document.getElementById('btn-delete-bel').style.display = 'none';
+  fillBelForm(nextBel);
+  window.scrollTo(0, 0);
+  showToast(`BEL ${bel.gruppenNr} gespeichert → BEL ${nextBel.gruppenNr}`);
+}
+
+async function saveBelAndNextRoom() {
+  const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
+  readBelFormIntoObj(bel);
+  await saveBeleuchtung(bel);
+  await renderHkList();
+
+  const nextBel = newBeleuchtung(currentProjektId, {
+    gebaeude: bel.gebaeude,
+    geschoss: bel.geschoss,
+    raumdecke: bel.raumdecke,
+    installationsart: bel.installationsart,
+    installationsartSub: bel.installationsartSub,
+    leuchtenart: bel.leuchtenart,
+    leuchtmittelKategorie: bel.leuchtmittelKategorie
+  });
+  nextBel.raumnr = '';
+  nextBel.raumbezeichnung = '';
+  nextBel.gruppenNr = 1;
+
+  currentBelId = null;
+  document.getElementById('header-form-title').textContent = 'Neue Leuchtengruppe';
+  document.getElementById('btn-delete-bel').style.display = 'none';
+  fillBelForm(nextBel);
+  window.scrollTo(0, 0);
+  document.getElementById('f-raumnr').focus();
+  showToast(`BEL ${bel.gruppenNr} gespeichert → neuer Raum`);
+}
+
+async function deleteCurrentBel() {
+  if (!currentBelId) return;
+  if (confirm('Leuchtengruppe wirklich löschen?')) {
+    await deleteBeleuchtung(currentBelId);
+    await renderHkList();
+    navigate('screen-hk-list');
+    showToast('Leuchtengruppe gelöscht');
+  }
+}
+
+async function confirmDeleteBel(id) {
+  const bel = await getBeleuchtung(id);
+  if (confirm(`BEL ${bel.gruppenNr || '-'} (${bel.geschoss || ''} / R${bel.raumnr || ''}) wirklich löschen?`)) {
+    await deleteBeleuchtung(id);
+    await renderHkList();
+    showToast('Leuchtengruppe gelöscht');
+  }
+}
+
+// ── Leuchtmittel je Leuchte Toggle ──
+
+function setLmToggle(val) {
+  document.getElementById('f-leuchtmittelJeLeuchte').value = val || '';
+  document.querySelectorAll('.lm-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', Number(btn.dataset.val) === val);
+  });
+}
+
+// ── Installationsart Sub-Select ──
+
+function updateInstallationsartFields() {
+  const art = document.getElementById('f-installationsart').value;
+  document.getElementById('group-installationsartSub').style.display = art === 'Pendel' ? 'block' : 'none';
+  if (art !== 'Pendel') document.getElementById('f-installationsartSub').value = '';
+  checkBelSonstigeHinweis();
+}
+
+// ── Leuchtmittel Smart-Lookup ──
+
+function updateLeuchtmittelFields() {
+  const kat = document.getElementById('f-leuchtmittelKategorie').value;
+
+  // Alle Sub-Felder verstecken
+  document.getElementById('lm-linear-fields').style.display = 'none';
+  document.getElementById('lm-dulux-fields').style.display = 'none';
+  document.getElementById('lm-spot-fields').style.display = 'none';
+  document.getElementById('lm-sq28-fields').style.display = 'none';
+  document.getElementById('lm-led-fields').style.display = 'none';
+
+  if (kat === 'linear') {
+    document.getElementById('lm-linear-fields').style.display = 'block';
+    // Typ-Select befüllen
+    const typSel = document.getElementById('f-lm-linear-typ');
+    const curTyp = typSel.value;
+    typSel.innerHTML = '<option value="">Bitte wählen</option>';
+    for (const t of Object.keys(LEUCHTMITTEL_DB.linear)) {
+      typSel.innerHTML += `<option value="${esc(t)}">${esc(t)}</option>`;
+    }
+    typSel.value = curTyp;
+
+    // Längen/Wattage Datalists basierend auf ausgewähltem Typ
+    const selectedTyp = typSel.value;
+    if (selectedTyp && LEUCHTMITTEL_DB.linear[selectedTyp]) {
+      const entries = LEUCHTMITTEL_DB.linear[selectedTyp];
+      const laengen = [...new Set(entries.map(e => e.mm))].sort((a,b) => a-b);
+      const wattages = [...new Set(entries.map(e => e.w))].sort((a,b) => a-b);
+      document.getElementById('dl-lm-laenge').innerHTML = laengen.map(v => `<option value="${v}">`).join('');
+      document.getElementById('dl-lm-wattage').innerHTML = wattages.map(v => `<option value="${v}">`).join('');
+
+      // Auto-fill: Länge → Wattage vorschlagen
+      const laengeVal = document.getElementById('f-lm-linear-laenge').value;
+      if (laengeVal) {
+        const matching = entries.filter(e => e.mm === Number(laengeVal));
+        if (matching.length > 0) {
+          document.getElementById('dl-lm-wattage').innerHTML = matching.map(e => `<option value="${e.w}">`).join('');
+          if (matching.length === 1 && !document.getElementById('f-lm-linear-wattage').value) {
+            document.getElementById('f-lm-linear-wattage').value = matching[0].w;
+          }
+        }
+      }
+      // Auto-fill: Wattage → Länge vorschlagen
+      const wattVal = document.getElementById('f-lm-linear-wattage').value;
+      if (wattVal) {
+        const matching = entries.filter(e => e.w === Number(wattVal));
+        if (matching.length === 1 && !document.getElementById('f-lm-linear-laenge').value) {
+          document.getElementById('f-lm-linear-laenge').value = matching[0].mm;
+        }
+      }
+    } else {
+      document.getElementById('dl-lm-laenge').innerHTML = '';
+      document.getElementById('dl-lm-wattage').innerHTML = '';
+    }
+
+  } else if (kat === 'dulux') {
+    document.getElementById('lm-dulux-fields').style.display = 'block';
+    // Typ ermitteln aus Wendel + Wattage
+    const wattage = Number(document.getElementById('f-lm-dulux-wattage').value);
+    const wendel = document.getElementById('f-lm-dulux-wendel').value;
+    let ermittelt = '';
+    if (wattage && wendel) {
+      for (const [name, info] of Object.entries(LEUCHTMITTEL_DB.dulux)) {
+        if (info.wendel === wendel && info.wattages.includes(wattage)) {
+          ermittelt = `${name} ${wattage}W`;
+          // EVG-Hinweis
+          if (info.evg) {
+            const vsg = document.getElementById('f-vorschaltgeraet');
+            if (!vsg.value) vsg.value = 'EVG';
+          }
+          break;
+        }
+      }
+      // Falls keine exakte Wendel-Übereinstimmung, Dulux F/L prüfen
+      if (!ermittelt) {
+        for (const name of ['Dulux F', 'Dulux L']) {
+          if (LEUCHTMITTEL_DB.dulux[name].wattages.includes(wattage)) {
+            ermittelt = `${name} ${wattage}W (?)`;
+            break;
+          }
+        }
+      }
+    }
+    document.getElementById('f-lm-dulux-typ').value = ermittelt;
+
+  } else if (kat === 'spot') {
+    document.getElementById('lm-spot-fields').style.display = 'block';
+    const typSel = document.getElementById('f-lm-spot-typ');
+    const curTyp = typSel.value;
+    typSel.innerHTML = '<option value="">Bitte wählen</option>';
+    for (const t of Object.keys(LEUCHTMITTEL_DB.spot)) {
+      typSel.innerHTML += `<option value="${esc(t)}">${esc(t)}</option>`;
+    }
+    typSel.value = curTyp;
+
+    // Wattage-Options basierend auf Typ
+    const wattSel = document.getElementById('f-lm-spot-wattage');
+    const curWatt = wattSel.value;
+    wattSel.innerHTML = '<option value="">Bitte wählen</option>';
+    if (curTyp && LEUCHTMITTEL_DB.spot[curTyp]) {
+      for (const w of LEUCHTMITTEL_DB.spot[curTyp]) {
+        wattSel.innerHTML += `<option value="${w}">${w} W</option>`;
+      }
+    }
+    wattSel.value = curWatt;
+
+  } else if (kat === 'sq28') {
+    document.getElementById('lm-sq28-fields').style.display = 'block';
+
+  } else if (kat === 'led') {
+    document.getElementById('lm-led-fields').style.display = 'block';
+  }
+}
+
+// ── Bel Sonstige Hinweis ──
+
+function checkBelSonstigeHinweis() {
+  const hinweis = document.getElementById('bel-sonstige-foto-hinweis');
+  if (!hinweis) return;
+  const raumdecke = document.getElementById('f-raumdecke').value;
+  const installationsart = document.getElementById('f-installationsart').value;
+  const leuchtenart = document.getElementById('f-leuchtenart').value;
+  hinweis.style.display = (raumdecke === 'Sonstige' || installationsart === 'Sonstige' || leuchtenart === 'Sonstige') ? 'block' : 'none';
+}
+
+// ── Bel Fotos ──
+
+function renderBelPhotoSlots() {
+  const container = document.getElementById('bel-photo-slots-container');
+  if (!container) return;
+  let html = '';
+  for (let i = 0; i < belFormPhotos.length; i++) {
+    if (belFormPhotos[i]) {
+      html += `<div class="photo-slot" onclick="triggerBelPhoto(${i})">
+        <img src="${belFormPhotos[i]}" alt="Foto ${i + 1}">
+        <button class="remove-photo" onclick="event.stopPropagation(); removeBelPhoto(${i})">&times;</button>
+      </div>`;
+    } else {
+      html += `<div class="photo-slot" onclick="triggerBelPhoto(${i})">
+        <div class="placeholder">Foto ${i + 1}</div>
+      </div>`;
+    }
+  }
+  html += `<div class="photo-slot photo-slot-add" onclick="addBelPhotoSlot()">
+    <div class="placeholder" style="font-size:1.5rem">+</div>
+  </div>`;
+  container.innerHTML = html;
+}
+
+function addBelPhotoSlot() {
+  belFormPhotos.push(null);
+  const newIndex = belFormPhotos.length - 1;
+  renderBelPhotoSlots();
+  triggerBelPhoto(newIndex);
+}
+
+let _belCameraIndex = 0;
+
+async function triggerBelPhoto(index) {
+  _belCameraIndex = index;
+  _photoTarget = 'bel';
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 4096 }, height: { ideal: 3072 } }
+      });
+      openCameraModal(stream);
+      return;
+    } catch (e) {
+      if (e.name === 'NotAllowedError') { showToast('Kamera-Berechtigung benötigt'); return; }
+    }
+  }
+  const input = document.getElementById('bel-photo-input');
+  input.dataset.index = index;
+  input.click();
+}
+
+function handleBelPhotoInput(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const index = parseInt(input.dataset.index);
+  compressImage(file, (dataUrl) => {
+    belFormPhotos[index] = dataUrl;
+    renderBelPhotoSlots();
+  });
+  input.value = '';
+}
+
+function removeBelPhoto(index) {
+  belFormPhotos[index] = null;
+  renderBelPhotoSlots();
+}
+
+// ── HK Fotos ──
+
+let _photoTarget = 'hk'; // 'hk' or 'bel'
 
 function renderPhotoSlots() {
   const container = document.getElementById('photo-slots-container');
@@ -647,7 +1237,6 @@ function renderPhotoSlots() {
       </div>`;
     }
   }
-  // "+Foto"-Button
   html += `<div class="photo-slot photo-slot-add" onclick="addPhotoSlot()">
     <div class="placeholder" style="font-size:1.5rem">+</div>
   </div>`;
@@ -661,16 +1250,13 @@ function addPhotoSlot() {
   triggerPhoto(newIndex);
 }
 
-// ── Sonstige-Hinweis ──
-
 function checkSonstigeHinweis() {
   const hinweis = document.getElementById('sonstige-foto-hinweis');
   if (!hinweis) return;
   const typ = document.getElementById('f-typ').value;
-  const einbau = document.getElementById('f-einbausituation');
   const einbauSonstige = document.getElementById('f-einbau-sonstige');
   const thermo = document.getElementById('f-artThermostatkopf').value;
-  const einbauIsSonstige = einbauSonstige ? einbauSonstige.checked : (einbau ? einbau.value === 'sonstige' : false);
+  const einbauIsSonstige = einbauSonstige ? einbauSonstige.checked : false;
   hinweis.style.display = (typ === 'Sonstige' || einbauIsSonstige || thermo === 'Sonstiges') ? 'block' : 'none';
 }
 
@@ -679,7 +1265,7 @@ let _cameraIndex = 0;
 
 async function triggerPhoto(index) {
   _cameraIndex = index;
-  // Versuche getUserMedia für explizite Rückkamera (höhere Auflösung)
+  _photoTarget = 'hk';
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -692,7 +1278,6 @@ async function triggerPhoto(index) {
         showToast('Kamera-Berechtigung benötigt');
         return;
       }
-      // Andere Fehler: Fallback auf File-Input (ohne capture-Attribut)
     }
   }
   const input = document.getElementById('photo-input');
@@ -728,8 +1313,13 @@ function captureFromStream() {
   closeCameraModal();
   const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
   compressImage(null, (compressed) => {
-    formPhotos[_cameraIndex] = compressed;
-    renderPhotoSlots();
+    if (_photoTarget === 'bel') {
+      belFormPhotos[_belCameraIndex] = compressed;
+      renderBelPhotoSlots();
+    } else {
+      formPhotos[_cameraIndex] = compressed;
+      renderPhotoSlots();
+    }
   }, dataUrl);
 }
 
@@ -745,25 +1335,22 @@ function handlePhotoInput(input) {
 }
 
 function compressImage(file, callback, directDataUrl) {
-  // Speicherung in hoher Qualität — Komprimierung erst beim Export/Versenden
-  const MAX_BYTES = 3_000_000;  // 3 MB für Speicherung (statt 800KB)
+  const MAX_BYTES = 3_000_000;
 
   function processImage(src) {
     const img = new Image();
     img.onerror = () => {
       showToast('Foto konnte nicht geladen werden');
-      renderPhotoSlots();
     };
     img.onload = () => {
       const canvas = document.createElement('canvas');
       let w = img.width, h = img.height;
-      const maxW = 2560;  // Höhere Auflösung für Speicherung
+      const maxW = 2560;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       canvas.width = w;
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
-      // Leichte Komprimierung für Speicherung (hohe Qualität beibehalten)
       let quality = 0.92;
       let dataUrl = canvas.toDataURL('image/jpeg', quality);
       let bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
@@ -784,7 +1371,6 @@ function compressImage(file, callback, directDataUrl) {
     const reader = new FileReader();
     reader.onerror = () => {
       showToast('Fehler beim Laden des Fotos');
-      renderPhotoSlots();
     };
     reader.onload = (e) => processImage(e.target.result);
     reader.readAsDataURL(file);
@@ -800,7 +1386,7 @@ function removePhoto(index) {
 
 function parseGebaeudedatenXlsx(arrayBuffer) {
   const wb = XLSX.read(arrayBuffer, { type: 'array' });
-  const result = {}; // Key=Liegenschaft (Sheet-Name), Value={gebaeude,geschoss,raum,raumDetails}
+  const result = {};
 
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
@@ -867,14 +1453,11 @@ async function fetchGebaeudedatenFromServer() {
 }
 
 async function loadGebaeudedaten() {
-  // Zuerst vom Server holen (immer aktuell)
   const fetched = await fetchGebaeudedatenFromServer();
   if (!fetched) {
-    // Offline-Fallback: aus localStorage laden
     const stored = localStorage.getItem('gebaeudedaten');
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Backwards-Compat: altes Format {gebaeude,...} → {Standard: {...}}
       if (parsed.gebaeude && Array.isArray(parsed.gebaeude)) {
         allGebaeudeDaten = { Standard: parsed };
       } else {
@@ -891,7 +1474,6 @@ function getActiveGebaeudeDaten() {
   if (currentLiegenschaft && allGebaeudeDaten[currentLiegenschaft]) {
     return allGebaeudeDaten[currentLiegenschaft];
   }
-  // Fallback: erste verfügbare Liegenschaft
   const keys = Object.keys(allGebaeudeDaten);
   if (keys.length > 0) return allGebaeudeDaten[keys[0]];
   return { gebaeude: [], geschoss: [], raum: [], raumDetails: {} };
@@ -929,28 +1511,35 @@ function hideZipProgress() {
 }
 
 async function sendData() {
-  const hks = await getHeizkoerperByProjekt(currentProjektId);
   const projekt = await getProjekt(currentProjektId);
-  if (hks.length === 0) {
-    showToast('Keine Heizkörper zum Versenden');
+  const modul = projekt.modulType || 'hk';
+  const showHk = modul === 'hk' || modul === 'beides';
+  const showBel = modul === 'beleuchtung' || modul === 'beides';
+
+  const hks = showHk ? await getHeizkoerperByProjekt(currentProjektId) : [];
+  const bels = showBel ? await getBeleuchtungByProjekt(currentProjektId) : [];
+
+  if (hks.length === 0 && bels.length === 0) {
+    showToast('Keine Daten zum Versenden');
     return;
   }
 
   const btnSend = document.getElementById('btn-send-data');
   if (btnSend) btnSend.disabled = true;
 
-  hks.sort((a, b) =>
+  const sortFn = (a, b) =>
     (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
     (a.geschoss || '').localeCompare(b.geschoss || '') ||
-    (a.raumnr || '').localeCompare(b.raumnr || '') ||
-    (Number(a.hkNr) || 0) - (Number(b.hkNr) || 0)
-  );
+    (a.raumnr || '').localeCompare(b.raumnr || '');
+
+  hks.sort((a, b) => sortFn(a, b) || (Number(a.hkNr) || 0) - (Number(b.hkNr) || 0));
+  bels.sort((a, b) => sortFn(a, b) || (Number(a.gruppenNr) || 0) - (Number(b.gruppenNr) || 0));
 
   const safeName = sanitizeFilename(projekt.name);
-  const subject = `HK-Aufnahme: ${projekt.name}`;
-  const zipFileName = safeName + '_HK-Aufnahme.zip';
+  const modulLabel = modul === 'hk' ? 'HK-Aufnahme' : modul === 'beleuchtung' ? 'Beleuchtung' : 'HK+Beleuchtung';
+  const subject = `${modulLabel}: ${projekt.name}`;
+  const zipFileName = safeName + '_' + modulLabel.replace(/\+/g, '-') + '.zip';
 
-  // Empfänger sammeln
   const recipients = [];
   if (document.getElementById('send-r1').checked) recipients.push(document.getElementById('send-r1').value);
   if (document.getElementById('send-r2').checked) recipients.push(document.getElementById('send-r2').value);
@@ -960,19 +1549,18 @@ async function sendData() {
 
   try {
     showZipProgress('Erstelle Excel…', 0);
-    const zipBlob = await buildExportZip(hks, safeName, (done, total) => {
+    const zipBlob = await buildExportZip(hks, bels, modul, safeName, (done, total) => {
       showZipProgress(`Foto ${done} von ${total} komprimiert`, done / total * 100);
     });
     hideZipProgress();
 
     const zipFile = new File([zipBlob], zipFileName, { type: 'application/zip' });
 
-    // Web Share API: Datei wird tatsächlich als Anhang geteilt
     if (navigator.canShare && navigator.canShare({ files: [zipFile] })) {
       try {
         const shareData = { title: subject, files: [zipFile] };
         if (recipients.length > 0) {
-          shareData.text = 'An: ' + recipients.join(', ') + '\n\nHK-Aufnahme als ZIP-Datei.';
+          shareData.text = 'An: ' + recipients.join(', ') + '\n\n' + modulLabel + ' als ZIP-Datei.';
         }
         await navigator.share(shareData);
         closeSendDialog();
@@ -983,7 +1571,6 @@ async function sendData() {
       }
     }
 
-    // Fallback: ZIP herunterladen, dann mailto mit Hinweis zum Anhängen
     downloadBlob(zipBlob, zipFileName);
     if (recipients.length > 0) {
       const body = 'Bitte die heruntergeladene Datei "' + zipFileName + '" an diese E-Mail anhängen.';
@@ -998,32 +1585,51 @@ async function sendData() {
   }
 }
 
-async function buildExportZip(hks, safeName, onProgress) {
-  const data = [EXPORT_HEADERS, ...hks.map(hkToRow)];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = EXPORT_HEADERS.map((h, i) => ({
-    wch: Math.max(h.length, ...hks.map(hk => String(hkToRow(hk)[i] || '').length), 10)
-  }));
+async function buildExportZip(hks, bels, modul, safeName, onProgress) {
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'HK-Aufnahme');
+
+  if (hks.length > 0) {
+    const hkData = [EXPORT_HEADERS, ...hks.map(hkToRow)];
+    const wsHk = XLSX.utils.aoa_to_sheet(hkData);
+    wsHk['!cols'] = EXPORT_HEADERS.map((h, i) => ({
+      wch: Math.max(h.length, ...hks.map(hk => String(hkToRow(hk)[i] || '').length), 10)
+    }));
+    XLSX.utils.book_append_sheet(wb, wsHk, 'HK-Aufnahme');
+  }
+
+  if (bels.length > 0) {
+    const belData = [BEL_EXPORT_HEADERS, ...bels.map(belToRow)];
+    const wsBel = XLSX.utils.aoa_to_sheet(belData);
+    wsBel['!cols'] = BEL_EXPORT_HEADERS.map((h, i) => ({
+      wch: Math.max(h.length, ...bels.map(b => String(belToRow(b)[i] || '').length), 10)
+    }));
+    XLSX.utils.book_append_sheet(wb, wsBel, 'Beleuchtung');
+  }
+
   const xlsxBytes = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const modulLabel = modul === 'hk' ? 'HK-Aufnahme' : modul === 'beleuchtung' ? 'Beleuchtung' : 'HK-Beleuchtung';
+  const zipFiles = [{ name: safeName + '_' + modulLabel + '.xlsx', data: new Uint8Array(xlsxBytes) }];
 
-  const zipFiles = [{ name: safeName + '_HK-Aufnahme.xlsx', data: new Uint8Array(xlsxBytes) }];
-
-  // Alle Foto-Slots sammeln
+  // Fotos sammeln
   const allFotos = [];
   for (const hk of hks)
     for (let i = 0; i < (hk.fotos || []).length; i++)
-      if (hk.fotos[i]) allFotos.push({ hk, i });
+      if (hk.fotos[i]) allFotos.push({ item: hk, i, type: 'hk' });
+  for (const bel of bels)
+    for (let i = 0; i < (bel.fotos || []).length; i++)
+      if (bel.fotos[i]) allFotos.push({ item: bel, i, type: 'bel' });
 
-  // Batch-Kompression mit UI-Yield zwischen Batches
   const BATCH = 3;
   for (let b = 0; b < allFotos.length; b += BATCH) {
     const batch = allFotos.slice(b, b + BATCH);
-    const results = await Promise.all(batch.map(f => compressForExport(f.hk.fotos[f.i])));
-    results.forEach((data, j) => zipFiles.push({ name: fotoFilename(batch[j].hk, batch[j].i), data }));
+    const results = await Promise.all(batch.map(f => compressForExport(f.item.fotos[f.i])));
+    results.forEach((data, j) => {
+      const f = batch[j];
+      const fname = f.type === 'hk' ? fotoFilename(f.item, f.i) : belFotoFilename(f.item, f.i);
+      zipFiles.push({ name: fname, data });
+    });
     if (onProgress) onProgress(Math.min(b + BATCH, allFotos.length), allFotos.length);
-    await new Promise(r => setTimeout(r, 0)); // UI-Thread freigeben
+    await new Promise(r => setTimeout(r, 0));
   }
 
   const zipData = buildZip(zipFiles);
@@ -1038,7 +1644,6 @@ function populateDropdowns() {
   fillDatalist('dl-dnVentil', CONFIG.dnVentil);
   fillSelect('f-ventilform', CONFIG.ventilform, 'Ventilform');
   fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf, 'Thermostatkopf', { 'Sonstiges': 'Sonstiges → Foto!' });
-  // Datalists werden in updateTypFields befüllt
   fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
   fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
 }
@@ -1073,10 +1678,8 @@ function openHelpImage(src, title) {
   img.style.width = '';
   img.style.maxWidth = '';
   document.getElementById('modal-help-image').style.display = 'flex';
-  // Tipp zum Umschalten zwischen Normal/Zoom
   img.onclick = () => {
     if (img.style.width) {
-      // nach Pinch-Zoom: zurücksetzen
       img.style.width = '';
       img.style.maxWidth = '';
     } else {
@@ -1088,7 +1691,6 @@ function openHelpImage(src, title) {
 
 function setupHelpImagePinchZoom(img) {
   const body = img.parentElement;
-  // Alte Handler entfernen
   if (_helpPinchHandlers) {
     body.removeEventListener('touchstart', _helpPinchHandlers.start);
     body.removeEventListener('touchmove', _helpPinchHandlers.move);
@@ -1143,7 +1745,6 @@ const README_URL = 'https://raw.githubusercontent.com/e1felixr/heizkoerper/main/
 
 function openHelp() {
   navigate('screen-help');
-  // Default: Kurzanleitung zeigen
   document.getElementById('help-quick').style.display = 'block';
   document.getElementById('help-detail').style.display = 'none';
 }
@@ -1154,7 +1755,6 @@ function toggleDetailHelp() {
   if (detail.style.display === 'none') {
     detail.style.display = 'block';
     quick.style.display = 'none';
-    // README laden falls noch nicht geladen
     const cached = localStorage.getItem('readme-cache');
     if (cached) renderReadme(cached);
     fetchReadme(false);
@@ -1181,43 +1781,28 @@ async function fetchReadme(showToastOnSuccess) {
 }
 
 function renderReadme(md) {
-  // Minimaler Markdown → HTML Konverter
   let html = esc_md(md)
-    // Code-Blöcke (```…```)
     .replace(/```[\w]*\n([\s\S]*?)```/g, (_, c) => `<pre><code>${c.trimEnd()}</code></pre>`)
-    // Tabellen (einfach, Header + Rows)
     .replace(/(\|.+\|\n\|[-| :]+\|\n(?:\|.+\|\n?)*)/g, mdTable)
-    // Überschriften
     .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    // Checkbox-Listenpunkte
     .replace(/^- \[ \] (.+)$/gm, '<li class="cb-open">&#9744; $1</li>')
     .replace(/^- \[x\] (.+)$/gm, '<li class="cb-done">&#9745; $1</li>')
-    // Ungeordnete Listen
     .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
-    // Aufeinanderfolgende <li> in <ul> wrappen
     .replace(/(<li>[\s\S]*?<\/li>)(\n<li>[\s\S]*?<\/li>)*/g, m => `<ul>${m}</ul>`)
-    // Fett
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Kursiv
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Inline-Code
     .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // Links
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-    // Horizontale Linie
     .replace(/^---+$/gm, '<hr>')
-    // Leerzeilen → Absätze (nur zwischen nicht-Block-Elementen)
     .replace(/\n{2,}/g, '\n<br>\n');
 
   document.getElementById('help-content').innerHTML = html;
 }
 
 function esc_md(str) {
-  // Nur HTML-Sonderzeichen escapen, die nicht Teil von Markdown-Syntax sind
-  // Wir escapen < und > außerhalb von bereits verarbeiteten Tags
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
@@ -1254,7 +1839,6 @@ function openSettings() {
   document.getElementById('set-fieldpadding').value = s.fieldPadding;
   document.getElementById('val-fieldpadding').textContent = s.fieldPadding + 'px';
 
-  // Abbrechen-Button ausblenden wenn Erfasser noch nicht gesetzt (Pflicht)
   document.getElementById('btn-settings-cancel').style.display = settingsReady ? '' : 'none';
 
   navigate('screen-settings');
@@ -1280,10 +1864,9 @@ function saveSettings() {
 }
 
 async function resetAllData() {
-  if (!confirm('ACHTUNG: Alle Projekte, Heizkörper und Gebäudedaten werden unwiderruflich gelöscht!\n\nFortfahren?')) return;
+  if (!confirm('ACHTUNG: Alle Projekte, Heizkörper, Beleuchtungsdaten und Gebäudedaten werden unwiderruflich gelöscht!\n\nFortfahren?')) return;
   if (!confirm('Wirklich ALLE Daten löschen? Dies kann nicht rückgängig gemacht werden!')) return;
 
-  // IndexedDB löschen
   const projekte = await getAllProjekte();
   for (const p of projekte) {
     await deleteProjekt(p.id);
@@ -1329,9 +1912,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadGebaeudedaten();
   await renderProjekte();
 
-  // Event-Listener für Typ-Dropdown
+  // HK Event-Listener
   document.getElementById('f-typ').addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
   document.getElementById('f-artThermostatkopf').addEventListener('change', checkSonstigeHinweis);
+
+  // Beleuchtung Event-Listener
+  document.getElementById('f-raumdecke').addEventListener('change', checkBelSonstigeHinweis);
+  document.getElementById('f-leuchtenart').addEventListener('change', checkBelSonstigeHinweis);
 
   // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
   document.getElementById('f-raumnr').addEventListener('change', () => {
@@ -1345,6 +1932,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Gebäude-Filter: Geschoss-Datalist filtern
+  document.getElementById('f-gebaeude').addEventListener('change', () => {
+    filterDatalistsForGebaeude();
+  });
+
+  // Geschoss-Filter: Raum-Datalist filtern
+  document.getElementById('f-geschoss').addEventListener('change', () => {
+    filterDatalistsForGeschoss();
+  });
+
   // Filter
   document.getElementById('filter-text').addEventListener('input', renderHkList);
 
@@ -1353,18 +1950,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Enter') createNewProjekt();
   });
 
-  // Wenn kein Erfasser-Name gesetzt -> Settings erzwingen
   if (!settingsReady) {
     openSettings();
     return;
   }
 
-  // Startseite oder Hash-Navigation
   const hash = location.hash.replace('#', '');
   if (hash) {
     navigate(hash, false);
   }
 });
+
+// ── Raum-Filterung ──
+
+function filterDatalistsForGebaeude() {
+  const data = getActiveGebaeudeDaten();
+  // Aktuell keine gebäude-spezifische Filterung, da Gebäudedaten-Format das nicht direkt unterstützt
+  // Kann hier bei Bedarf erweitert werden
+}
+
+function filterDatalistsForGeschoss() {
+  // Aktuell keine geschoss-spezifische Filterung
+  // Kann hier bei Bedarf erweitert werden
+}
 
 // ── Service Worker Registrierung ──
 if ('serviceWorker' in navigator) {
@@ -1382,24 +1990,20 @@ async function checkForUpdate() {
       await forceUpdate();
     }
   } catch {
-    // Offline oder Fehler - kein Update möglich, weiter mit aktueller Version
+    // Offline oder Fehler
   }
 }
 
 async function forceUpdate() {
-  // 1. Service Worker Cache komplett löschen
   if ('caches' in window) {
     const keys = await caches.keys();
     await Promise.all(keys.map(k => caches.delete(k)));
   }
-  // 2. Service Worker deregistrieren
   if ('serviceWorker' in navigator) {
     const regs = await navigator.serviceWorker.getRegistrations();
     await Promise.all(regs.map(r => r.unregister()));
   }
-  // 3. Seite komplett neu laden (vom Server)
   window.location.reload();
 }
 
-// Versionscheck 2 Sekunden nach Start (damit UI sofort da ist)
 setTimeout(checkForUpdate, 2000);

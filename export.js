@@ -1,5 +1,7 @@
 // export.js - xlsx- und CSV-Export mit Foto-ZIP
 
+// ── HK Export ──
+
 const EXPORT_HEADERS = [
   'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'HK-Nr.',
   'Typ', 'Bauart', 'Bauart Konvektor', 'Baulänge [mm]', 'Bauhöhe [mm]', 'Anz. Röhren', 'Anz. Glieder',
@@ -35,9 +37,50 @@ function hkToRow(hk) {
     if (typeof val === 'boolean') return val ? 'Ja' : 'Nein';
     return val != null ? String(val) : '';
   });
-  // Foto-Dateinamen anhängen
   for (let i = 0; i < 3; i++) {
     row.push(hk.fotos && hk.fotos[i] ? fotoFilename(hk, i) : '');
+  }
+  return row;
+}
+
+// ── Beleuchtung Export ──
+
+const BEL_EXPORT_HEADERS = [
+  'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'Gruppen-Nr.',
+  'Raumdecke', 'Anzahl Reihen', 'Leuchten je Reihe', 'Leuchtmittel je Leuchte',
+  'Installationsart', 'Installationsart Detail', 'Leuchtenart',
+  'Leuchtmittel Kategorie', 'Leuchtmittel Typ', 'Leuchtmittel Länge [mm]', 'Leuchtmittel Wattage [W]',
+  'Wendelanzahl', 'Vorschaltgerät', 'Zustand',
+  'Bemerkung', 'Erfasser', 'Erfasst am',
+  'Foto 1', 'Foto 2', 'Foto 3'
+];
+
+const BEL_EXPORT_FIELDS = [
+  'gebaeude', 'geschoss', 'raumnr', 'raumbezeichnung', 'gruppenNr',
+  'raumdecke', 'anzahlReihen', 'leuchtenJeReihe', 'leuchtmittelJeLeuchte',
+  'installationsart', 'installationsartSub', 'leuchtenart',
+  'leuchtmittelKategorie', 'leuchtmittelTyp', 'leuchtmittelLaenge', 'leuchtmittelWattage',
+  'wendelanzahl', 'vorschaltgeraet', 'zustand',
+  'bemerkung', 'erfasser', 'erstelltAm'
+];
+
+function belFotoFilename(bel, index) {
+  const parts = [
+    bel.geschoss || 'X',
+    bel.raumnr || 'X',
+    'BEL' + (bel.gruppenNr || 'X')
+  ].map(s => sanitizeFilename(String(s)));
+  const suffix = index > 0 ? `_${index + 1}` : '';
+  return `Fotos/${parts.join('_')}${suffix}.jpg`;
+}
+
+function belToRow(bel) {
+  const row = BEL_EXPORT_FIELDS.map(f => {
+    const val = bel[f];
+    return val != null ? String(val) : '';
+  });
+  for (let i = 0; i < 3; i++) {
+    row.push(bel.fotos && bel.fotos[i] ? belFotoFilename(bel, i) : '');
   }
   return row;
 }
@@ -198,7 +241,5 @@ function downloadBlob(blob, filename) {
 }
 
 function sanitizeFilename(name) {
-  // Punkt und Bindestrich erlauben (für Raumnummern wie "1.54" oder "1-003")
-  // Nur echte Pfad-Trennzeichen und Sonderzeichen entfernen
   return name.replace(/[\/\\:*?"<>|]/g, '').replace(/\s+/g, '_');
 }

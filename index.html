@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#1565C0">
+  <meta name="theme-color" content="#FF6633">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>HK-Aufnahme</title>
@@ -18,7 +18,7 @@
 <div class="header" id="header">
   <button class="btn-back" id="btn-back" onclick="history.back()" style="display:none">&#8592;</button>
   <div class="header-text" id="header-title">
-    <span class="header-main">Heizkörper-Erfassung <span id="header-version"></span></span>
+    <span class="header-main">Erfassung <span id="header-version"></span></span>
     <span class="header-sub" id="header-timestamp"></span>
   </div>
   <button class="btn-help" id="btn-help" onclick="openHelp()" title="Hilfe / Anleitung">&#9432;</button>
@@ -31,19 +31,19 @@
   <button class="fab" onclick="showNewProjektDialog()" title="Neues Projekt">+</button>
 </div>
 
-<!-- ════════ SCREEN: Heizkörper-Liste ════════ -->
+<!-- ════════ SCREEN: Liste (HK / Beleuchtung / Beides) ════════ -->
 <div class="screen" id="screen-hk-list">
   <div class="filter-bar">
     <input type="text" id="filter-text" placeholder="Filter (Gebäude, Geschoss, Raum...)">
   </div>
   <div class="action-bar">
-    <button class="btn btn-accent btn-sm" onclick="showSendDialog()">Versenden</button>
+    <button class="btn btn-module btn-sm" onclick="showSendDialog()">Versenden</button>
     <button class="btn btn-outline btn-sm" onclick="document.getElementById('file-gebaeudedaten').click()">Gebäudedaten</button>
     <input type="file" id="file-gebaeudedaten" accept=".xlsx" style="display:none" onchange="importGebaeudedaten(this.files[0])">
     <span id="hk-count" class="count-badge" style="align-self:center;white-space:nowrap">0</span>
   </div>
   <div id="hk-list"></div>
-  <button class="fab" onclick="openHkForm()" title="Neuer Heizkörper">+</button>
+  <button class="fab" id="fab-add" onclick="onFabAdd()" title="Neuer Eintrag">+</button>
 </div>
 
 <!-- ════════ SCREEN: Erfassungsformular ════════ -->
@@ -53,7 +53,7 @@
   <!-- Mode-Toggle: nur bei neuem HK sichtbar -->
   <div id="new-hk-mode-toggle" style="display:none">
     <div class="mode-toggle">
-      <button id="btn-mode-same-room" class="mode-btn" onclick="setNewHkMode('same-room')">HK im Raum</button>
+      <button id="btn-mode-same-room" class="mode-btn" onclick="setNewHkMode('same-room')">im Raum</button>
       <button id="btn-mode-new-room" class="mode-btn" onclick="setNewHkMode('new-room')">Neuer Raum</button>
     </div>
   </div>
@@ -81,148 +81,402 @@
     </div>
   </div>
 
-  <!-- HK Daten -->
-  <div class="section-title">Heizkörper</div>
-  <div class="form-row">
-    <div class="form-group">
-      <label>HK-Nr.</label>
-      <input type="number" id="f-hkNr" inputmode="numeric" min="1">
+  <!-- ════════ HK-Sektion ════════ -->
+  <div id="hk-form-section">
+    <div class="section-title section-title-hk" id="section-title-hk">Heizkörper</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>HK-Nr.</label>
+        <input type="number" id="f-hkNr" inputmode="numeric" min="1">
+      </div>
+      <div class="form-group">
+        <label>Heizkörper-Typ <button class="btn-help-inline" onclick="openHelpImage('hilfe/hk-typen.png','Heizkörpertypen')" title="Hilfe: Heizkörpertypen">?</button></label>
+        <select id="f-typ"></select>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Heizkörper-Typ <button class="btn-help-inline" onclick="openHelpImage('hilfe/hk-typen.png','Heizkörpertypen')" title="Hilfe: Heizkörpertypen">?</button></label>
-      <select id="f-typ"></select>
+    <div class="form-group" id="group-subtyp" style="display:none">
+      <label>Bauart <button class="btn-help-inline" onclick="openHelpImage('hilfe/hilfe_kompakt.jpg','Typen Kompaktheizkörper')" title="Hilfe: Kompaktübersicht">?</button></label>
+      <select id="f-subtyp"></select>
     </div>
-  </div>
-  <div class="form-group" id="group-subtyp" style="display:none">
-    <label>Bauart <button class="btn-help-inline" onclick="openHelpImage('hilfe/hilfe_kompakt.jpg','Typen Kompaktheizkörper')" title="Hilfe: Kompaktübersicht">?</button></label>
-    <select id="f-subtyp"></select>
-  </div>
-  <div class="form-group" id="group-konvektorBauart" style="display:none">
-    <label>Bauart</label>
-    <select id="f-konvektorBauart">
-      <option value="">Bauart wählen</option>
-      <option value="Normal">Normal</option>
-      <option value="Unterflur">Unterflur</option>
-    </select>
-  </div>
-  <div class="form-row" id="group-roehrenGlieder" style="display:none">
-    <div class="form-group">
-      <label>Anzahl Röhren</label>
-      <select id="f-anzahlRoehren"></select>
+    <div class="form-group" id="group-konvektorBauart" style="display:none">
+      <label>Bauart</label>
+      <select id="f-konvektorBauart">
+        <option value="">Bauart wählen</option>
+        <option value="Normal">Normal</option>
+        <option value="Unterflur">Unterflur</option>
+      </select>
     </div>
-    <div class="form-group">
-      <label>Anzahl Glieder</label>
-      <input type="number" id="f-anzahlGlieder" inputmode="numeric" min="1">
+    <div class="form-row" id="group-roehrenGlieder" style="display:none">
+      <div class="form-group">
+        <label>Anzahl Röhren</label>
+        <select id="f-anzahlRoehren"></select>
+      </div>
+      <div class="form-group">
+        <label>Anzahl Glieder</label>
+        <input type="number" id="f-anzahlGlieder" inputmode="numeric" min="1">
+      </div>
     </div>
-  </div>
-  <div class="form-row" id="group-baumasseRow">
-    <div class="form-group" id="group-baulaenge">
-      <label>Baulänge [mm]</label>
-      <input type="text" id="f-baulaenge" inputmode="numeric" list="dl-baulaenge" placeholder="z.B. 1000">
+    <div class="form-row" id="group-baumasseRow">
+      <div class="form-group" id="group-baulaenge">
+        <label>Baulänge [mm]</label>
+        <input type="text" id="f-baulaenge" inputmode="numeric" list="dl-baulaenge" placeholder="z.B. 1000">
+      </div>
+      <div class="form-group" id="group-bauhoehe">
+        <label>Bauhöhe [mm]</label>
+        <input type="text" id="f-bauhoehe" inputmode="numeric" list="dl-bauhoehe" placeholder="z.B. 600" onchange="onBauhoeheChange()">
+      </div>
     </div>
-    <div class="form-group" id="group-bauhoehe">
-      <label>Bauhöhe [mm]</label>
-      <input type="text" id="f-bauhoehe" inputmode="numeric" list="dl-bauhoehe" placeholder="z.B. 600" onchange="onBauhoeheChange()">
-    </div>
-  </div>
 
-  <!-- Ventil -->
-  <div class="section-title">Ventil / Anschluss</div>
-  <div class="form-row">
-    <div class="form-group">
-      <label>Nabenabstand [mm]</label>
-      <input type="text" id="f-nabenabstand" inputmode="numeric" list="dl-nabenabstand" placeholder="z.B. 500" onchange="onNabenabstandChange()">
+    <!-- Ventil -->
+    <div class="section-title section-title-hk">Ventil / Anschluss</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nabenabstand [mm]</label>
+        <input type="text" id="f-nabenabstand" inputmode="numeric" list="dl-nabenabstand" placeholder="z.B. 500" onchange="onNabenabstandChange()">
+      </div>
+      <div class="form-group">
+        <label>DN Ventil</label>
+        <input type="text" id="f-dnVentil" list="dl-dnVentil" placeholder="z.B. DN15">
+        <datalist id="dl-dnVentil"></datalist>
+      </div>
     </div>
-    <div class="form-group">
-      <label>DN Ventil</label>
-      <input type="text" id="f-dnVentil" list="dl-dnVentil" placeholder="z.B. DN15">
-      <datalist id="dl-dnVentil"></datalist>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Ventiltyp <button class="btn-help-inline" onclick="openHelpImage('hilfe/ventiltypen.png','Ventiltypen')" title="Hilfe: Ventiltypen">?</button></label>
+        <select id="f-ventilform"></select>
+      </div>
+      <div class="form-group">
+        <label>Art Thermostatkopf <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/thermostatkoepfe.jpg','Thermostatköpfe')" title="Hilfe: Thermostatköpfe">?</button></label>
+        <select id="f-artThermostatkopf"></select>
+      </div>
     </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label>Ventiltyp <button class="btn-help-inline" onclick="openHelpImage('hilfe/ventiltypen.png','Ventiltypen')" title="Hilfe: Ventiltypen">?</button></label>
-      <select id="f-ventilform"></select>
-    </div>
-    <div class="form-group">
-      <label>Art Thermostatkopf <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/thermostatkoepfe.jpg','Thermostatköpfe')" title="Hilfe: Thermostatköpfe">?</button></label>
-      <select id="f-artThermostatkopf"></select>
-    </div>
-  </div>
 
-
-  <!-- Einbau -->
-  <div class="section-title">Einbau / Sonstiges</div>
-  <div class="checkbox-grid">
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-einbau-verkleidung">
-      <span>hinter Verkleidung?</span>
-      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/einbausituation.jpg','Einbausituation')" title="Hilfe: Einbausituation">?</button>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-einbau-bruestung">
-      <span>unter Brüstung?</span>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-einbau-moebel">
-      <span>hinter Möbeln?</span>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-einbau-sonstige" onchange="checkSonstigeHinweis()">
-      <span>Sonstige Einbau?</span>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-hahnblock">
-      <span>Hahnblock?</span>
-      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hahnblock.jpg','Hahnblock')" title="Hilfe: Hahnblock">?</button>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-rlVerschraubung">
-      <span>RL-Verschraubung?</span>
-      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/rlverschraubung.jpg','RL-Verschraubung')" title="Hilfe: RL-Verschraubung">?</button>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-entlueftung">
-      <span>Entlüftung?</span>
-      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/entflueftung.jpg','Entlüftung')" title="Hilfe: Entlüftung">?</button>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-entleerung">
-      <span>Entleerung?</span>
-      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/entleerung.jpg','Entleerung')" title="Hilfe: Entleerung">?</button>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" id="f-ventilVoreinstellbar" onchange="document.getElementById('group-ventilWert').style.display=this.checked?'block':'none'">
-      <span>Voreinstellbar?</span>
-      <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/voreinstellbar.jpg','Voreinstellbar')" title="Hilfe: Voreinstellbar">?</button>
-    </label>
-  </div>
-  <div id="group-ventilWert" style="display:none;margin-top:6px">
-    <div class="form-group">
-      <label>Voreinstellwert</label>
-      <input type="text" id="f-ventilVoreinstellbarWert" placeholder="z.B. 3.5" inputmode="decimal">
+    <!-- Einbau -->
+    <div class="section-title section-title-hk">Einbau / Sonstiges</div>
+    <div class="checkbox-grid">
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-einbau-verkleidung">
+        <span>hinter Verkleidung?</span>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/einbausituation.jpg','Einbausituation')" title="Hilfe: Einbausituation">?</button>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-einbau-bruestung">
+        <span>unter Brüstung?</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-einbau-moebel">
+        <span>hinter Möbeln?</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-einbau-sonstige" onchange="checkSonstigeHinweis()">
+        <span>Sonstige Einbau?</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-hahnblock">
+        <span>Hahnblock?</span>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hahnblock.jpg','Hahnblock')" title="Hilfe: Hahnblock">?</button>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-rlVerschraubung">
+        <span>RL-Verschraubung?</span>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/rlverschraubung.jpg','RL-Verschraubung')" title="Hilfe: RL-Verschraubung">?</button>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-entlueftung">
+        <span>Entlüftung?</span>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/entflueftung.jpg','Entlüftung')" title="Hilfe: Entlüftung">?</button>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-entleerung">
+        <span>Entleerung?</span>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/entleerung.jpg','Entleerung')" title="Hilfe: Entleerung">?</button>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="f-ventilVoreinstellbar" onchange="document.getElementById('group-ventilWert').style.display=this.checked?'block':'none'">
+        <span>Voreinstellbar?</span>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/voreinstellbar.jpg','Voreinstellbar')" title="Hilfe: Voreinstellbar">?</button>
+      </label>
     </div>
-  </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label>Strang-Nr.</label>
-      <input type="text" id="f-strang" inputmode="decimal" placeholder="z.B. 1.1">
+    <div id="group-ventilWert" style="display:none;margin-top:6px">
+      <div class="form-group">
+        <label>Voreinstellwert</label>
+        <input type="text" id="f-ventilVoreinstellbarWert" placeholder="z.B. 3.5" inputmode="decimal">
+      </div>
     </div>
-  </div>
-  <div class="form-group">
-    <label>Bemerkung</label>
-    <textarea id="f-bemerkung" rows="2"></textarea>
-  </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Strang-Nr.</label>
+        <input type="text" id="f-strang" inputmode="decimal" placeholder="z.B. 1.1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Bemerkung</label>
+      <textarea id="f-bemerkung" rows="2"></textarea>
+    </div>
 
-  <!-- Sonstige-Hinweis -->
-  <div id="sonstige-foto-hinweis" class="sonstige-hinweis" style="display:none">
-    Sonstiges &rarr; Foto!
-  </div>
+    <!-- Sonstige-Hinweis -->
+    <div id="sonstige-foto-hinweis" class="sonstige-hinweis" style="display:none">
+      Sonstiges &rarr; Foto!
+    </div>
 
-  <!-- Fotos -->
-  <div class="section-title">Fotos</div>
-  <div class="photo-slots" id="photo-slots-container"></div>
-  <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoInput(this)">
+    <!-- HK Fotos -->
+    <div class="section-title section-title-hk">Fotos</div>
+    <div class="photo-slots" id="photo-slots-container"></div>
+    <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoInput(this)">
+
+    <!-- Standard-Checkbox -->
+    <label class="checkbox-row" style="margin-top:16px">
+      <input type="checkbox" id="f-setStandard">
+      <span>Diesen Heizkörper als Standard definieren</span>
+      <button class="btn-help-inline" onclick="event.preventDefault();alert('Wenn aktiviert, werden Typ, Ventildaten und Einbausituation dieses Heizkörpers als Vorlage für alle neuen Heizkörper übernommen (ohne Maße).')" title="Was bedeutet Standard?">?</button>
+    </label>
+
+    <!-- HK Buttons -->
+    <div class="form-actions" id="hk-form-actions">
+      <button class="btn btn-primary" onclick="saveForm()">Speichern</button>
+      <button class="btn btn-accent" onclick="saveAndNextHk()">+ HK im Raum</button>
+      <button class="btn btn-accent" onclick="saveAndNextRoom()">+ Raum</button>
+      <button class="btn btn-outline" onclick="history.back()">Abbrechen</button>
+      <button class="btn btn-danger btn-sm" id="btn-delete-hk" onclick="deleteCurrentHk()" style="display:none">Löschen</button>
+    </div>
+  </div><!-- /hk-form-section -->
+
+  <!-- ════════ Beleuchtungs-Sektion ════════ -->
+  <div id="bel-form-section" style="display:none">
+    <div class="section-title section-title-bel" id="section-title-bel">Beleuchtung</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Gruppen-Nr.</label>
+        <input type="number" id="f-gruppenNr" inputmode="numeric" min="1">
+      </div>
+      <div class="form-group">
+        <label>Raumdecke</label>
+        <select id="f-raumdecke">
+          <option value="">Bitte wählen</option>
+          <option value="Trockenbau">Trockenbau</option>
+          <option value="Beton">Beton</option>
+          <option value="Holz">Holz</option>
+          <option value="Metalllamellen">Metalllamellen</option>
+          <option value="Akustikdecke">Akustikdecke</option>
+          <option value="Sonstige">Sonstige &rarr; Foto!</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Anzahl Reihen</label>
+        <input type="number" id="f-anzahlReihen" inputmode="numeric" min="1" placeholder="z.B. 2">
+      </div>
+      <div class="form-group">
+        <label>Leuchten je Reihe</label>
+        <input type="number" id="f-leuchtenJeReihe" inputmode="numeric" min="1" placeholder="z.B. 4">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Leuchtmittel je Leuchte</label>
+      <div class="lm-toggle" id="lm-toggle">
+        <button type="button" class="lm-toggle-btn" data-val="1" onclick="setLmToggle(1)">1</button>
+        <button type="button" class="lm-toggle-btn" data-val="2" onclick="setLmToggle(2)">2</button>
+        <button type="button" class="lm-toggle-btn" data-val="3" onclick="setLmToggle(3)">3</button>
+        <button type="button" class="lm-toggle-btn" data-val="4" onclick="setLmToggle(4)">4</button>
+      </div>
+      <input type="hidden" id="f-leuchtmittelJeLeuchte" value="">
+    </div>
+
+    <div class="form-group">
+      <label>Installationsart</label>
+      <select id="f-installationsart" onchange="updateInstallationsartFields()">
+        <option value="">Bitte wählen</option>
+        <option value="Einbau">Einbau</option>
+        <option value="Anbau">Anbau</option>
+        <option value="Pendel">Pendel</option>
+        <option value="Sonstige">Sonstige &rarr; Foto!</option>
+      </select>
+    </div>
+    <div class="form-group" id="group-installationsartSub" style="display:none">
+      <label>Pendel-Typ</label>
+      <select id="f-installationsartSub">
+        <option value="">Bitte wählen</option>
+        <option value="direkt">direkt</option>
+        <option value="direkt-indirekt">direkt-indirekt</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Leuchtenart</label>
+      <select id="f-leuchtenart">
+        <option value="">Bitte wählen</option>
+        <option value="Langfeld">Langfeld</option>
+        <option value="BAP-Leuchte">BAP-Leuchte</option>
+        <option value="Downlight">Downlight</option>
+        <option value="Freistrahler">Freistrahler</option>
+        <option value="Spot">Spot</option>
+        <option value="Strahler">Strahler</option>
+        <option value="Stehleuchte">Stehleuchte</option>
+        <option value="Sonstige">Sonstige &rarr; Foto!</option>
+      </select>
+    </div>
+
+    <!-- Leuchtmittel -->
+    <div class="section-title section-title-bel">Leuchtmittel</div>
+    <div class="form-group">
+      <label>Kategorie</label>
+      <select id="f-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()">
+        <option value="">Bitte wählen</option>
+        <option value="linear">Leuchtstoffröhre (T5/T8/T12)</option>
+        <option value="dulux">Kompakt (Dulux)</option>
+        <option value="spot">Spot / Reflektor</option>
+        <option value="sq28">SQ28</option>
+        <option value="led">LED / Sonstige</option>
+      </select>
+    </div>
+
+    <!-- Linear Sub-Felder -->
+    <div id="lm-linear-fields" style="display:none">
+      <div class="form-group">
+        <label>Typ</label>
+        <select id="f-lm-linear-typ" onchange="updateLeuchtmittelFields()">
+          <option value="">Bitte wählen</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Länge [mm]</label>
+          <input type="text" id="f-lm-linear-laenge" inputmode="numeric" list="dl-lm-laenge" onchange="updateLeuchtmittelFields()">
+          <datalist id="dl-lm-laenge"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Wattage [W]</label>
+          <input type="text" id="f-lm-linear-wattage" inputmode="numeric" list="dl-lm-wattage" onchange="updateLeuchtmittelFields()">
+          <datalist id="dl-lm-wattage"></datalist>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dulux Sub-Felder -->
+    <div id="lm-dulux-fields" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Wattage [W]</label>
+          <input type="number" id="f-lm-dulux-wattage" inputmode="numeric" onchange="updateLeuchtmittelFields()">
+        </div>
+        <div class="form-group">
+          <label>Wendelanzahl</label>
+          <select id="f-lm-dulux-wendel" onchange="updateLeuchtmittelFields()">
+            <option value="">Bitte wählen</option>
+            <option value="S">1 (S)</option>
+            <option value="D">2 (D)</option>
+            <option value="T">3 (T)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Ermittelter Typ</label>
+        <input type="text" id="f-lm-dulux-typ" readonly style="background:#f5f5f5">
+      </div>
+    </div>
+
+    <!-- Spot Sub-Felder -->
+    <div id="lm-spot-fields" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Typ</label>
+          <select id="f-lm-spot-typ" onchange="updateLeuchtmittelFields()">
+            <option value="">Bitte wählen</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Wattage [W]</label>
+          <select id="f-lm-spot-wattage">
+            <option value="">Bitte wählen</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQ28 Sub-Felder -->
+    <div id="lm-sq28-fields" style="display:none">
+      <div class="form-group">
+        <label>Wattage [W]</label>
+        <select id="f-lm-sq28-wattage">
+          <option value="">Bitte wählen</option>
+          <option value="21">21 W</option>
+          <option value="28">28 W</option>
+          <option value="38">38 W</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- LED/Sonstige Sub-Felder -->
+    <div id="lm-led-fields" style="display:none">
+      <div class="form-group">
+        <label>Beschreibung</label>
+        <input type="text" id="f-lm-led-text" placeholder="z.B. LED Panel 40W">
+      </div>
+    </div>
+
+    <!-- Vorschaltgerät -->
+    <div class="section-title section-title-bel">Vorschaltgerät / Zustand</div>
+    <div class="form-group">
+      <label>Vorschaltgerät <button class="btn-help-inline" onclick="event.stopPropagation();alert('Tipp: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\n\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: Vorschaltgerät erkennen">?</button></label>
+      <select id="f-vorschaltgeraet">
+        <option value="">Bitte wählen</option>
+        <option value="KVG/VVG">KVG/VVG (konventionell)</option>
+        <option value="EVG">EVG (elektronisch)</option>
+      </select>
+    </div>
+
+    <!-- Zustand -->
+    <div class="form-group">
+      <label>Zustand</label>
+      <div class="zustand-grid">
+        <label class="checkbox-row">
+          <input type="checkbox" id="f-zustand-defekt">
+          <span>defekt</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="f-zustand-beschaedigt">
+          <span>beschädigt</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="f-zustand-verschmutzt">
+          <span>stark verschmutzt</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="f-zustand-abgaengig">
+          <span>abgängig</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Bemerkung</label>
+      <textarea id="f-bel-bemerkung" rows="2"></textarea>
+    </div>
+
+    <!-- Bel Sonstige-Hinweis -->
+    <div id="bel-sonstige-foto-hinweis" class="sonstige-hinweis" style="display:none">
+      Sonstiges &rarr; Foto!
+    </div>
+
+    <!-- Bel Fotos -->
+    <div class="section-title section-title-bel">Fotos</div>
+    <div class="typenschild-hinweis">Bitte Typenschilder fotografieren!</div>
+    <div class="photo-slots" id="bel-photo-slots-container"></div>
+    <input type="file" id="bel-photo-input" accept="image/*" style="display:none" onchange="handleBelPhotoInput(this)">
+
+    <!-- Bel Buttons -->
+    <div class="form-actions" id="bel-form-actions">
+      <button class="btn btn-primary" onclick="saveBelForm()">Speichern</button>
+      <button class="btn btn-accent" onclick="saveBelAndNextGroup()">+ Leuchte im Raum</button>
+      <button class="btn btn-accent" onclick="saveBelAndNextRoom()">+ Raum</button>
+      <button class="btn btn-outline" onclick="history.back()">Abbrechen</button>
+      <button class="btn btn-danger btn-sm" id="btn-delete-bel" onclick="deleteCurrentBel()" style="display:none">Löschen</button>
+    </div>
+  </div><!-- /bel-form-section -->
 
   <!-- Kamera-Modal (getUserMedia) -->
   <div id="camera-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:9999;flex-direction:column">
@@ -231,22 +485,6 @@
       <button class="btn btn-accent" onclick="captureFromStream()" style="font-size:1.1rem;padding:12px 32px">Foto aufnehmen</button>
       <button class="btn btn-outline" onclick="closeCameraModal()">Abbrechen</button>
     </div>
-  </div>
-
-  <!-- Standard-Checkbox -->
-  <label class="checkbox-row" style="margin-top:16px">
-    <input type="checkbox" id="f-setStandard">
-    <span>Diesen Heizkörper als Standard definieren</span>
-    <button class="btn-help-inline" onclick="event.preventDefault();alert('Wenn aktiviert, werden Typ, Ventildaten und Einbausituation dieses Heizkörpers als Vorlage für alle neuen Heizkörper übernommen (ohne Maße).')" title="Was bedeutet Standard?">?</button>
-  </label>
-
-  <!-- Buttons -->
-  <div class="form-actions">
-    <button class="btn btn-primary" onclick="saveForm()">Speichern</button>
-    <button class="btn btn-accent" onclick="saveAndNextHk()">+ HK im Raum</button>
-    <button class="btn btn-accent" onclick="saveAndNextRoom()">+ Raum</button>
-    <button class="btn btn-outline" onclick="history.back()">Abbrechen</button>
-    <button class="btn btn-danger btn-sm" id="btn-delete-hk" onclick="deleteCurrentHk()" style="display:none">Löschen</button>
   </div>
 </div>
 
@@ -260,19 +498,20 @@
   <div id="help-quick" class="help-content">
     <h3>Kurzanleitung</h3>
     <ul>
-      <li><strong>Projekt anlegen:</strong> Auf der Startseite "+" tippen und Projektname vergeben.</li>
+      <li><strong>Projekt anlegen:</strong> Auf der Startseite "+" tippen und Projektname vergeben. Erfassungsart wählen: HK, Beleuchtung oder Beides.</li>
       <li><strong>Heizkörper erfassen:</strong> Im Projekt auf "+" tippen. Standort, Typ und Maße eintragen.</li>
-      <li><strong>Fotos:</strong> Auf die Foto-Slots tippen, um Fotos mit der Kamera aufzunehmen. Bei "Sonstige" unbedingt ein Foto machen!</li>
+      <li><strong>Beleuchtung erfassen:</strong> Im Projekt auf "+" tippen. Raumdecke, Leuchten, Leuchtmittel eintragen.</li>
+      <li><strong>Fotos:</strong> Auf die Foto-Slots tippen, um Fotos mit der Kamera aufzunehmen. Bei "Sonstige" unbedingt ein Foto machen! Bei Beleuchtung: Typenschilder fotografieren!</li>
       <li><strong>Speichern & Weiter:</strong>
         <ul>
-          <li>"Speichern" &ndash; HK speichern, zurück zur Liste</li>
-          <li>"+ HK im Raum" &ndash; speichern, nächster HK im selben Raum</li>
+          <li>"Speichern" &ndash; Eintrag speichern, zurück zur Liste</li>
+          <li>"+ im Raum" &ndash; speichern, nächster Eintrag im selben Raum</li>
           <li>"+ Raum" &ndash; speichern, neuer Raum</li>
         </ul>
       </li>
       <li><strong>Standard:</strong> Checkbox "Als Standard definieren" setzt Typ/Maße als Vorlage für neue HK.</li>
       <li><strong>Daten versenden:</strong> In der Liste auf "Versenden" tippen. ZIP mit Excel + Fotos wird erstellt.</li>
-      <li><strong>Hilfe-Bilder:</strong> Die "?"-Buttons bei Heizkörper, Ventil und Bauart zeigen Nachschlagebilder. Zum Vergrößern auf das Bild tippen.</li>
+      <li><strong>Hilfe-Bilder:</strong> Die "?"-Buttons zeigen Nachschlagebilder. Zum Vergrößern auf das Bild tippen.</li>
     </ul>
     <hr>
     <button class="btn btn-outline btn-sm" onclick="toggleDetailHelp()" id="btn-toggle-help">Ausführliche Hilfe anzeigen</button>
@@ -325,7 +564,7 @@
   <div class="settings-danger-zone">
     <div class="section-title" style="color:var(--danger)">Daten zurücksetzen</div>
     <button class="btn btn-danger" onclick="resetAllData()">Alle Daten zurücksetzen</button>
-    <p class="hint">Löscht alle Projekte, Heizkörper und Gebäudedaten unwiderruflich.</p>
+    <p class="hint">Löscht alle Projekte, Heizkörper, Beleuchtungsdaten und Gebäudedaten unwiderruflich.</p>
   </div>
 </div>
 
@@ -342,6 +581,15 @@
       <select id="input-projekt-liegenschaft">
         <option value="">-- Liegenschaft --</option>
       </select>
+    </div>
+    <div class="form-group">
+      <label>Erfassungsart</label>
+      <div class="modul-toggle" id="modul-toggle">
+        <button type="button" class="modul-toggle-btn" data-modul="hk" onclick="setModulToggle('hk')">HK</button>
+        <button type="button" class="modul-toggle-btn active-bel" data-modul="beleuchtung" onclick="setModulToggle('beleuchtung')">Beleuchtung</button>
+        <button type="button" class="modul-toggle-btn" data-modul="beides" onclick="setModulToggle('beides')">Beides</button>
+      </div>
+      <input type="hidden" id="input-projekt-modul" value="beleuchtung">
     </div>
     <button class="btn btn-primary" onclick="createNewProjekt()">Erstellen</button>
     <button class="btn btn-outline" onclick="closeNewProjektDialog()">Abbrechen</button>
@@ -369,6 +617,16 @@
     </div>
     <button class="btn btn-primary" id="btn-send-data" onclick="sendData()" style="margin-top:12px">Versenden</button>
     <button class="btn btn-outline" onclick="closeSendDialog()" style="margin-top:8px">Abbrechen</button>
+  </div>
+</div>
+
+<!-- ════════ Modal: FAB Auswahl (bei "beides") ════════ -->
+<div class="modal-overlay" id="modal-fab-choice" style="display:none" onclick="if(event.target===this)document.getElementById('modal-fab-choice').style.display='none'">
+  <div class="modal">
+    <h2>Was erfassen?</h2>
+    <button class="btn btn-module" style="background:#FF6633;color:#fff" onclick="document.getElementById('modal-fab-choice').style.display='none';openHkForm()">Heizkörper</button>
+    <button class="btn btn-module" style="background:#FFCC00;color:#000" onclick="document.getElementById('modal-fab-choice').style.display='none';openBelForm()">Beleuchtung</button>
+    <button class="btn btn-outline" onclick="document.getElementById('modal-fab-choice').style.display='none'">Abbrechen</button>
   </div>
 </div>
 
@@ -416,7 +674,7 @@
 <script>
   // Header-Navigation steuern
   const screens = {
-    'screen-projekte': { title: 'Heizkörper-Erfassung', back: false },
+    'screen-projekte': { title: 'Erfassung', back: false },
     'screen-hk-list': { title: null, back: true },
     'screen-form': { title: null, back: true },
     'screen-settings': { title: 'Einstellungen', back: true },
@@ -439,7 +697,7 @@
     } else if (screen === 'screen-form') {
       headerTitle.textContent = document.getElementById('header-form-title').textContent;
     } else {
-      headerTitle.textContent = cfg.title || 'Heizkörper-Erfassung';
+      headerTitle.textContent = cfg.title || 'Erfassung';
     }
   };
 </script>
