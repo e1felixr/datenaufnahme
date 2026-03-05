@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v3.5';
-const APP_BUILD_DATE = '05.03.2026 16:36'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.6';
+const APP_BUILD_DATE = '05.03.2026 21:58'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -268,10 +268,26 @@ async function renderHkList() {
     bels = bels.filter(filterFn);
   }
 
-  const sortFn = (a, b) =>
-    (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
-    (a.geschoss || '').localeCompare(b.geschoss || '') ||
-    (a.raumnr || '').localeCompare(b.raumnr || '');
+  const sortMode = document.getElementById('sort-select')?.value || 'raumnr';
+  let sortFn;
+  if (sortMode === 'datum') {
+    sortFn = (a, b) => (b.erstelltAm || '').localeCompare(a.erstelltAm || '');
+  } else if (sortMode === 'gebaeude') {
+    sortFn = (a, b) =>
+      (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
+      (a.geschoss || '').localeCompare(b.geschoss || '') ||
+      (a.raumnr || '').localeCompare(b.raumnr || '');
+  } else if (sortMode === 'geschoss') {
+    sortFn = (a, b) =>
+      (a.geschoss || '').localeCompare(b.geschoss || '') ||
+      (a.raumnr || '').localeCompare(b.raumnr || '') ||
+      (a.gebaeude || '').localeCompare(b.gebaeude || '');
+  } else {
+    sortFn = (a, b) =>
+      (a.raumnr || '').localeCompare(b.raumnr || '') ||
+      (a.geschoss || '').localeCompare(b.geschoss || '') ||
+      (a.gebaeude || '').localeCompare(b.gebaeude || '');
+  }
 
   hks.sort((a, b) => sortFn(a, b) || (Number(a.hkNr) || 0) - (Number(b.hkNr) || 0));
   bels.sort((a, b) => sortFn(a, b) || (Number(a.gruppenNr) || 0) - (Number(b.gruppenNr) || 0));
@@ -311,12 +327,23 @@ async function renderHkList() {
     if (item.raumbezeichnung && !room.raumbezeichnung) room.raumbezeichnung = item.raumbezeichnung;
   }
 
-  // Rooms sortieren
-  rooms.sort((a, b) =>
-    (a.gebaeude || '').localeCompare(b.gebaeude || '') ||
-    (a.geschoss || '').localeCompare(b.geschoss || '') ||
-    (a.raumnr || '').localeCompare(b.raumnr || '')
-  );
+  // Rooms sortieren (gleiche Sortierung wie items)
+  if (sortMode === 'datum') {
+    // Bei Datum: Raum mit neuestem Eintrag zuerst
+    const roomNewest = new Map();
+    for (const item of [...hks, ...bels]) {
+      const key = `${item.gebaeude || ''}|${item.geschoss || ''}|${item.raumnr || ''}`;
+      const cur = roomNewest.get(key) || '';
+      if ((item.erstelltAm || '') > cur) roomNewest.set(key, item.erstelltAm || '');
+    }
+    rooms.sort((a, b) => {
+      const ka = `${a.gebaeude || ''}|${a.geschoss || ''}|${a.raumnr || ''}`;
+      const kb = `${b.gebaeude || ''}|${b.geschoss || ''}|${b.raumnr || ''}`;
+      return (roomNewest.get(kb) || '').localeCompare(roomNewest.get(ka) || '');
+    });
+  } else {
+    rooms.sort((a, b) => sortFn(a, b));
+  }
 
   let html = '';
   for (const room of rooms) {

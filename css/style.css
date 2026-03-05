@@ -325,10 +325,17 @@ body {
   flex-wrap: wrap;
 }
 
-.filter-bar input,
-.filter-bar select {
+.filter-bar input {
   flex: 1;
   min-width: 120px;
+  padding: var(--ui-field-padding, 10px);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: .9rem;
+  background: #fff;
+}
+.filter-bar select {
+  flex: 0 0 auto;
   padding: var(--ui-field-padding, 10px);
   border: 2px solid var(--border);
   border-radius: var(--radius);
@@ -750,12 +757,18 @@ body {
   appearance: none;
   width: 20px;
   height: 20px;
+  min-width: 20px;
+  min-height: 20px;
   flex-shrink: 0;
   border: 2px solid #999;
   border-radius: 4px;
   background: #fff;
   position: relative;
   cursor: pointer;
+  margin: 0;
+}
+.checkbox-row span {
+  line-height: 1.2;
 }
 .checkbox-row input[type="checkbox"]:checked {
   background: var(--module-color);

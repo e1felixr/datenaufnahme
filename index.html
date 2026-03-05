@@ -35,6 +35,12 @@
 <div class="screen" id="screen-hk-list">
   <div class="filter-bar">
     <input type="text" id="filter-text" placeholder="Filter (Gebäude, Geschoss, Raum...)">
+    <select id="sort-select" onchange="renderHkList()" title="Sortierung">
+      <option value="raumnr">Raumnr</option>
+      <option value="gebaeude">Gebäude</option>
+      <option value="geschoss">Etage</option>
+      <option value="datum">Datum</option>
+    </select>
   </div>
   <div class="action-bar">
     <button class="btn btn-module btn-sm" onclick="showSendDialog()">Versenden</button>
@@ -90,12 +96,12 @@
         <input type="number" id="f-hkNr" inputmode="numeric" min="1">
       </div>
       <div class="form-group">
-        <label>Heizkörper-Typ <button class="btn-help-inline" onclick="openHelpImage('hilfe/hk-typen.png','Heizkörpertypen')" title="Hilfe: Heizkörpertypen">?</button></label>
+        <label>Heizkörper-Typ <button class="btn-help-inline" onclick="openHelpImage('hilfe/hzg/hk-typen.png','Heizkörpertypen')" title="Hilfe: Heizkörpertypen">?</button></label>
         <select id="f-typ"></select>
       </div>
     </div>
     <div class="form-group" id="group-subtyp" style="display:none">
-      <label>Bauart <button class="btn-help-inline" onclick="openHelpImage('hilfe/hilfe_kompakt.jpg','Typen Kompaktheizkörper')" title="Hilfe: Kompaktübersicht">?</button></label>
+      <label>Bauart <button class="btn-help-inline" onclick="openHelpImage('hilfe/hzg/hilfe_kompakt.jpg','Typen Kompaktheizkörper')" title="Hilfe: Kompaktübersicht">?</button></label>
       <select id="f-subtyp"></select>
     </div>
     <div class="form-group" id="group-konvektorBauart" style="display:none">
@@ -142,11 +148,11 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Ventiltyp <button class="btn-help-inline" onclick="openHelpImage('hilfe/ventiltypen.png','Ventiltypen')" title="Hilfe: Ventiltypen">?</button></label>
+        <label>Ventiltyp <button class="btn-help-inline" onclick="openHelpImage('hilfe/hzg/ventiltypen.png','Ventiltypen')" title="Hilfe: Ventiltypen">?</button></label>
         <select id="f-ventilform"></select>
       </div>
       <div class="form-group">
-        <label>Art Thermostatkopf <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/thermostatkoepfe.jpg','Thermostatköpfe')" title="Hilfe: Thermostatköpfe">?</button></label>
+        <label>Art Thermostatkopf <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/thermostatkoepfe.jpg','Thermostatköpfe')" title="Hilfe: Thermostatköpfe">?</button></label>
         <select id="f-artThermostatkopf"></select>
       </div>
     </div>
@@ -157,7 +163,7 @@
       <label class="checkbox-row">
         <input type="checkbox" id="f-einbau-verkleidung">
         <span>hinter Verkleidung?</span>
-        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/einbausituation.jpg','Einbausituation')" title="Hilfe: Einbausituation">?</button>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/einbausituation.jpg','Einbausituation')" title="Hilfe: Einbausituation">?</button>
       </label>
       <label class="checkbox-row">
         <input type="checkbox" id="f-einbau-bruestung">
@@ -174,27 +180,27 @@
       <label class="checkbox-row">
         <input type="checkbox" id="f-hahnblock">
         <span>Hahnblock?</span>
-        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hahnblock.jpg','Hahnblock')" title="Hilfe: Hahnblock">?</button>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/hahnblock.jpg','Hahnblock')" title="Hilfe: Hahnblock">?</button>
       </label>
       <label class="checkbox-row">
         <input type="checkbox" id="f-rlVerschraubung">
         <span>RL-Verschraubung?</span>
-        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/rlverschraubung.jpg','RL-Verschraubung')" title="Hilfe: RL-Verschraubung">?</button>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/rlverschraubung.jpg','RL-Verschraubung')" title="Hilfe: RL-Verschraubung">?</button>
       </label>
       <label class="checkbox-row">
         <input type="checkbox" id="f-entlueftung">
         <span>Entlüftung?</span>
-        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/entflueftung.jpg','Entlüftung')" title="Hilfe: Entlüftung">?</button>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/entflueftung.jpg','Entlüftung')" title="Hilfe: Entlüftung">?</button>
       </label>
       <label class="checkbox-row">
         <input type="checkbox" id="f-entleerung">
         <span>Entleerung?</span>
-        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/entleerung.jpg','Entleerung')" title="Hilfe: Entleerung">?</button>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/entleerung.jpg','Entleerung')" title="Hilfe: Entleerung">?</button>
       </label>
       <label class="checkbox-row">
         <input type="checkbox" id="f-ventilVoreinstellbar" onchange="document.getElementById('group-ventilWert').style.display=this.checked?'block':'none'">
         <span>Voreinstellbar?</span>
-        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/voreinstellbar.jpg','Voreinstellbar')" title="Hilfe: Voreinstellbar">?</button>
+        <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/voreinstellbar.jpg','Voreinstellbar')" title="Hilfe: Voreinstellbar">?</button>
       </label>
     </div>
     <div id="group-ventilWert" style="display:none;margin-top:6px">
@@ -247,7 +253,7 @@
     <input type="hidden" id="f-gruppenNr" value="">
 
     <!-- Installation -->
-    <div class="section-title section-title-bel">Installation <button class="btn-help-inline" onclick="openHelpImage('hilfe/raumdecken.jpg','Deckentypen')" title="Hilfe: Deckentypen">?</button></div>
+    <div class="section-title section-title-bel">Installation <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/raumdecken.jpg','Deckentypen')" title="Hilfe: Deckentypen">?</button></div>
     <div class="form-row">
       <div class="form-group">
         <label>Raumdecke</label>
@@ -280,6 +286,10 @@
         <option value="direkt-indirekt">direkt-indirekt</option>
       </select>
     </div>
+    <label class="checkbox-row" style="margin:4px 0 8px">
+      <input type="checkbox" id="f-zustand-erreichbar" onchange="checkBelSonstigeHinweis()">
+      <span>schlecht erreichbar</span>
+    </label>
     <div class="form-group">
       <label>Leuchtenart</label>
       <select id="f-leuchtenart" onchange="checkBelSonstigeHinweis()">
@@ -420,7 +430,7 @@
     </div>
 
     <!-- Beleuchtungssteuerung -->
-    <div class="section-title section-title-bel">Steuerung</div>
+    <div class="section-title section-title-bel">Steuerung <button class="btn-help-inline" onclick="event.stopPropagation();alert('BWM = Bewegungs-/Präsenzmelder\ndimmbar = stufenlose Regelung\nDALI = digitales Lichtbus-System\nKNX = Gebäudeautomation')" title="Hilfe: Steuerung">?</button></div>
     <div class="form-group">
       <div class="steuerung-grid">
         <label class="checkbox-row"><input type="checkbox" id="f-steuerung-bwm"><span>BWM</span></label>
@@ -453,10 +463,6 @@
           <input type="checkbox" id="f-zustand-abgaengig">
           <span>abgängig</span>
           <button class="btn-help-inline" onclick="event.preventDefault();event.stopPropagation();alert('Leuchte ist stark veraltet, Fassungen sind spröde. Daher sollte eher eine Leuchte als ein Leuchtmitteltausch vorgesehen werden.')" title="Info: abgängig">?</button>
-        </label>
-        <label class="checkbox-row">
-          <input type="checkbox" id="f-zustand-erreichbar" onchange="checkBelSonstigeHinweis()">
-          <span>schlecht erreichbar</span>
         </label>
       </div>
     </div>
