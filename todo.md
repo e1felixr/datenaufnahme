@@ -4,9 +4,19 @@ Offene Punkte:
 
 * Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden. Platzhalter-Button bei Rauminfo vorhanden (hilfe/raumdecken.jpg fehlt noch).
 
-* Optionen für diverse Strahler anbieten (HQI, HQL, etc.). Frage mich hierzu regelmäßig an, da liefere ich dir etwas. Dito für Glühbirnen E14/E27/E40.
+* Optionen für Glühbirnen E14/E27/E40 anbieten. Frage mich hierzu regelmäßig an, da liefere ich dir etwas.
 
 ………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
+
+### v3.5
+
+* ~~HQI/HIT als Strahler-Typ unter "Sonstige" mit freier Wattage-Eingabe~~ **erledigt v3.5** (LEUCHTMITTEL_DB.sonstige['HQI/HIT'] mit freeInput-Flag, Wattage als input+datalist)
+
+* ~~AR111 entfernt~~ **erledigt v3.5** (aus LEUCHTMITTEL_DB.sonstige entfernt)
+
+* ~~Fassung-Feld (E14/E27/E40/Sonstige) bei Strahler-Typen~~ **erledigt v3.5** (MR11, MR16, GU10, HQI/HIT zeigen Fassung-Dropdown, Info-Button erklärt LED-Ersatz-Möglichkeit)
+
+* ~~Beleuchtungssteuerung: BWM, dimmbar, DALI, KNX als Checkboxen~~ **erledigt v3.5** (Steuerung-Section mit 4-spaltigem Grid, in DB/Formular/Export integriert)
 
 ### v3.4
 

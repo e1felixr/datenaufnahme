@@ -382,7 +382,7 @@
       </div>
     </div>
 
-    <!-- Sonstige Sub-Felder (T5 Ring, Spot, SQ28) -->
+    <!-- Sonstige Sub-Felder (T5 Ring, Spot, SQ28, HQI/HIT) -->
     <div id="lm-sonstige-fields" style="display:none">
       <div class="form-row">
         <div class="form-group">
@@ -393,8 +393,19 @@
         </div>
         <div class="form-group">
           <label>Wattage [W]</label>
-          <select id="f-lm-sonstige-wattage">
+          <input type="text" id="f-lm-sonstige-wattage" inputmode="numeric" list="dl-lm-sonstige-wattage" placeholder="Wattage">
+          <datalist id="dl-lm-sonstige-wattage"></datalist>
+        </div>
+      </div>
+      <div id="group-fassung" style="display:none">
+        <div class="form-group">
+          <label>Fassung <button class="btn-help-inline" onclick="event.stopPropagation();alert('E14/E27/E40 = LED-Ersatz möglich\nSonstige = kein direkter LED-Ersatz')" title="Hilfe: Fassung">?</button></label>
+          <select id="f-lm-fassung">
             <option value="">Bitte wählen</option>
+            <option value="E14">E14</option>
+            <option value="E27">E27</option>
+            <option value="E40">E40</option>
+            <option value="Sonstige">Sonstige</option>
           </select>
         </div>
       </div>
@@ -405,6 +416,17 @@
       <div class="form-group">
         <label>Beschreibung</label>
         <input type="text" id="f-lm-led-text" placeholder="z.B. LED Panel 40W">
+      </div>
+    </div>
+
+    <!-- Beleuchtungssteuerung -->
+    <div class="section-title section-title-bel">Steuerung</div>
+    <div class="form-group">
+      <div class="steuerung-grid">
+        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-bwm"><span>BWM</span></label>
+        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-dimmbar"><span>dimmbar</span></label>
+        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-dali"><span>DALI</span></label>
+        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-knx"><span>KNX</span></label>
       </div>
     </div>
 
