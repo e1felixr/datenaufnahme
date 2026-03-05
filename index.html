@@ -572,14 +572,9 @@
   <div class="modal">
     <h2>Neues Projekt</h2>
     <div class="form-group">
-      <label>Projektname</label>
-      <input type="text" id="input-projekt-name" placeholder="z.B. Musterstraße 12">
-    </div>
-    <div class="form-group">
       <label>Liegenschaft</label>
-      <select id="input-projekt-liegenschaft">
-        <option value="">-- Liegenschaft --</option>
-      </select>
+      <input type="text" id="input-projekt-name" list="dl-liegenschaften" placeholder="z.B. Musterstraße 12">
+      <datalist id="dl-liegenschaften"></datalist>
     </div>
     <div class="form-group">
       <label>Erfassungsart</label>

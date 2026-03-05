@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v3.1';
-const APP_BUILD_DATE = '05.03.2026 14:27'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 14:43'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -133,10 +133,10 @@ function applyModuleTheme(modulType) {
     html.style.setProperty('--module-text', '#000');
     html.dataset.theme = 'bel';
   } else {
-    // beides: orange
-    html.style.setProperty('--module-color', '#FF8C00');
-    html.style.setProperty('--module-color-light', '#FFF3E0');
-    html.style.setProperty('--module-color-dark', '#E65100');
+    // beides: blau
+    html.style.setProperty('--module-color', '#1565C0');
+    html.style.setProperty('--module-color-light', '#E3F2FD');
+    html.style.setProperty('--module-color-dark', '#0D47A1');
     html.style.setProperty('--module-text', '#fff');
     html.dataset.theme = 'beides';
   }
@@ -175,18 +175,17 @@ async function renderProjekte() {
     const hks = await getHeizkoerperByProjekt(p.id);
     const bels = await getBeleuchtungByProjekt(p.id);
     const datum = new Date(p.erstelltAm).toLocaleDateString('de-DE');
-    const liegBadge = p.liegenschaft ? ` <span class="badge">${esc(p.liegenschaft)}</span>` : '';
     const modul = p.modulType || 'hk';
     const modulLabel = modul === 'hk' ? 'HK' : modul === 'beleuchtung' ? 'BEL' : 'HK+BEL';
     let countInfo = '';
     if (modul === 'hk') countInfo = `${hks.length} HK`;
-    else if (modul === 'beleuchtung') countInfo = `${bels.length} Leuchtengruppen`;
+    else if (modul === 'beleuchtung') countInfo = `${bels.length} Leuchten`;
     else countInfo = `${hks.length} HK, ${bels.length} BEL`;
     html += `
       <div class="card" data-id="${p.id}">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="flex:1;cursor:pointer" onclick="openProjekt('${p.id}')">
-            <div class="card-title">${esc(p.name)}${liegBadge} <span class="badge">${modulLabel}</span></div>
+            <div class="card-title">${esc(p.name)} <span class="badge">${modulLabel}</span></div>
             <div class="card-sub">${datum} &middot; ${countInfo}</div>
           </div>
           <button class="btn-icon btn-icon-danger" onclick="event.stopPropagation();confirmDeleteProjekt('${p.id}')" title="Löschen">&#128465;</button>
@@ -200,11 +199,9 @@ function showNewProjektDialog() {
   document.getElementById('modal-new-projekt').style.display = 'flex';
   const inp = document.getElementById('input-projekt-name');
   inp.value = '';
-  const sel = document.getElementById('input-projekt-liegenschaft');
   const keys = Object.keys(allGebaeudeDaten);
-  sel.innerHTML = '<option value="">-- Liegenschaft --</option>' +
-    keys.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
-  if (keys.length === 1) sel.value = keys[0];
+  document.getElementById('dl-liegenschaften').innerHTML = keys.map(k => `<option value="${esc(k)}">`).join('');
+  if (keys.length === 1) inp.value = keys[0];
   setModulToggle('beleuchtung');
   inp.focus();
 }
@@ -216,7 +213,8 @@ function closeNewProjektDialog() {
 async function createNewProjekt() {
   const name = document.getElementById('input-projekt-name').value.trim();
   if (!name) return;
-  const liegenschaft = document.getElementById('input-projekt-liegenschaft').value;
+  // Liegenschaft = Name, wenn in Gebäudedaten vorhanden; sonst leer (freie Eingabe)
+  const liegenschaft = allGebaeudeDaten[name] ? name : '';
   const modulType = document.getElementById('input-projekt-modul').value || 'beleuchtung';
   await createProjekt(name, liegenschaft, modulType);
   closeNewProjektDialog();
