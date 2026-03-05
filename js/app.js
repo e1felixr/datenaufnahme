@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.7.4';
-const APP_BUILD_DATE = '05.03.2026 23:19'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.8.0';
+const APP_BUILD_DATE = '05.03.2026 23:23'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -106,6 +106,33 @@ window.addEventListener('popstate', (e) => {
     navigate('screen-projekte', false);
   }
 });
+
+// ── Toggle-Button Picker (ersetzt Select-Dropdowns) ──
+
+function pickToggle(event, fieldId, callback) {
+  const btn = event.target.closest('.toggle-btn');
+  if (!btn) return;
+  const group = btn.parentElement;
+  const input = document.getElementById(fieldId);
+  const wasActive = btn.classList.contains('active');
+  group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  if (wasActive) {
+    input.value = '';
+  } else {
+    btn.classList.add('active');
+    input.value = btn.dataset.val;
+  }
+  if (callback) callback();
+}
+
+function syncToggles(fieldId) {
+  const input = document.getElementById(fieldId);
+  const group = input.nextElementSibling;
+  if (!group || !group.classList.contains('toggle-group-auto')) return;
+  group.querySelectorAll('.toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.val === input.value);
+  });
+}
 
 // ── Toast ──
 
@@ -843,11 +870,14 @@ function fillBelForm(bel) {
   document.getElementById('f-leuchtenJeReihe').value = bel.leuchtenJeReihe || '';
   document.getElementById('f-leuchtmittelJeLeuchte').value = bel.leuchtmittelJeLeuchte || '';
   document.getElementById('f-installationsart').value = bel.installationsart || '';
+  syncToggles('f-installationsart');
   document.getElementById('f-installationsartSub').value = bel.installationsartSub || '';
   updateInstallationsartFields();
   document.getElementById('f-leuchtenart').value = bel.leuchtenart || '';
-  document.getElementById('f-leuchtmittelKategorie').value = bel.leuchtmittelKategorie || '';
   document.getElementById('f-vorschaltgeraet').value = bel.vorschaltgeraet || '';
+  syncToggles('f-vorschaltgeraet');
+  document.getElementById('f-leuchtmittelKategorie').value = bel.leuchtmittelKategorie || '';
+  syncToggles('f-leuchtmittelKategorie');
 
   // Steuerung checkboxen
   const steuerung = bel.steuerung || '';
@@ -1154,6 +1184,7 @@ function updateDuluxTyp() {
       // EVG auto-setzen wenn eindeutig
       if (best.info.evg === true && !vsg) {
         document.getElementById('f-vorschaltgeraet').value = 'EVG';
+        syncToggles('f-vorschaltgeraet');
       }
     }
     // Falls keine Wendel-Match, Dulux F/L prüfen

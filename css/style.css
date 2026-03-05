@@ -261,6 +261,19 @@ body {
   font-weight: 600;
 }
 
+/* Auto-width Toggle für Textlabels */
+.toggle-group-auto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.toggle-group-auto .toggle-btn {
+  width: auto;
+  padding: 6px 10px;
+  min-height: 32px;
+  font-size: .82rem;
+}
+
 /* ── Photo Slots ── */
 .photo-slots {
   display: grid;
@@ -762,6 +775,8 @@ body {
   height: 14px;
   min-width: 14px;
   min-height: 14px;
+  max-width: 14px;
+  max-height: 14px;
   flex-shrink: 0;
   border: 1.5px solid #999;
   border-radius: 2px;
@@ -769,11 +784,14 @@ body {
   position: relative;
   cursor: pointer;
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   vertical-align: middle;
 }
 .checkbox-row span {
   line-height: 1;
   vertical-align: middle;
+  padding-left: 2px;
 }
 .checkbox-row input[type="checkbox"]:checked {
   background: var(--module-color);

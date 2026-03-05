@@ -269,13 +269,13 @@
       </div>
       <div class="form-group">
         <label>Installationsart</label>
-        <select id="f-installationsart" onchange="updateInstallationsartFields()">
-          <option value="">Bitte wählen</option>
-          <option value="Einbau">Einbau</option>
-          <option value="Anbau">Anbau</option>
-          <option value="Pendel">Pendel</option>
-          <option value="Sonstige">Sonstige &rarr; Foto!</option>
-        </select>
+        <input type="hidden" id="f-installationsart">
+        <div class="toggle-group-auto" data-field="f-installationsart" onclick="pickToggle(event,'f-installationsart',updateInstallationsartFields)">
+          <button type="button" class="toggle-btn" data-val="Einbau">Einbau</button>
+          <button type="button" class="toggle-btn" data-val="Anbau">Anbau</button>
+          <button type="button" class="toggle-btn" data-val="Pendel">Pendel</button>
+          <button type="button" class="toggle-btn" data-val="Sonstige">Sonstige</button>
+        </div>
       </div>
     </div>
     <div class="form-group" id="group-installationsartSub" style="display:none">
@@ -343,22 +343,22 @@
     <div class="form-row">
       <div class="form-group">
         <label>VSG <button class="btn-help-inline" onclick="event.stopPropagation();alert('VSG = Vorschaltgerät\n\nTipp 1: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nTipp 2: Bei Kompaktleuchtstofflampen (Dulux, PL-S/C/T) Sockelbezeichnung prüfen:\n• q in Sockelbez. → 4-Pin → immer EVG\n• d in Sockelbez. → 2-Pin → immer KVG\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: VSG erkennen">?</button></label>
-        <select id="f-vorschaltgeraet" onchange="updateLeuchtmittelFields()">
-          <option value="">Bitte wählen</option>
-          <option value="KVG/VVG">KVG/VVG</option>
-          <option value="EVG">EVG</option>
-        </select>
+        <input type="hidden" id="f-vorschaltgeraet">
+        <div class="toggle-group-auto" onclick="pickToggle(event,'f-vorschaltgeraet',updateLeuchtmittelFields)">
+          <button type="button" class="toggle-btn" data-val="KVG/VVG">KVG/VVG</button>
+          <button type="button" class="toggle-btn" data-val="EVG">EVG</button>
+        </div>
       </div>
       <div class="form-group">
         <label>Leuchtmittel</label>
-        <select id="f-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()">
-          <option value="">Bitte wählen</option>
-          <option value="t5">T5</option>
-          <option value="t8">T8</option>
-          <option value="dulux">Dulux</option>
-          <option value="led">LED</option>
-          <option value="sonstige">Sonstige</option>
-        </select>
+        <input type="hidden" id="f-leuchtmittelKategorie">
+        <div class="toggle-group-auto" onclick="pickToggle(event,'f-leuchtmittelKategorie',updateLeuchtmittelFields)">
+          <button type="button" class="toggle-btn" data-val="t5">T5</button>
+          <button type="button" class="toggle-btn" data-val="t8">T8</button>
+          <button type="button" class="toggle-btn" data-val="dulux">Dulux</button>
+          <button type="button" class="toggle-btn" data-val="led">LED</button>
+          <button type="button" class="toggle-btn" data-val="sonstige">Sonst.</button>
+        </div>
       </div>
     </div>
 
