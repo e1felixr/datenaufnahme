@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.7.0';
-const APP_BUILD_DATE = '05.03.2026 23:01'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.7.1';
+const APP_BUILD_DATE = '05.03.2026 23:02'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2099,7 +2099,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// ── Auto-Advance nach Datalist/Select-Auswahl ──
+// ── Auto-Advance + Datalist-Reopen ──
 
 function setupAutoAdvance() {
   const formScreen = document.getElementById('screen-form');
@@ -2122,8 +2122,25 @@ function setupAutoAdvance() {
     if (el.tagName !== 'INPUT' || !el.list) return;
     const opts = Array.from(el.list.options).map(o => o.value);
     if (el.value && opts.includes(el.value)) {
+      el._dlPrev = null; // Vorauswahl zurücksetzen
       setTimeout(() => { const nf = nextField(el); if (nf) nf.focus(); }, 50);
     }
+  });
+
+  // Datalist-Inputs: Klick auf gefülltes Feld → leeren, damit alle Vorschläge erscheinen
+  formScreen.addEventListener('focusin', (e) => {
+    const el = e.target;
+    if (el.tagName !== 'INPUT' || !el.list || !el.value) return;
+    el._dlPrev = el.value;
+    el.value = '';
+  });
+
+  // Datalist-Inputs: bei Blur ohne neuen Wert → alten Wert wiederherstellen
+  formScreen.addEventListener('focusout', (e) => {
+    const el = e.target;
+    if (el.tagName !== 'INPUT' || !el.list || el._dlPrev == null) return;
+    if (!el.value) el.value = el._dlPrev;
+    el._dlPrev = null;
   });
 
   // Select-Felder: bei Auswahl (nicht leer) weiter
