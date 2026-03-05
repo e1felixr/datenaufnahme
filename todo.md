@@ -4,7 +4,23 @@ Offene Punkte:
 
 * Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden. Platzhalter-Button bei Rauminfo vorhanden (hilfe/raumdecken.jpg fehlt noch).
 
+* Optionen für diverse Strahler anbieten (HQI, HQL, etc.). Frage mich hierzu regelmäßig an, da liefere ich dir etwas. Dito für Glühbirnen E14/E27/E40.
+
 ………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
+
+### v3.4
+
+* ~~"Standort" → "Raum", "Rauminfo" → "Installation", "Leuchten-Anordnung" → "Leuchteninfo"~~ **erledigt v3.4**
+
+* ~~Zwischenüberschrift "Vorschaltgerät/Leuchtmittel" entfernt, VSG + Leuchtmittel in eine Zeile~~ **erledigt v3.4** (form-row, VSG mit Erläuterung im Info-Button)
+
+* ~~T5/T8 als eigene Kategorien, T12 entfernt (65W unter T8), Spot/SQ28/T5 Ring unter "Sonstige"~~ **erledigt v3.4** (LEUCHTMITTEL_DB umgebaut, Typ-Dropdown entfällt für T5/T8)
+
+* ~~Checkboxen kleiner, Text vertikal zentriert~~ **erledigt v3.4** (20px statt 22px, align-items: center)
+
+* ~~Leuchtenart "Tafelbeleuchtung" ergänzt~~ **erledigt v3.4**
+
+* ~~Bei nächstem Raum: Defaults vom ersten Eintrag des Raums~~ **erledigt v3.4** (saveBelAndNextRoom nutzt firstInRoom statt aktuellen Eintrag)
 
 ### v3.3
 
