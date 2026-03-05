@@ -333,7 +333,7 @@
     <!-- VSG + Leuchtmittel -->
     <div class="form-row">
       <div class="form-group">
-        <label>VSG <button class="btn-help-inline" onclick="event.stopPropagation();alert('VSG = Vorschaltgerät\n\nTipp: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\n\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: VSG erkennen">?</button></label>
+        <label>VSG <button class="btn-help-inline" onclick="event.stopPropagation();alert('VSG = Vorschaltgerät\n\nTipp 1: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nTipp 2: Sockelbezeichnung auf dem Leuchtmittel prüfen:\n• q in Sockelbez. → 4-Pin → immer EVG\n• d in Sockelbez. → 2-Pin → immer KVG\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: VSG erkennen">?</button></label>
         <select id="f-vorschaltgeraet" onchange="updateLeuchtmittelFields()">
           <option value="">Bitte wählen</option>
           <option value="KVG/VVG">KVG/VVG</option>
