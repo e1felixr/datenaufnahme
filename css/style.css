@@ -1036,6 +1036,14 @@ body {
   font-weight: 600;
 }
 
+/* ── Bel Steuerung Checkboxen (4 in einer Reihe) ── */
+.steuerung-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 4px 8px;
+  margin: 6px 0;
+}
+
 /* ── Bel Zustand Checkboxen ── */
 .zustand-grid {
   display: grid;

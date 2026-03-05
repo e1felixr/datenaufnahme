@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v3.4';
-const APP_BUILD_DATE = '05.03.2026 16:17'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.5';
+const APP_BUILD_DATE = '05.03.2026 16:36'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -54,8 +54,8 @@ const LEUCHTMITTEL_DB = {
     'MR11':    { wattages: [20, 35] },
     'MR16':    { wattages: [20, 35, 50] },
     'GU10':    { wattages: [35, 50] },
-    'AR111':   { wattages: [35, 50, 75] },
-    'SQ28':    { wattages: [21, 28, 38] }
+    'SQ28':    { wattages: [21, 28, 38] },
+    'HQI/HIT': { wattages: [70, 100, 150, 250, 400, 1000, 2000], freeInput: true }
   }
 };
 
@@ -808,6 +808,13 @@ function fillBelForm(bel) {
   document.getElementById('f-leuchtmittelKategorie').value = bel.leuchtmittelKategorie || '';
   document.getElementById('f-vorschaltgeraet').value = bel.vorschaltgeraet || '';
 
+  // Steuerung checkboxen
+  const steuerung = bel.steuerung || '';
+  document.getElementById('f-steuerung-bwm').checked = steuerung.includes('BWM');
+  document.getElementById('f-steuerung-dimmbar').checked = steuerung.includes('dimmbar');
+  document.getElementById('f-steuerung-dali').checked = steuerung.includes('DALI');
+  document.getElementById('f-steuerung-knx').checked = steuerung.includes('KNX');
+
   // Zustand checkboxen
   const zustand = bel.zustand || '';
   document.getElementById('f-zustand-defekt').checked = zustand.includes('defekt');
@@ -836,6 +843,7 @@ function fillBelForm(bel) {
       updateSonstigeLmFields();
       setTimeout(() => {
         document.getElementById('f-lm-sonstige-wattage').value = bel.leuchtmittelWattage || '';
+        document.getElementById('f-lm-fassung').value = bel.fassung || '';
       }, 0);
     } else if (kat === 'led') {
       document.getElementById('f-lm-led-text').value = bel.leuchtmittelTyp || '';
@@ -875,14 +883,17 @@ function readBelFormIntoObj(bel) {
     bel.leuchtmittelLaenge = document.getElementById('f-lm-linear-laenge').value;
     bel.leuchtmittelWattage = document.getElementById('f-lm-linear-wattage').value;
     bel.wendelanzahl = '';
+    bel.fassung = '';
   } else if (kat === 'dulux') {
     bel.leuchtmittelTyp = document.getElementById('f-lm-dulux-typ').value;
     bel.leuchtmittelWattage = document.getElementById('f-lm-dulux-wattage').value;
     bel.wendelanzahl = document.getElementById('f-lm-dulux-wendel').value;
     bel.leuchtmittelLaenge = '';
+    bel.fassung = '';
   } else if (kat === 'sonstige') {
     bel.leuchtmittelTyp = document.getElementById('f-lm-sonstige-typ').value;
     bel.leuchtmittelWattage = document.getElementById('f-lm-sonstige-wattage').value;
+    bel.fassung = document.getElementById('f-lm-fassung').value;
     bel.leuchtmittelLaenge = '';
     bel.wendelanzahl = '';
   } else if (kat === 'led') {
@@ -890,11 +901,13 @@ function readBelFormIntoObj(bel) {
     bel.leuchtmittelWattage = '';
     bel.leuchtmittelLaenge = '';
     bel.wendelanzahl = '';
+    bel.fassung = '';
   } else {
     bel.leuchtmittelTyp = '';
     bel.leuchtmittelWattage = '';
     bel.leuchtmittelLaenge = '';
     bel.wendelanzahl = '';
+    bel.fassung = '';
   }
 
   // Zustand
@@ -905,6 +918,14 @@ function readBelFormIntoObj(bel) {
   if (document.getElementById('f-zustand-abgaengig').checked) zustandParts.push('abgängig');
   if (document.getElementById('f-zustand-erreichbar').checked) zustandParts.push('schlecht erreichbar');
   bel.zustand = zustandParts.join(', ');
+
+  // Steuerung
+  const steuerungParts = [];
+  if (document.getElementById('f-steuerung-bwm').checked) steuerungParts.push('BWM');
+  if (document.getElementById('f-steuerung-dimmbar').checked) steuerungParts.push('dimmbar');
+  if (document.getElementById('f-steuerung-dali').checked) steuerungParts.push('DALI');
+  if (document.getElementById('f-steuerung-knx').checked) steuerungParts.push('KNX');
+  bel.steuerung = steuerungParts.join(', ');
 
   bel.bemerkung = document.getElementById('f-bel-bemerkung').value.trim();
   bel.fotos = belFormPhotos.filter(Boolean);
@@ -1140,17 +1161,20 @@ function updateLeuchtmittelFields() {
 
 function updateSonstigeLmFields() {
   const typ = document.getElementById('f-lm-sonstige-typ').value;
-  const wattSel = document.getElementById('f-lm-sonstige-wattage');
-  const curWatt = wattSel.value;
-  wattSel.innerHTML = '<option value="">Bitte wählen</option>';
+  const dlEl = document.getElementById('dl-lm-sonstige-wattage');
+  dlEl.innerHTML = '';
   if (typ && LEUCHTMITTEL_DB.sonstige[typ]) {
     const data = LEUCHTMITTEL_DB.sonstige[typ];
     const wattages = data.wattages || (data.entries ? data.entries.map(e => e.w) : []);
-    for (const w of wattages) {
-      wattSel.innerHTML += `<option value="${w}">${w} W</option>`;
-    }
+    dlEl.innerHTML = wattages.map(w => `<option value="${w}">`).join('');
   }
-  wattSel.value = curWatt;
+  // Fassung-Feld bei Strahler-Typen anzeigen (MR11, MR16, GU10, HQI/HIT)
+  const fassungTypes = ['MR11', 'MR16', 'GU10', 'HQI/HIT'];
+  const fassungGroup = document.getElementById('group-fassung');
+  if (fassungGroup) {
+    fassungGroup.style.display = fassungTypes.includes(typ) ? 'block' : 'none';
+    if (!fassungTypes.includes(typ)) document.getElementById('f-lm-fassung').value = '';
+  }
 }
 
 // ── Bel Sonstige Hinweis ──
