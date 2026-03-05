@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v3.1';
-const APP_BUILD_DATE = '05.03.2026 14:43'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 14:44'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1484,6 +1484,7 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    if (rows.length < 2) continue;
 
     const gebaeude = new Set();
     const geschoss = new Set();
@@ -1491,22 +1492,47 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
     const raumDetails = {};
     const geschossRaum = {}; // Geschoss → [Raum-Nrn]
 
+    // Format erkennen anhand Header-Zeile
+    const header = (rows[0] || []).map(h => String(h || '').trim().toLowerCase());
+    const isNewFormat = header[0] && header[0].includes('geschoss') && header[1] && header[1].includes('raum');
+
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
-      const ges = (row[2] != null && String(row[2]).trim()) ? String(row[2]).trim() : '';
-      if (ges) geschoss.add(ges);
-      if (row[4] != null && String(row[4]).trim()) {
-        const rNr = String(row[4]).trim();
-        raum.add(rNr);
-        raumDetails[rNr] = {
-          flaeche: row[5] != null ? String(row[5]).trim() : '',
-          nutzung: row[6] != null ? String(row[6]).trim() : '',
-          barcode: row[7] != null ? String(row[7]).trim() : ''
-        };
-        if (ges) {
-          if (!geschossRaum[ges]) geschossRaum[ges] = [];
-          if (!geschossRaum[ges].includes(rNr)) geschossRaum[ges].push(rNr);
+
+      if (isNewFormat) {
+        // Neues Format: A=Geschoss, B=Raum Nr., C=Raumbezeichnung, D=Bodenfläche
+        const ges = (row[0] != null && String(row[0]).trim()) ? String(row[0]).trim() : '';
+        if (ges) geschoss.add(ges);
+        if (row[1] != null && String(row[1]).trim()) {
+          const rNr = String(row[1]).trim();
+          raum.add(rNr);
+          raumDetails[rNr] = {
+            nutzung: row[2] != null ? String(row[2]).trim() : '',
+            flaeche: row[3] != null ? String(row[3]).trim() : '',
+            barcode: ''
+          };
+          if (ges) {
+            if (!geschossRaum[ges]) geschossRaum[ges] = [];
+            if (!geschossRaum[ges].includes(rNr)) geschossRaum[ges].push(rNr);
+          }
+        }
+      } else {
+        // Altes Format: A=Gebäude, C=Geschoss, E=Raum, F=Fläche, G=Nutzung, H=Barcode
+        if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
+        const ges = (row[2] != null && String(row[2]).trim()) ? String(row[2]).trim() : '';
+        if (ges) geschoss.add(ges);
+        if (row[4] != null && String(row[4]).trim()) {
+          const rNr = String(row[4]).trim();
+          raum.add(rNr);
+          raumDetails[rNr] = {
+            flaeche: row[5] != null ? String(row[5]).trim() : '',
+            nutzung: row[6] != null ? String(row[6]).trim() : '',
+            barcode: row[7] != null ? String(row[7]).trim() : ''
+          };
+          if (ges) {
+            if (!geschossRaum[ges]) geschossRaum[ges] = [];
+            if (!geschossRaum[ges].includes(rNr)) geschossRaum[ges].push(rNr);
+          }
         }
       }
     }
