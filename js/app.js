@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
 const APP_VERSION = 'v3.3';
-const APP_BUILD_DATE = '05.03.2026 15:29'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '05.03.2026 15:32'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -174,7 +174,7 @@ async function renderProjekte() {
   for (const p of projekte) {
     const hks = await getHeizkoerperByProjekt(p.id);
     const bels = await getBeleuchtungByProjekt(p.id);
-    const datum = new Date(p.erstelltAm).toLocaleDateString('de-DE');
+    const datum = new Date(p.erstelltAm).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const modul = p.modulType || 'hk';
     const modulLabel = modul === 'hk' ? 'HK' : modul === 'beleuchtung' ? 'BEL' : 'HK+BEL';
     let countInfo = '';
