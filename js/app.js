@@ -1,7 +1,7 @@
 // app.js - Hauptlogik, Navigation, Event-Handling
 
-const APP_VERSION = 'v3.2';
-const APP_BUILD_DATE = '05.03.2026 15:01'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.3';
+const APP_BUILD_DATE = '05.03.2026 15:29'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -922,7 +922,7 @@ function readBelFormIntoObj(bel) {
   // Zustand
   const zustandParts = [];
   if (document.getElementById('f-zustand-defekt').checked) zustandParts.push('defekt');
-  if (document.getElementById('f-zustand-beschaedigt').checked) zustandParts.push('beschädigt');
+  if (document.getElementById('f-zustand-beschaedigt').checked) zustandParts.push('beschädigt (→ Foto!)');
   if (document.getElementById('f-zustand-verschmutzt').checked) zustandParts.push('stark verschmutzt');
   if (document.getElementById('f-zustand-abgaengig').checked) zustandParts.push('abgängig');
   if (document.getElementById('f-zustand-erreichbar').checked) zustandParts.push('schlecht erreichbar');

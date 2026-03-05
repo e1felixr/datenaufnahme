@@ -2,9 +2,17 @@ Oberhalb der gepunkteten Linie dürften stets nur die offenen Aufgaben stehen!!
 
 Offene Punkte:
 
-* Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden. Platzhalter-Buttons sind vorbereitet (hilfe/ Ordner).
+* Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden. Platzhalter-Button bei Rauminfo vorhanden (hilfe/raumdecken.jpg fehlt noch).
 
 ………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………
+
+### v3.3
+
+* ~~Kompakteres Beleuchtungs-Formular~~ **erledigt v3.3** (Raumdecke + Installationsart in form-row, Leuchten-Anordnung 3 Felder in form-row-3, Labels gekürzt)
+
+* ~~Zustand-Checkboxen: sichtbare Haken, Mehrfachauswahl, Info-Texte~~ **erledigt v3.3** (Custom CSS-Checkboxen mit ✓-Zeichen, schwarzer Haken bei Gelb-Theme, Info-Buttons bei defekt/beschädigt/verschmutzt/abgängig, "beschädigt (→ Foto!)")
+
+* ~~Leuchtenart "Panel" wählbar~~ **erledigt v3.3** (Panel als Option im Leuchtenart-Dropdown)
 
 ### v3.1
 
