@@ -3,6 +3,10 @@
   --primary: #1565C0;
   --primary-dark: #0D47A1;
   --primary-light: #E3F2FD;
+  --module-color: #FF6633;
+  --module-color-light: #FFF3E0;
+  --module-color-dark: #E65100;
+  --module-text: #fff;
   --accent: #FF6F00;
   --danger: #C62828;
   --danger-light: #FFEBEE;
@@ -36,8 +40,8 @@ body {
 
 /* ── Header ── */
 .header {
-  background: var(--primary);
-  color: #fff;
+  background: var(--module-color);
+  color: var(--module-text);
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -84,7 +88,7 @@ body {
 .btn-back {
   background: none;
   border: none;
-  color: #fff;
+  color: var(--module-text);
   font-size: 1.5rem;
   cursor: pointer;
   padding: 4px 8px;
@@ -111,7 +115,7 @@ body {
   transition: border-color .15s;
 }
 
-.card:active { background: var(--primary-light); }
+.card:active { background: var(--module-color-light); }
 .card .card-title { font-weight: 600; font-size: .95rem; }
 .card .card-sub { color: var(--text-sec); font-size: .8rem; margin-top: 2px; }
 
@@ -134,6 +138,8 @@ body {
 
 .btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:active { background: var(--primary-dark); }
+.btn-module { background: var(--module-color); color: var(--module-text); }
+.btn-module:active { opacity: .85; }
 .btn-accent { background: var(--accent); color: #fff; }
 .btn-danger { background: var(--danger); color: #fff; }
 .btn-outline {
@@ -151,8 +157,8 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
+  background: var(--module-color);
+  color: var(--module-text);
   border: none;
   font-size: 1.8rem;
   box-shadow: 0 4px 8px rgba(0,0,0,.25);
@@ -206,7 +212,7 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--module-color);
 }
 
 .form-group textarea {
@@ -248,9 +254,9 @@ body {
 }
 
 .toggle-btn.active {
-  border-color: var(--primary);
-  background: var(--primary-light);
-  color: var(--primary);
+  border-color: var(--module-color);
+  background: var(--module-color-light);
+  color: var(--module-color);
   font-weight: 600;
 }
 
@@ -395,8 +401,8 @@ body {
   height: 38px;
   border: none;
   border-radius: 50%;
-  background: var(--primary-light);
-  color: var(--primary);
+  background: var(--module-color-light);
+  color: var(--module-color);
   font-size: 1.1rem;
   cursor: pointer;
   display: flex;
@@ -423,7 +429,7 @@ body {
   color: var(--text);
 }
 
-.room-hks {
+.room-hks, .room-bels, .room-items {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -436,7 +442,7 @@ body {
   padding: 6px 10px;
   border: 2px solid var(--border);
   border-radius: var(--radius);
-  background: var(--primary-light);
+  background: #FFF3E0;
   cursor: pointer;
   font-size: .82rem;
   transition: border-color .15s;
@@ -444,10 +450,28 @@ body {
 }
 
 .room-hk-chip:active {
-  border-color: var(--primary);
+  border-color: #FF6633;
 }
 
-.room-hk-nr {
+.room-bel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: #FFF9C4;
+  cursor: pointer;
+  font-size: .82rem;
+  transition: border-color .15s;
+  position: relative;
+}
+
+.room-bel-chip:active {
+  border-color: #FFCC00;
+}
+
+.room-hk-nr, .room-bel-nr {
   font-weight: 600;
   white-space: nowrap;
 }
@@ -457,7 +481,7 @@ body {
   letter-spacing: -2px;
 }
 
-.room-hk-del {
+.room-hk-del, .room-bel-del {
   background: none;
   border: none;
   color: var(--danger);
@@ -469,7 +493,7 @@ body {
   opacity: .6;
 }
 
-.room-hk-del:active {
+.room-hk-del:active, .room-bel-del:active {
   opacity: 1;
 }
 
@@ -480,8 +504,8 @@ body {
   border-radius: 4px;
   font-size: .75rem;
   font-weight: 600;
-  background: var(--primary-light);
-  color: var(--primary);
+  background: var(--module-color-light);
+  color: var(--module-color-dark, var(--module-color));
 }
 
 /* ── Section Title ── */
@@ -490,10 +514,20 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .5px;
-  color: var(--primary);
+  color: var(--module-color);
   margin: 14px 0 6px;
   padding-bottom: 4px;
-  border-bottom: 2px solid var(--primary-light);
+  border-bottom: 2px solid var(--module-color-light);
+}
+
+.section-title-hk {
+  color: #FF6633;
+  border-bottom-color: #FFF3E0;
+}
+
+.section-title-bel {
+  color: #B8860B;
+  border-bottom-color: #FFF9C4;
 }
 
 /* ── Toast ── */
@@ -517,8 +551,8 @@ body {
 
 /* ── Count Badge ── */
 .count-badge {
-  background: var(--accent);
-  color: #fff;
+  background: var(--module-color);
+  color: var(--module-text);
   border-radius: 12px;
   padding: 1px 8px;
   font-size: .8rem;
@@ -541,7 +575,7 @@ body {
 .btn-help {
   background: none;
   border: none;
-  color: #fff;
+  color: var(--module-text);
   font-size: 1.3rem;
   cursor: pointer;
   padding: 4px 8px;
@@ -714,7 +748,7 @@ body {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  accent-color: var(--primary);
+  accent-color: var(--module-color);
 }
 
 /* ── Checkbox Grid (2 Spalten) ── */
@@ -728,7 +762,7 @@ body {
 /* ── Mode Toggle (HK im Raum / Neuer Raum) ── */
 .mode-toggle {
   display: flex;
-  border: 2px solid var(--primary);
+  border: 2px solid var(--module-color);
   border-radius: var(--radius);
   overflow: hidden;
   margin-bottom: 12px;
@@ -739,7 +773,7 @@ body {
   padding: 8px 12px;
   border: none;
   background: #fff;
-  color: var(--primary);
+  color: var(--module-color);
   font-size: .88rem;
   font-weight: 500;
   cursor: pointer;
@@ -747,12 +781,12 @@ body {
 }
 
 .mode-btn + .mode-btn {
-  border-left: 2px solid var(--primary);
+  border-left: 2px solid var(--module-color);
 }
 
 .mode-btn.active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--module-color);
+  color: var(--module-text);
   font-weight: 600;
 }
 
@@ -808,9 +842,9 @@ body {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 1.5px solid var(--primary);
-  background: var(--primary-light);
-  color: var(--primary);
+  border: 1.5px solid var(--module-color);
+  background: var(--module-color-light);
+  color: var(--module-color);
   font-size: .65rem;
   font-weight: 700;
   cursor: pointer;
@@ -821,8 +855,8 @@ body {
 }
 
 .btn-help-inline:active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--module-color);
+  color: var(--module-text);
 }
 
 /* ── Help Image Modal ── */
@@ -930,4 +964,93 @@ body {
 
 .camera-shutter:active::after {
   background: #ccc;
+}
+
+/* ── Modul-Auswahl Toggle (Projekt-Dialog) ── */
+.modul-toggle {
+  display: flex;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.modul-toggle-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  background: #fff;
+  color: var(--text);
+  font-size: .85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  text-align: center;
+}
+
+.modul-toggle-btn + .modul-toggle-btn {
+  border-left: 2px solid var(--border);
+}
+
+.modul-toggle-btn.active-hk {
+  background: #FF6633;
+  color: #fff;
+  font-weight: 600;
+}
+
+.modul-toggle-btn.active-bel {
+  background: #FFCC00;
+  color: #000;
+  font-weight: 600;
+}
+
+.modul-toggle-btn.active-beides {
+  background: #FF8C00;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Leuchtmittel je Leuchte Toggle ── */
+.lm-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.lm-toggle-btn {
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.lm-toggle-btn.active {
+  border-color: #FFCC00;
+  background: #FFF9C4;
+  color: #B8860B;
+}
+
+/* ── Bel Zustand Checkboxen ── */
+.zustand-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  margin: 6px 0;
+}
+
+/* ── Typenschild-Hinweis ── */
+.typenschild-hinweis {
+  background: #FFF9C4;
+  border: 2px solid #FFCC00;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin: 8px 0;
+  font-weight: 600;
+  color: #B8860B;
+  text-align: center;
+  font-size: .85rem;
 }
