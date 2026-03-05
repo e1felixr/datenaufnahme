@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.6.4';
-const APP_BUILD_DATE = '05.03.2026 22:54'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.7.0';
+const APP_BUILD_DATE = '05.03.2026 23:01'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2078,6 +2078,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (e.key === 'Enter') createNewProjekt();
     });
 
+    // Auto-Advance: nach Datalist-Auswahl oder Select-Änderung zum nächsten Feld springen
+    setupAutoAdvance();
+
     // Landscape-Keyboard-Fix: Header ausblenden wenn Input fokussiert + Viewport zu klein
     setupLandscapeKeyboardFix();
 
@@ -2095,6 +2098,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (t) { t.textContent = 'Fehler: ' + err.message; t.classList.add('show'); }
   }
 });
+
+// ── Auto-Advance nach Datalist/Select-Auswahl ──
+
+function setupAutoAdvance() {
+  const formScreen = document.getElementById('screen-form');
+
+  // Nächstes sichtbares, editierbares Feld im Formular finden
+  function nextField(el) {
+    const fields = Array.from(formScreen.querySelectorAll('input:not([type="hidden"]):not([readonly]), select, textarea'));
+    const idx = fields.indexOf(el);
+    if (idx < 0) return null;
+    for (let i = idx + 1; i < fields.length; i++) {
+      const f = fields[i];
+      if (f.offsetParent !== null && !f.disabled && !f.readOnly) return f;
+    }
+    return null;
+  }
+
+  // Datalist-Inputs: bei Auswahl eines Vorschlags weiter
+  formScreen.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.tagName !== 'INPUT' || !el.list) return;
+    const opts = Array.from(el.list.options).map(o => o.value);
+    if (el.value && opts.includes(el.value)) {
+      setTimeout(() => { const nf = nextField(el); if (nf) nf.focus(); }, 50);
+    }
+  });
+
+  // Select-Felder: bei Auswahl (nicht leer) weiter
+  formScreen.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.tagName !== 'SELECT') return;
+    if (el.value) {
+      setTimeout(() => { const nf = nextField(el); if (nf) nf.focus(); }, 50);
+    }
+  });
+}
 
 // ── Landscape-Keyboard-Fix ──
 
