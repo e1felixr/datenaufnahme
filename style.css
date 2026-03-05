@@ -452,6 +452,11 @@ body {
   white-space: nowrap;
 }
 
+.chip-fotos {
+  font-size: .75rem;
+  letter-spacing: -2px;
+}
+
 .room-hk-del {
   background: none;
   border: none;
