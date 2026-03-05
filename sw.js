@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'hk-aufnahme-v21';
+const CACHE_NAME = 'hk-aufnahme-v22';
 const ASSETS = [
   './',
   './index.html',

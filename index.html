@@ -37,8 +37,6 @@
     <input type="text" id="filter-text" placeholder="Filter (Gebäude, Geschoss, Raum...)">
   </div>
   <div class="action-bar">
-    <button class="btn btn-outline btn-sm" onclick="exportData('xlsx')">Export xlsx</button>
-    <button class="btn btn-outline btn-sm" onclick="exportData('csv')">Export CSV</button>
     <button class="btn btn-accent btn-sm" onclick="showSendDialog()">Versenden</button>
     <button class="btn btn-outline btn-sm" onclick="document.getElementById('file-gebaeudedaten').click()">Gebäudedaten</button>
     <input type="file" id="file-gebaeudedaten" accept=".xlsx" style="display:none" onchange="importGebaeudedaten(this.files[0])">
