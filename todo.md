@@ -6,6 +6,8 @@ Offene Punkte:
 
 * Optionen für Glühbirnen E14/E27/E40 anbieten. Frage mich hierzu regelmäßig an, da liefere ich dir etwas.
 
+* Was gibt es noch für Einstellungen, die der Nutzer unter Einstellungen setzen wollen könnte?
+
 IMMER:
 * Bei relevanten Änderungen Version hochzählen
 * Immer Zeitstempel "letzte Änderung" aktualisieren, damit ist das letzte änderungsdatum egal welcher datei gemeint.

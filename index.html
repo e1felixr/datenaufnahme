@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#FF6633">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>HK-Aufnahme</title>
   <link rel="manifest" href="manifest.json">
@@ -65,7 +66,7 @@
   </div>
 
   <!-- Ort -->
-  <div class="section-title">Raum</div>
+  <div class="section-title" id="section-title-raum">Raum</div>
   <div class="form-row">
     <div class="form-group">
       <label>Gebäude</label>
@@ -249,7 +250,6 @@
 
   <!-- ════════ Beleuchtungs-Sektion ════════ -->
   <div id="bel-form-section" style="display:none">
-    <div class="section-title section-title-bel" id="section-title-bel">Beleuchtung</div>
     <input type="hidden" id="f-gruppenNr" value="">
 
     <!-- Installation -->
@@ -269,13 +269,10 @@
       </div>
       <div class="form-group">
         <label>Installationsart</label>
-        <input type="hidden" id="f-installationsart">
-        <div class="toggle-group-auto" data-field="f-installationsart" onclick="pickToggle(event,'f-installationsart',updateInstallationsartFields)">
-          <button type="button" class="toggle-btn" data-val="Einbau">Einbau</button>
-          <button type="button" class="toggle-btn" data-val="Anbau">Anbau</button>
-          <button type="button" class="toggle-btn" data-val="Pendel">Pendel</button>
-          <button type="button" class="toggle-btn" data-val="Sonstige">Sonstige</button>
-        </div>
+        <input type="text" id="f-installationsart" list="dl-installationsart" onchange="updateInstallationsartFields()">
+        <datalist id="dl-installationsart">
+          <option value="Einbau"><option value="Anbau"><option value="Pendel"><option value="Sonstige">
+        </datalist>
       </div>
     </div>
     <div class="form-group" id="group-installationsartSub" style="display:none">
@@ -343,22 +340,17 @@
     <div class="form-row">
       <div class="form-group">
         <label>VSG <button class="btn-help-inline" onclick="event.stopPropagation();alert('VSG = Vorschaltgerät\n\nTipp 1: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nTipp 2: Bei Kompaktleuchtstofflampen (Dulux, PL-S/C/T) Sockelbezeichnung prüfen:\n• q in Sockelbez. → 4-Pin → immer EVG\n• d in Sockelbez. → 2-Pin → immer KVG\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: VSG erkennen">?</button></label>
-        <input type="hidden" id="f-vorschaltgeraet">
-        <div class="toggle-group-auto" onclick="pickToggle(event,'f-vorschaltgeraet',updateLeuchtmittelFields)">
-          <button type="button" class="toggle-btn" data-val="KVG/VVG">KVG/VVG</button>
-          <button type="button" class="toggle-btn" data-val="EVG">EVG</button>
-        </div>
+        <input type="text" id="f-vorschaltgeraet" list="dl-vorschaltgeraet" onchange="updateLeuchtmittelFields()">
+        <datalist id="dl-vorschaltgeraet">
+          <option value="KVG/VVG"><option value="EVG">
+        </datalist>
       </div>
       <div class="form-group">
         <label>Leuchtmittel</label>
-        <input type="hidden" id="f-leuchtmittelKategorie">
-        <div class="toggle-group-auto" onclick="pickToggle(event,'f-leuchtmittelKategorie',updateLeuchtmittelFields)">
-          <button type="button" class="toggle-btn" data-val="t5">T5</button>
-          <button type="button" class="toggle-btn" data-val="t8">T8</button>
-          <button type="button" class="toggle-btn" data-val="dulux">Dulux</button>
-          <button type="button" class="toggle-btn" data-val="led">LED</button>
-          <button type="button" class="toggle-btn" data-val="sonstige">Sonst.</button>
-        </div>
+        <input type="text" id="f-leuchtmittelKategorie" list="dl-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()">
+        <datalist id="dl-leuchtmittelKategorie">
+          <option value="T5"><option value="T8"><option value="Dulux"><option value="LED"><option value="Sonstige">
+        </datalist>
       </div>
     </div>
 
@@ -446,6 +438,7 @@
         <label class="checkbox-row"><input type="checkbox" id="f-steuerung-dimmbar"><span>dimmbar</span></label>
         <label class="checkbox-row"><input type="checkbox" id="f-steuerung-dali"><span>DALI</span></label>
         <label class="checkbox-row"><input type="checkbox" id="f-steuerung-knx"><span>KNX</span></label>
+        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-defekt"><span>defekt</span></label>
       </div>
     </div>
 
@@ -478,7 +471,7 @@
 
     <div class="form-group">
       <label>Bemerkung</label>
-      <textarea id="f-bel-bemerkung" rows="2"></textarea>
+      <textarea id="f-bel-bemerkung" rows="2" placeholder="z.B. besondere Lichtfarbe"></textarea>
     </div>
 
     <!-- Bel Sonstige-Hinweis -->
