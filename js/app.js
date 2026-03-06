@@ -15,7 +15,7 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 const APP_VERSION = 'v3.14.0';
-const APP_BUILD_DATE = '06.03.2026 22:31'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '06.03.2026 22:38'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1570,7 +1570,7 @@ function handlePhotoInput(input) {
 }
 
 function compressImage(file, callback, directDataUrl) {
-  const MAX_BYTES = 3_000_000;
+  const MAX_BYTES = 2_000_000;
 
   function processImage(src) {
     const img = new Image();
