@@ -2,6 +2,7 @@
 
 ### v3.11
 
+* ~~Eingabefelder kompakter~~ **erledigt v3.11.3** (field-padding 10px→6px, form-group margin 10px→8px)
 * ~~alert() durch showInfo()-Modal ersetzt~~ **erledigt v3.11.2** (eigener Info-Dialog ohne Browser-Header "Auf e1felixr.github.io wird Folgendes angezeigt:")
 * ~~Steuerung: 5 Checkboxen in einer Zeile~~ **erledigt v3.11.1** (steuerung-grid auf repeat(5, auto))
 * ~~Sonstiges: 3-Spalten-Layout~~ **erledigt v3.11.1** (Raumdecke/Erreichbarkeit/LPH in form-row-3, Zustand-Grid auf 3 Spalten, "schlecht erreichbar" mit Label in Kapitaelchen)
