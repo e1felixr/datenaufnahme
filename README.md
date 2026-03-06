@@ -4,7 +4,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v3.12.0 · **Letzte Änderung:** 06.03.2026 14:55
+**aktuelle Version:** v3.12.0 · **Letzte Änderung:** 06.03.2026 14:57
 
 ## Installation auf dem Smartphone
 
@@ -147,4 +147,4 @@ icons/                PWA-Icons
 
 ### Was soll ich tun, wenn ich Probleme mit der Bedienung habe?
 
-Laut schreien und fluchen (z.B. *"So eine verdammte Scheiße!"* oder *"Immer dieser App-Scheiß!"* oder *"War ja klar, dass der Dreck wieder nicht funktioniert!"*), das mobile Endgerät wegpacken und wie in grauer Vorzeit handschriftlich auf Papier notieren!
+Laut schreien und fluchen (z.B. *"So eine verdammte Scheiße!"* oder *"Immer dieser App-Scheiß!"* oder *"War ja klar, dass der Dreck wieder nicht funktioniert!"*), das mobile Endgerät wegpacken und wie bisher handschriftlich auf Papier notieren!
