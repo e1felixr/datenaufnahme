@@ -116,7 +116,7 @@ function compressForExport(dataUrl) {
     img.onload = () => {
       const canvas = document.createElement('canvas');
       let w = img.width, h = img.height;
-      const maxW = 1920;
+      const maxW = 2560;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       canvas.width = w;
       canvas.height = h;
@@ -126,8 +126,8 @@ function compressForExport(dataUrl) {
       let result = canvas.toDataURL('image/jpeg', quality);
       let bytes = Math.round((result.length - result.indexOf(',') - 1) * 3 / 4);
 
-      while (bytes > MAX_BYTES && quality > 0.3) {
-        quality -= 0.1;
+      while (bytes > MAX_BYTES && quality > 0.5) {
+        quality -= 0.05;
         result = canvas.toDataURL('image/jpeg', quality);
         bytes = Math.round((result.length - result.indexOf(',') - 1) * 3 / 4);
       }
