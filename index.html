@@ -594,6 +594,15 @@
     </div>
   </div>
 
+  <div class="settings-group">
+    <label for="set-exportsize">Max. Fotogröße beim Versand</label>
+    <div class="settings-range-row">
+      <input type="range" id="set-exportsize" min="500" max="5000" step="500" value="2000">
+      <span class="range-value" id="val-exportsize">2 MB</span>
+    </div>
+    <p style="font-size:.75rem;color:var(--text-sec);margin-top:4px">Fotos werden beim Versand auf diese Größe komprimiert. Höher = bessere Qualität, größere ZIP.</p>
+  </div>
+
   <div class="form-actions">
     <button class="btn btn-primary" onclick="saveSettings()">Speichern</button>
     <button class="btn btn-outline" id="btn-settings-cancel" onclick="history.back()">Abbrechen</button>

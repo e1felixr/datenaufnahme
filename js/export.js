@@ -110,7 +110,7 @@ function base64ToBytes(dataUrl) {
 
 function compressForExport(dataUrl) {
   return new Promise((resolve) => {
-    const MAX_BYTES = 2_000_000;
+    const MAX_BYTES = (Number(localStorage.getItem('export-photo-size')) || 2000) * 1000;
     const img = new Image();
     img.onerror = () => resolve(base64ToBytes(dataUrl)); // Fallback: unkomprimiert
     img.onload = () => {

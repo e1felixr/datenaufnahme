@@ -15,7 +15,7 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 const APP_VERSION = 'v3.14.0';
-const APP_BUILD_DATE = '06.03.2026 22:43'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '06.03.2026 22:46'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2066,12 +2066,13 @@ function loadSettings() {
   const fontSize = localStorage.getItem('ui-font-size') || '13';
   const fieldPadding = localStorage.getItem('ui-field-padding') || '10';
   const erfasser = localStorage.getItem('erfasser-name') || '';
+  const exportSize = localStorage.getItem('export-photo-size') || '2000';
 
   document.documentElement.style.setProperty('--ui-font-size', fontSize + 'px');
   document.documentElement.style.setProperty('--ui-field-padding', fieldPadding + 'px');
 
   settingsReady = !!erfasser;
-  return { fontSize, fieldPadding, erfasser };
+  return { fontSize, fieldPadding, erfasser, exportSize };
 }
 
 function openSettings() {
@@ -2081,6 +2082,8 @@ function openSettings() {
   document.getElementById('val-fontsize').textContent = s.fontSize + 'px';
   document.getElementById('set-fieldpadding').value = s.fieldPadding;
   document.getElementById('val-fieldpadding').textContent = s.fieldPadding + 'px';
+  document.getElementById('set-exportsize').value = s.exportSize;
+  document.getElementById('val-exportsize').textContent = formatKB(s.exportSize);
 
   document.getElementById('btn-settings-cancel').style.display = settingsReady ? '' : 'none';
 
@@ -2097,9 +2100,12 @@ function saveSettings() {
   const fontSize = document.getElementById('set-fontsize').value;
   const fieldPadding = document.getElementById('set-fieldpadding').value;
 
+  const exportSize = document.getElementById('set-exportsize').value;
+
   localStorage.setItem('erfasser-name', erfasser);
   localStorage.setItem('ui-font-size', fontSize);
   localStorage.setItem('ui-field-padding', fieldPadding);
+  localStorage.setItem('export-photo-size', exportSize);
 
   loadSettings();
   navigate('screen-projekte');
@@ -2124,9 +2130,15 @@ async function resetAllData() {
   showToast('Alle Daten gelöscht');
 }
 
+function formatKB(kb) {
+  const n = Number(kb);
+  return n >= 1000 ? (n / 1000) + ' MB' : n + ' KB';
+}
+
 function initSettingsSliders() {
   const fontSlider = document.getElementById('set-fontsize');
   const paddingSlider = document.getElementById('set-fieldpadding');
+  const exportSlider = document.getElementById('set-exportsize');
 
   fontSlider.addEventListener('input', () => {
     const v = fontSlider.value;
@@ -2138,6 +2150,10 @@ function initSettingsSliders() {
     const v = paddingSlider.value;
     document.getElementById('val-fieldpadding').textContent = v + 'px';
     document.documentElement.style.setProperty('--ui-field-padding', v + 'px');
+  });
+
+  exportSlider.addEventListener('input', () => {
+    document.getElementById('val-exportsize').textContent = formatKB(exportSlider.value);
   });
 }
 
