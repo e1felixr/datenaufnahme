@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.11.1';
-const APP_BUILD_DATE = '06.03.2026 13:37'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.11.2';
+const APP_BUILD_DATE = '06.03.2026 13:42'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -113,6 +113,18 @@ window.addEventListener('popstate', (e) => {
     navigate('screen-projekte', false);
   }
 });
+
+// ── Info-Dialog (ersetzt alert()) ──
+
+function showInfo(title, text) {
+  document.getElementById('info-title').textContent = title;
+  document.getElementById('info-text').textContent = text;
+  document.getElementById('modal-info').style.display = 'flex';
+}
+
+function closeInfo() {
+  document.getElementById('modal-info').style.display = 'none';
+}
 
 // ── Toast ──
 
