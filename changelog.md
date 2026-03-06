@@ -1,5 +1,19 @@
 # Changelog
 
+### v3.14
+
+* ~~LED als Leuchtmittel mit optionaler Wattage~~ **erledigt v3.14.0**
+* ~~BAP-Leuchte entfernt, stattdessen UGR 19? Checkbox mit Info-Symbol~~ **erledigt v3.14.0**
+* ~~Panel → Rasterleuchte umbenannt~~ **erledigt v3.14.0**
+* ~~Smart-Defaults bei Leuchtenart rückgängig gemacht~~ **erledigt v3.14.0**
+* ~~Einstellungen: Standard-Erfassungsart + Standard-Gebäude entfernt~~ **erledigt v3.14.0**
+* ~~Leuchtmittel nach Leuchtentyp eingeschränkt~~ **erledigt v3.14.0** (Langfeld/Freistrahler/Tafel→T8,T5,Dulux L,LED; Downlight→Dulux,LED; Spot→Sonstige; Rasterleuchte→T8,T5,LED)
+* ~~Versand: Download + mailto nacheinander~~ **erledigt v3.14.0** (Web Share entfernt, ZIP Download + Mail öffnen + Hinweis)
+* ~~Checkbox-Abstände vereinheitlicht~~ **erledigt v3.14.0** (überflüssige form-group-Wrapper bei Steuerung/Zustand entfernt)
+* ~~+Raum: Raumnummern-Vorschlagsliste~~ **erledigt v3.14.0** (Nachbar-Nummern ±5 via Datalist)
+* ~~MR11 bei Spots entfernt~~ **erledigt v3.14.0**
+* ~~Info-Symbol Steuerung: "defekt" ergänzt~~ **erledigt v3.14.0**
+
 ### v3.13
 
 * ~~Smart-Defaults bei Leuchtenart~~ **erledigt v3.13.0** (Strahler/Spot/Downlight/Panel/Freistrahler→LM=1; Downlight/Panel→Einbau; Panel→LED; nur leere Felder)

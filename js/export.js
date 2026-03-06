@@ -57,7 +57,7 @@ const BEL_EXPORT_HEADERS = [
   'Raumdecke', 'Anzahl Reihen', 'Leuchten je Reihe', 'Leuchtmittel je Leuchte',
   'Installationsart', 'Installationsart Detail', 'Leuchtenart',
   'Leuchtmittel Kategorie', 'Leuchtmittel Typ', 'Leuchtmittel Länge [mm]', 'Leuchtmittel Wattage [W]',
-  'Fassung', 'Vorschaltgerät', 'Steuerung', 'LPH [m]', 'Zustand',
+  'Fassung', 'Vorschaltgerät', 'Steuerung', 'LPH [m]', 'UGR 19', 'Zustand',
   'Bemerkung', 'Erfasser', 'Erfasst am',
   'Foto 1', 'Foto 2', 'Foto 3'
 ];
@@ -67,7 +67,7 @@ const BEL_EXPORT_FIELDS = [
   'raumdecke', 'anzahlReihen', 'leuchtenJeReihe', 'leuchtmittelJeLeuchte',
   'installationsart', 'installationsartSub', 'leuchtenart',
   'leuchtmittelKategorie', 'leuchtmittelTyp', 'leuchtmittelLaenge', 'leuchtmittelWattage',
-  'fassung', 'vorschaltgeraet', 'steuerung', 'lph', 'zustand',
+  'fassung', 'vorschaltgeraet', 'steuerung', 'lph', 'ugr19', 'zustand',
   'bemerkung', 'erfasser', 'erstelltAm'
 ];
 
@@ -85,6 +85,7 @@ function belToRow(bel) {
   const row = BEL_EXPORT_FIELDS.map(f => {
     const val = bel[f];
     if (f === 'erstelltAm') return formatErstelltAm(val);
+    if (typeof val === 'boolean') return val ? 'Ja' : 'Nein';
     return val != null ? String(val) : '';
   });
   for (let i = 0; i < 3; i++) {

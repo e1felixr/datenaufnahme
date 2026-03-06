@@ -267,9 +267,8 @@
         <select id="f-leuchtenart" onchange="checkBelSonstigeHinweis()">
           <option value="">Bitte wählen</option>
           <option value="Langfeld">Langfeld</option>
-          <option value="BAP-Leuchte">BAP-Leuchte</option>
           <option value="Downlight">Downlight</option>
-          <option value="Panel">Panel</option>
+          <option value="Rasterleuchte">Rasterleuchte</option>
           <option value="Freistrahler">Freistrahler</option>
           <option value="Spot">Spot</option>
           <option value="Strahler">Strahler</option>
@@ -397,9 +396,15 @@
 
     <!-- LED Sub-Felder -->
     <div id="lm-led-fields" style="display:none">
-      <div class="form-group">
-        <label>Beschreibung</label>
-        <input type="text" id="f-lm-led-text" placeholder="z.B. LED Panel 40W" autocomplete="off">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Beschreibung</label>
+          <input type="text" id="f-lm-led-text" placeholder="z.B. LED Panel" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Wattage [W] (optional)</label>
+          <input type="text" id="f-lm-led-wattage" inputmode="numeric" placeholder="z.B. 40" autocomplete="off">
+        </div>
       </div>
     </div>
 
@@ -423,15 +428,13 @@
     </div>
 
     <!-- Beleuchtungssteuerung -->
-    <div class="section-title section-title-bel">Steuerung <button class="btn-help-inline" onclick="event.stopPropagation();showInfo('Steuerung','BWM = Bewegungs-/Präsenzmelder\ndimmbar = stufenlose Regelung\nDALI = digitales Lichtbus-System\nKNX = Gebäudeautomation')" title="Hilfe: Steuerung">?</button></div>
-    <div class="form-group">
-      <div class="steuerung-grid">
-        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-bwm"><span>BWM</span></label>
-        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-dimmbar"><span>dimmbar</span></label>
-        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-dali"><span>DALI</span></label>
-        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-knx"><span>KNX</span></label>
-        <label class="checkbox-row"><input type="checkbox" id="f-steuerung-defekt"><span>defekt</span></label>
-      </div>
+    <div class="section-title section-title-bel">Steuerung <button class="btn-help-inline" onclick="event.stopPropagation();showInfo('Steuerung','BWM = Bewegungs-/Präsenzmelder\ndimmbar = stufenlose Regelung\nDALI = digitales Lichtbus-System\nKNX = Gebäudeautomation\ndefekt = vorhanden, funktioniert aber nicht mehr')" title="Hilfe: Steuerung">?</button></div>
+    <div class="steuerung-grid">
+      <label class="checkbox-row"><input type="checkbox" id="f-steuerung-bwm"><span>BWM</span></label>
+      <label class="checkbox-row"><input type="checkbox" id="f-steuerung-dimmbar"><span>dimmbar</span></label>
+      <label class="checkbox-row"><input type="checkbox" id="f-steuerung-dali"><span>DALI</span></label>
+      <label class="checkbox-row"><input type="checkbox" id="f-steuerung-knx"><span>KNX</span></label>
+      <label class="checkbox-row"><input type="checkbox" id="f-steuerung-defekt"><span>defekt</span></label>
     </div>
 
     <!-- Sonstiges -->
@@ -460,8 +463,7 @@
         </div>
       </div>
     </div>
-    <div class="form-group">
-      <div class="zustand-grid">
+    <div class="zustand-grid">
         <label class="checkbox-row">
           <input type="checkbox" id="f-zustand-defekt">
           <span>defekt</span>
@@ -483,7 +485,12 @@
           <button class="btn-help-inline" onclick="event.preventDefault();event.stopPropagation();showInfo('abgängig','Leuchte ist stark veraltet, Fassungen sind spröde. Daher sollte eher eine Leuchte als ein Leuchtmitteltausch vorgesehen werden.')" title="Info: abgängig">?</button>
         </label>
       </div>
-    </div>
+
+    <label class="checkbox-row" style="margin-top:8px">
+      <input type="checkbox" id="f-ugr19">
+      <span>UGR 19?</span>
+      <button class="btn-help-inline" onclick="event.preventDefault();event.stopPropagation();showInfo('UGR 19','UGR &lt; 19 = blendungsbegrenzt für Bildschirmarbeitsplätze (BAP).\n\nLeuchten mit UGR &lt; 19 sind für Büros mit Bildschirmarbeit geeignet.')" title="Info: UGR 19">?</button>
+    </label>
 
     <div class="form-group">
       <label>Bemerkung</label>
@@ -595,20 +602,6 @@
     </div>
   </div>
 
-  <div class="settings-group">
-    <label for="set-modulDefault">Standard-Erfassungsart</label>
-    <select id="set-modulDefault">
-      <option value="hk">HK</option>
-      <option value="beleuchtung" selected>Beleuchtung</option>
-      <option value="beides">Beides</option>
-    </select>
-  </div>
-
-  <div class="settings-group">
-    <label for="set-gebaeude">Standard-Gebäude</label>
-    <input type="text" id="set-gebaeude" list="dl-gebaeude" autocomplete="off" placeholder="z.B. Gebäude 1">
-  </div>
-
   <div class="form-actions">
     <button class="btn btn-primary" onclick="saveSettings()">Speichern</button>
     <button class="btn btn-outline" id="btn-settings-cancel" onclick="history.back()">Abbrechen</button>
@@ -648,7 +641,7 @@
 <div class="modal-overlay" id="modal-send" style="display:none" onclick="if(event.target===this)closeSendDialog()">
   <div class="modal">
     <h2>Daten versenden</h2>
-    <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:12px">ZIP wird erstellt und geteilt. Im Teilen-Dialog <strong>Outlook</strong> auswählen – die Mail wird automatisch mit dem Anhang vorbereitet.</p>
+    <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:12px">ZIP wird erstellt und heruntergeladen. Danach öffnet sich das Mailprogramm – bitte die ZIP-Datei manuell anhängen.</p>
     <div class="send-recipients">
       <label class="send-recipient-row">
         <input type="checkbox" id="send-r1" value="felix.rundel@e1-energie.com">

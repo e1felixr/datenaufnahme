@@ -4,9 +4,6 @@ Offene Punkte:
 
 * Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden. Platzhalter-Button bei Rauminfo vorhanden (hilfe/bel/raumdecken.jpg fehlt noch).
 
-
-
-
 IMMER:
 * Bei relevanten Änderungen Version hochzählen
 * Immer Zeitstempel "letzte Änderung" aktualisieren, damit ist das letzte änderungsdatum egal welcher datei gemeint.
