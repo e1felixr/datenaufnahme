@@ -760,7 +760,7 @@ body {
 .checkbox-row {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: .85rem;
   color: var(--text);
   cursor: pointer;
@@ -791,7 +791,6 @@ body {
 .checkbox-row span {
   line-height: 1;
   vertical-align: middle;
-  padding-left: 2px;
 }
 .checkbox-row input[type="checkbox"]:checked {
   background: var(--module-color);
