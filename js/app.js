@@ -15,7 +15,7 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 const APP_VERSION = 'v3.14.0';
-const APP_BUILD_DATE = '06.03.2026 22:46'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '06.03.2026 22:54'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1748,6 +1748,12 @@ function renderDatalists() {
 // ── Versand ──
 
 function showSendDialog() {
+  const saved = localStorage.getItem('export-photo-size') || '2000';
+  const slider = document.getElementById('send-exportsize');
+  if (slider) {
+    slider.value = saved;
+    document.getElementById('val-send-exportsize').textContent = formatKB(saved);
+  }
   document.getElementById('modal-send').style.display = 'flex';
 }
 
@@ -1804,6 +1810,10 @@ async function sendData() {
   if (r3check && r3check.checked && r3val) recipients.push(r3val);
 
   try {
+    // Export-Fotogröße aus Send-Dialog lesen und merken
+    const exportSizeSlider = document.getElementById('send-exportsize');
+    if (exportSizeSlider) localStorage.setItem('export-photo-size', exportSizeSlider.value);
+
     showZipProgress('Erstelle Excel…', 0);
     const zipBlob = await buildExportZip(hks, bels, modul, safeName, (done, total) => {
       showZipProgress(`Foto ${done} von ${total} komprimiert`, done / total * 100);
@@ -2066,13 +2076,12 @@ function loadSettings() {
   const fontSize = localStorage.getItem('ui-font-size') || '13';
   const fieldPadding = localStorage.getItem('ui-field-padding') || '10';
   const erfasser = localStorage.getItem('erfasser-name') || '';
-  const exportSize = localStorage.getItem('export-photo-size') || '2000';
 
   document.documentElement.style.setProperty('--ui-font-size', fontSize + 'px');
   document.documentElement.style.setProperty('--ui-field-padding', fieldPadding + 'px');
 
   settingsReady = !!erfasser;
-  return { fontSize, fieldPadding, erfasser, exportSize };
+  return { fontSize, fieldPadding, erfasser };
 }
 
 function openSettings() {
@@ -2082,9 +2091,6 @@ function openSettings() {
   document.getElementById('val-fontsize').textContent = s.fontSize + 'px';
   document.getElementById('set-fieldpadding').value = s.fieldPadding;
   document.getElementById('val-fieldpadding').textContent = s.fieldPadding + 'px';
-  document.getElementById('set-exportsize').value = s.exportSize;
-  document.getElementById('val-exportsize').textContent = formatKB(s.exportSize);
-
   document.getElementById('btn-settings-cancel').style.display = settingsReady ? '' : 'none';
 
   navigate('screen-settings');
@@ -2100,12 +2106,9 @@ function saveSettings() {
   const fontSize = document.getElementById('set-fontsize').value;
   const fieldPadding = document.getElementById('set-fieldpadding').value;
 
-  const exportSize = document.getElementById('set-exportsize').value;
-
   localStorage.setItem('erfasser-name', erfasser);
   localStorage.setItem('ui-font-size', fontSize);
   localStorage.setItem('ui-field-padding', fieldPadding);
-  localStorage.setItem('export-photo-size', exportSize);
 
   loadSettings();
   navigate('screen-projekte');
@@ -2138,8 +2141,6 @@ function formatKB(kb) {
 function initSettingsSliders() {
   const fontSlider = document.getElementById('set-fontsize');
   const paddingSlider = document.getElementById('set-fieldpadding');
-  const exportSlider = document.getElementById('set-exportsize');
-
   fontSlider.addEventListener('input', () => {
     const v = fontSlider.value;
     document.getElementById('val-fontsize').textContent = v + 'px';
@@ -2152,9 +2153,6 @@ function initSettingsSliders() {
     document.documentElement.style.setProperty('--ui-field-padding', v + 'px');
   });
 
-  exportSlider.addEventListener('input', () => {
-    document.getElementById('val-exportsize').textContent = formatKB(exportSlider.value);
-  });
 }
 
 // ── Init ──
