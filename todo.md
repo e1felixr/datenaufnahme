@@ -8,6 +8,7 @@ Offene Punkte:
 
 * Was gibt es noch für Einstellungen, die der Nutzer unter Einstellungen setzen wollen könnte?
 
+
 IMMER:
 * Bei relevanten Änderungen Version hochzählen
 * Immer Zeitstempel "letzte Änderung" aktualisieren, damit ist das letzte änderungsdatum egal welcher datei gemeint.

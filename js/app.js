@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.9.1';
-const APP_BUILD_DATE = '06.03.2026 10:46'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.10.0';
+const APP_BUILD_DATE = '06.03.2026 11:10'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1134,6 +1134,25 @@ function onLinearFieldChange(changedField) {
   }
 }
 
+// Dulux Wattage-Filter nach Wendelanzahl + VSG
+function updateDuluxWattageFilter() {
+  const wendel = document.getElementById('f-lm-dulux-wendel').value;
+  const vsg = document.getElementById('f-vorschaltgeraet').value;
+  const dlEl = document.getElementById('dl-lm-dulux-wattage');
+  if (!dlEl) return;
+
+  const allWattages = new Set();
+  for (const info of Object.values(LEUCHTMITTEL_DB.dulux)) {
+    // Filter nach Wendel (wenn gewählt)
+    if (wendel && info.wendel !== null && info.wendel !== wendel) continue;
+    // Filter nach VSG: bei EVG nur evg-kompatible, bei KVG/VVG nur nicht-evg
+    if (vsg === 'EVG' && info.evg === false) continue;
+    if (vsg === 'KVG/VVG' && info.evg === true) continue;
+    info.wattages.forEach(w => allWattages.add(w));
+  }
+  dlEl.innerHTML = [...allWattages].sort((a, b) => a - b).map(w => `<option value="${w}">`).join('');
+}
+
 // Dulux Typ-Ermittlung (eigene Funktion für bidirektionales Lookup)
 function updateDuluxTyp() {
   const wattage = Number(document.getElementById('f-lm-dulux-wattage').value);
@@ -1206,6 +1225,7 @@ function updateLeuchtmittelFields() {
 
   } else if (kat === 'dulux') {
     document.getElementById('lm-dulux-fields').style.display = 'block';
+    updateDuluxWattageFilter();
     updateDuluxTyp();
 
   } else if (kat === 'sonstige') {
