@@ -2,6 +2,8 @@
 
 ### v3.11
 
+* ~~App hängt auf Splash Screen: fehlende hilfe/bel/ Bilder im Git verursachten SW-Cache-Fehler~~ **erledigt v3.11.6** (dulux.png + montageart.png committed)
+* ~~Orientation: Querformat nur wenn Gerät es erlaubt~~ **erledigt v3.11.6** (manifest.json orientation "any"→"natural")
 * ~~Sonstiges-Bereich: 2 Spalten statt 3, Erreichbarkeit-Label entfernt, LPH unter Checkbox~~ **erledigt v3.11.5**
 * ~~Gebäudedaten-Parser: altes XLSX-Format (Schwedenstraße) zeigt jetzt alle Räume pro Geschoss~~ **erledigt v3.11.4** (lastGeb/lastGes über leere Zeilen merken)
 * ~~Eingabefelder kompakter~~ **erledigt v3.11.3** (field-padding 10px→6px, form-group margin 10px→8px)

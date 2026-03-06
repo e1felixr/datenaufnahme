@@ -4,7 +4,7 @@
   "description": "Heizkörper-Aufnahme App für Gebäudebegehung",
   "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "natural",
   "background_color": "#F5F5F5",
   "theme_color": "#1565C0",
   "icons": [
