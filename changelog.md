@@ -1,5 +1,13 @@
 # Changelog
 
+### v3.10
+
+* ~~Wendelanzahl filtert Dulux-Wattage vor~~ **erledigt v3.10** (updateDuluxWattageFilter() filtert Datalist nach Wendel+VSG, Wattage-Feld als Input+Datalist)
+* ~~Gebaeude Auto-Advance nach Etage~~ **erledigt v3.10** (f-gebaeude hat list-Attribut, setupAutoAdvance() greift automatisch)
+* ~~Montageart + Leuchtenart nach Leuchteninfo verschoben~~ **erledigt v3.10** (Label "Installationsart" umbenannt zu "Montageart", zusammen mit Leuchtenart in Leuchteninfo-Section vor Anz. Reihen)
+* ~~"Zustand" umbenannt zu "Sonstiges"~~ **erledigt v3.10** (enthaelt jetzt Raumdecke mit ?-Button, schlecht erreichbar+LPH, Zustand-Checkboxen, Bemerkung)
+* ~~Section "Installation" entfernt~~ **erledigt v3.10** (alle Felder in Leuchteninfo bzw. Sonstiges verschoben)
+
 ### v3.9
 
 * ~~Installationsart/VSG/Leuchtmittel: Toggle-Buttons durch Eingabefelder mit Datalist-Vorschlaegen ersetzt~~ **erledigt v3.9** (Input+Datalist statt Toggle-Buttons, Auto-Advance bei Auswahl)
