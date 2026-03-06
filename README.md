@@ -1,4 +1,4 @@
-# Datenaufnahme (HK + Beleuchtung)
+# E1 Begehung
 
 Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung bei Gebäudebegehungen. Läuft komplett im Browser, funktioniert offline und kann auf dem Smartphone wie eine native App installiert werden.
 
@@ -47,7 +47,7 @@ Im Normalfall **nie** - das Update-System erledigt alles automatisch. Nur in die
 - Browser > Einstellungen > Datenschutz > Browserdaten löschen > "Bilder und Dateien im Cache" auswählen
 - Oder (Android): Lange auf das App-Icon drücken > App-Info > Speicher > Cache leeren
 
-**Wichtig:** Beim Cache-Löschen gehen **keine Projektdaten verloren!** Projekte und Heizkörper werden in der IndexedDB gespeichert, die vom Cache-Löschen nicht betroffen ist.
+**Wichtig:** Beim Cache-Löschen gehen **keine Projektdaten verloren!** Projekte und Einträge werden in der IndexedDB gespeichert, die vom Cache-Löschen nicht betroffen ist.
 
 ### Wann muss ich die App neu installieren?
 
@@ -77,18 +77,37 @@ Bevor ein neues Gebäude / eine neue Liegenschaft erfasst wird, sind folgende Sc
 
 ### 1. Gebäudedaten-Datei anlegen
 
-Die Datei `gebaeudedaten.xlsx` im Repository enthält die Vorschlagslisten für das Formular. Vor einer neuen Erfassung muss sie mit den passenden Daten des Objekts befüllt werden:
+Die Datei `gebaeudedaten.xlsx` im Repository enthält die Vorschlagslisten für das Formular. Vor einer neuen Erfassung muss sie mit den passenden Daten des Objekts befüllt werden. Es werden zwei Formate unterstützt:
 
-1. `gebaeudedaten.xlsx` öffnen (direkt im Repo oder lokal bearbeiten)
-2. Spalte A: alle **Gebäude** eintragen (z.B. "Haus 1", "Haus Norbert")
-3. Spalte C: alle **Etagen** eintragen (z.B. "UG", "EG", "OG 1")
-4. Spalte E: alle **Räume** eintragen (z.B. "Raum 1", "Raum 12")
-5. Zeile 1 ist die Überschrift und wird übersprungen
-6. Datei speichern, committen und pushen
+**Neues Format (empfohlen):**
+
+| Spalte A | Spalte B | Spalte C | Spalte D |
+|----------|----------|----------|----------|
+| **Geschoss** | **Raum Nr.** | **Raumbezeichnung** | **Bodenfläche** |
+| EG | E415 | WC | 3.06 |
+| EG | E416 | Lager | 11.01 |
+| OG 1 | 1102 | Büro | 20.5 |
+
+- Geschoss steht nur in der ersten Zeile einer Gruppe (nachfolgende Zeilen können leer sein)
+- Bei Raumauswahl wird die Raumbezeichnung automatisch als Vorschlag übernommen
+
+**Altes Format:**
+
+| Spalte A | Spalte B | Spalte C | Spalte D | Spalte E | Spalte F | Spalte G | Spalte H |
+|----------|----------|----------|----------|----------|----------|----------|----------|
+| **Gebäude** | *(frei)* | **Etage** | *(frei)* | **Raum** | **Fläche** | **Nutzung** | **Barcode** |
+
+- Gebäude und Etage stehen nur in der ersten Zeile einer Gruppe
+- Spalten B und D werden ignoriert
+
+**Datei aktualisieren:**
+1. `gebaeudedaten.xlsx` bearbeiten (pro Liegenschaft ein Sheet)
+2. Änderung committen und pushen
+3. Beim nächsten Öffnen der App laden alle Geräte automatisch die aktualisierten Daten
 
 ### 2. Erfasser-Name eintragen
 
-Beim ersten Start der App wird der **Erfasser-Name** abgefragt (Pflichtfeld). Dieser wird automatisch bei jedem erfassten Heizkörper gespeichert. Der Name kann jederzeit unter Einstellungen geändert werden.
+Beim ersten Start der App wird der **Erfasser-Name** abgefragt (Pflichtfeld). Dieser wird automatisch bei jedem erfassten Eintrag gespeichert. Der Name kann jederzeit unter Einstellungen geändert werden.
 
 ### 3. Projekt anlegen
 
@@ -106,53 +125,6 @@ Im Projekt auf **"+"** tippen, um den ersten Eintrag anzulegen. Bei "Beides" wir
 - [ ] Erfasser-Name auf jedem Gerät eingetragen
 - [ ] Projekt in der App angelegt
 
-## Gebäudedaten importieren
-
-Beim Ausfüllen des HK-Formulars werden Vorschlagslisten für Gebäude, Etagen und Räume als Autovervollständigung angeboten. Die Daten stammen aus der Datei `gebaeudedaten.xlsx` im Repository.
-
-### Zentrale Datei im Repository (empfohlen)
-
-Die Datei **`gebaeudedaten.xlsx`** liegt direkt im Repo-Stammverzeichnis. Alle Geräte laden diese Datei beim App-Start automatisch vom Server - es muss nichts manuell auf die einzelnen Geräte kopiert werden.
-
-**Gebäudedaten aktualisieren:**
-1. Die Datei `gebaeudedaten.xlsx` im Repository bearbeiten
-2. Änderung committen und pushen
-3. Beim nächsten Öffnen der App laden alle Geräte automatisch die aktualisierten Daten
-
-### Manueller Import (Fallback)
-
-Über den Button **"Gebäudedaten"** in der Heizkörper-Liste kann alternativ eine xlsx-Datei vom Gerät importiert werden. Dies überschreibt die zentrale Datei lokal.
-
-### Datei-Anforderungen
-
-- **Format:** `.xlsx` (Excel)
-- **Dateiname im Repo:** `gebaeudedaten.xlsx` (ohne Umlaute)
-
-### Aufbau der xlsx-Datei
-
-Die Datei muss folgende Spaltenstruktur haben (Zeile 1 = Überschrift, wird übersprungen):
-
-| Spalte A | Spalte B | Spalte C | Spalte D | Spalte E |
-|----------|----------|----------|----------|----------|
-| **Gebäude** | *(frei)* | **Etage** | *(frei)* | **Raum** |
-| Haus 1 | | UG | | Raum 1 |
-| Haus 2 | | EG | | Raum 2 |
-| Haus Norbert | | OG 1 | | Raum 12 |
-| | | OG 2 | | |
-
-- Nur die Spalten **A**, **C** und **E** werden ausgelesen
-- Spalten B und D werden ignoriert (können leer sein oder andere Daten enthalten)
-- Leere Zellen und Duplikate werden automatisch gefiltert
-- Die Listen müssen nicht gleich lang sein (z.B. 3 Gebäude, 5 Etagen, 20 Räume)
-
-### Hinweise
-
-- Die Gebäudedaten gelten **für alle Projekte** gleichermaßen
-- Online: Die App holt sich bei jedem Start die aktuelle Version vom Server
-- Offline: Die zuletzt geladene Version wird aus dem lokalen Speicher verwendet
-- Ein manueller Import über den Button überschreibt die zentrale Datei lokal
-- Nach erfolgreichem Import erscheint ein Toast mit der Anzahl der importierten Einträge
-
 ## Technischer Aufbau
 
 ```
@@ -164,7 +136,8 @@ css/style.css         Mobile-first CSS
 sw.js                 Service Worker (Offline-Cache)
 manifest.json         PWA-Manifest
 lib/xlsx.mini.min.js  SheetJS für xlsx-Import/Export
-hilfe/                Hilfe-Bilder für Formular
+hilfe/hzg/            Hilfe-Bilder Heizung
+hilfe/bel/            Hilfe-Bilder Beleuchtung
 icons/                PWA-Icons
 ```
 
