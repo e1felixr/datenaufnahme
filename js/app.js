@@ -15,7 +15,7 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 const APP_VERSION = 'v3.14.0';
-const APP_BUILD_DATE = '06.03.2026 22:27'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '06.03.2026 22:31'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1489,22 +1489,7 @@ function addBelPhotoSlot() {
   triggerBelPhoto(newIndex);
 }
 
-let _belCameraIndex = 0;
-
-async function triggerBelPhoto(index) {
-  _belCameraIndex = index;
-  _photoTarget = 'bel';
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 4096 }, height: { ideal: 3072 } }
-      });
-      openCameraModal(stream);
-      return;
-    } catch (e) {
-      if (e.name === 'NotAllowedError') { showToast('Kamera-Berechtigung benötigt'); return; }
-    }
-  }
+function triggerBelPhoto(index) {
   const input = document.getElementById('bel-photo-input');
   input.dataset.index = index;
   input.click();
@@ -1527,8 +1512,6 @@ function removeBelPhoto(index) {
 }
 
 // ── HK Fotos ──
-
-let _photoTarget = 'hk'; // 'hk' or 'bel'
 
 function renderPhotoSlots() {
   const container = document.getElementById('photo-slots-container');
@@ -1569,67 +1552,10 @@ function checkSonstigeHinweis() {
   hinweis.style.display = (typ === 'Sonstige' || einbauIsSonstige || thermo === 'Sonstiges') ? 'block' : 'none';
 }
 
-let _cameraStream = null;
-let _cameraIndex = 0;
-
-async function triggerPhoto(index) {
-  _cameraIndex = index;
-  _photoTarget = 'hk';
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 4096 }, height: { ideal: 3072 } }
-      });
-      openCameraModal(stream);
-      return;
-    } catch (e) {
-      if (e.name === 'NotAllowedError') {
-        showToast('Kamera-Berechtigung benötigt');
-        return;
-      }
-    }
-  }
+function triggerPhoto(index) {
   const input = document.getElementById('photo-input');
   input.dataset.index = index;
   input.click();
-}
-
-function openCameraModal(stream) {
-  _cameraStream = stream;
-  const modal = document.getElementById('camera-modal');
-  const video = document.getElementById('camera-preview');
-  video.srcObject = stream;
-  modal.style.display = 'flex';
-}
-
-function closeCameraModal() {
-  if (_cameraStream) {
-    _cameraStream.getTracks().forEach(t => t.stop());
-    _cameraStream = null;
-  }
-  const modal = document.getElementById('camera-modal');
-  modal.style.display = 'none';
-  const video = document.getElementById('camera-preview');
-  video.srcObject = null;
-}
-
-function captureFromStream() {
-  const video = document.getElementById('camera-preview');
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  closeCameraModal();
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  compressImage(null, (compressed) => {
-    if (_photoTarget === 'bel') {
-      belFormPhotos[_belCameraIndex] = compressed;
-      renderBelPhotoSlots();
-    } else {
-      formPhotos[_cameraIndex] = compressed;
-      renderPhotoSlots();
-    }
-  }, dataUrl);
 }
 
 function handlePhotoInput(input) {
