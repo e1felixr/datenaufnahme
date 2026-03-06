@@ -4,9 +4,11 @@ Offene Punkte:
 
 * Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden. Platzhalter-Button bei Rauminfo vorhanden (hilfe/bel/raumdecken.jpg fehlt noch).
 
-* Optionen für Glühbirnen E14/E27/E40 anbieten. Frage mich hierzu regelmäßig an, da liefere ich dir etwas.
-
 * Was gibt es noch für Einstellungen, die der Nutzer unter Einstellungen setzen wollen könnte?
+
+* Die App muss möglichst zügig bedienbar sein und dem Nutzer sollten möglichst viele Eingaben abgenommen werden. Wenn z.B. Strahler ausgewählt wird, soll "Leuchtmittel je Leuchte" direkt auf 1 gesetzt werden, weil Strahler eigentlich immer nur ein Leuchtmittel haben. Überlege, wo solche Abkürzungen noch Sinn machen könnten und mache mir Vorschläge.
+
+
 
 
 IMMER:

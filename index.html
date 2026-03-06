@@ -256,7 +256,7 @@
     <div class="section-title section-title-bel">Leuchteninfo</div>
     <div class="form-row">
       <div class="form-group">
-        <label>Montageart</label>
+        <label>Montageart <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/montageart.png','Montagearten')" title="Hilfe: Montagearten">?</button></label>
         <input type="text" id="f-installationsart" list="dl-installationsart" onchange="updateInstallationsartFields()">
         <datalist id="dl-installationsart">
           <option value="Einbau"><option value="Anbau"><option value="Pendel"><option value="Sonstige">
@@ -321,7 +321,7 @@
         <label>Leuchtmittel</label>
         <input type="text" id="f-leuchtmittelKategorie" list="dl-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()">
         <datalist id="dl-leuchtmittelKategorie">
-          <option value="T5"><option value="T8"><option value="Dulux"><option value="LED"><option value="Sonstige">
+          <option value="T5"><option value="T8"><option value="Dulux"><option value="Glühbirne"><option value="LED"><option value="Sonstige">
         </datalist>
       </div>
     </div>
@@ -351,7 +351,7 @@
           <datalist id="dl-lm-dulux-wattage"></datalist>
         </div>
         <div class="form-group">
-          <label>Wendelanzahl</label>
+          <label>Wendelanzahl <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/dulux.png','Dulux Wendelanzahl')" title="Hilfe: Wendelanzahl">?</button></label>
           <select id="f-lm-dulux-wendel" onchange="updateDuluxWattageFilter();updateDuluxTyp()">
             <option value="">Bitte wählen</option>
             <option value="S">1 (S)</option>
@@ -384,13 +384,13 @@
       <div id="group-fassung" style="display:none">
         <div class="form-group">
           <label>Fassung <button class="btn-help-inline" onclick="event.stopPropagation();alert('E14/E27/E40 = LED-Ersatz möglich\nSonstige = kein direkter LED-Ersatz')" title="Hilfe: Fassung">?</button></label>
-          <select id="f-lm-fassung">
-            <option value="">Bitte wählen</option>
-            <option value="E14">E14</option>
-            <option value="E27">E27</option>
-            <option value="E40">E40</option>
-            <option value="Sonstige">Sonstige</option>
-          </select>
+          <input type="text" id="f-lm-fassung" list="dl-lm-fassung">
+          <datalist id="dl-lm-fassung">
+            <option value="E14"><option value="E27"><option value="E40">
+            <option value="GU4"><option value="GU5,3"><option value="GU10">
+            <option value="GY6,35"><option value="GR8"><option value="G10q">
+            <option value="2GX13"><option value="Sonstige">
+          </datalist>
         </div>
       </div>
     </div>
@@ -400,6 +400,25 @@
       <div class="form-group">
         <label>Beschreibung</label>
         <input type="text" id="f-lm-led-text" placeholder="z.B. LED Panel 40W">
+      </div>
+    </div>
+
+    <!-- Glühbirne Sub-Felder -->
+    <div id="lm-gluehbirne-fields" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fassung</label>
+          <select id="f-lm-gluehbirne-fassung" onchange="updateGluehbirneWattage()">
+            <option value="">Bitte wählen</option>
+            <option value="E14">E14</option>
+            <option value="E27">E27</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Wattage [W]</label>
+          <input type="text" id="f-lm-gluehbirne-wattage" inputmode="numeric" list="dl-lm-gluehbirne-wattage">
+          <datalist id="dl-lm-gluehbirne-wattage"></datalist>
+        </div>
       </div>
     </div>
 
@@ -481,6 +500,13 @@
     <div class="section-title section-title-bel">Fotos</div>
     <div class="photo-slots" id="bel-photo-slots-container"></div>
     <input type="file" id="bel-photo-input" accept="image/*" style="display:none" onchange="handleBelPhotoInput(this)">
+
+    <!-- Bel Standard-Checkbox -->
+    <label class="checkbox-row" style="margin-top:16px">
+      <input type="checkbox" id="f-bel-setStandard">
+      <span>Diese Leuchte als Standard definieren</span>
+      <button class="btn-help-inline" onclick="event.preventDefault();alert('Wenn aktiviert, werden Montageart, Leuchtenart, Leuchtmittel-Einstellungen und Raumdecke als Vorlage für alle neuen Leuchten übernommen (ohne Raum-Daten).')" title="Was bedeutet Standard?">?</button>
+    </label>
 
     <!-- Bel Buttons -->
     <div class="form-actions" id="bel-form-actions">

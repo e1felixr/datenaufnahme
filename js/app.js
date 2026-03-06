@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.10.0';
-const APP_BUILD_DATE = '06.03.2026 11:10'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.11.0';
+const APP_BUILD_DATE = '06.03.2026 13:28'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -61,15 +61,22 @@ const LEUCHTMITTEL_DB = {
     'Dulux T':   { wendel: 'T', evg: false, wattages: [13, 18, 26] },
     'Dulux T/E': { wendel: 'T', evg: true,  wattages: [13, 18, 26, 32, 42] },
     'Dulux F':   { wendel: null, evg: false, wattages: [18, 24, 36] },
-    'Dulux L':   { wendel: null, evg: null, wattages: [18, 24, 36, 40, 55, 80] }  // 2G11: beide Vorschaltgeräte möglich
+    'Dulux L':   { wendel: null, evg: null, wattages: [18, 24, 36, 40, 55] }  // 2G11: beide Vorschaltgeräte möglich
   },
   sonstige: {
     'T5 Ring': { entries: [{ w: 22, mm: 216 }, { w: 40, mm: 300 }] },
+    'T9 Ring': { wattages: [22, 32, 40] },
     'MR11':    { wattages: [20, 35] },
-    'MR16':    { wattages: [20, 35, 50] },
-    'GU10':    { wattages: [35, 50] },
-    'SQ28':    { wattages: [21, 28, 38] },
+    'MR16':    { wattages: [20, 35, 45, 50] },
+    'GU10':    { wattages: [25, 35, 50] },
+    'GU5,3':   { wattages: [20, 35, 45, 50] },
+    'GY6,35':  { wattages: [28, 40] },
+    'SQ':      { wattages: [16, 28] },
     'HQI/HIT': { wattages: [70, 100, 150, 250, 400, 1000, 2000], freeInput: true }
+  },
+  'glühbirne': {
+    'E14': { wattages: [25, 40, 60] },
+    'E27': { wattages: [25, 40, 60, 75, 100] }
   }
 };
 
@@ -691,6 +698,33 @@ function getHkStandard() {
   return stored ? JSON.parse(stored) : null;
 }
 
+// ── Bel Standard ──
+
+const BEL_STANDARD_FIELDS = [
+  'raumdecke', 'installationsart', 'installationsartSub', 'leuchtenart',
+  'leuchtmittelJeLeuchte', 'vorschaltgeraet', 'leuchtmittelKategorie',
+  'leuchtmittelWattage', 'leuchtmittelTyp', 'wendelanzahl', 'fassung',
+  'leuchtmittelLaenge'
+];
+
+function checkAndSaveBelStandard(bel) {
+  const cb = document.getElementById('f-bel-setStandard');
+  if (cb && cb.checked) {
+    const std = {};
+    for (const f of BEL_STANDARD_FIELDS) std[f] = bel[f] || '';
+    std.gebaeude = bel.gebaeude || '';
+    std.geschoss = bel.geschoss || '';
+    localStorage.setItem('bel-standard', JSON.stringify(std));
+    cb.checked = false;
+    showToast('Bel-Standard gespeichert');
+  }
+}
+
+function getBelStandard() {
+  const stored = localStorage.getItem('bel-standard');
+  return stored ? JSON.parse(stored) : null;
+}
+
 async function saveForm() {
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
@@ -799,19 +833,18 @@ async function openBelForm(belId) {
     document.getElementById('btn-delete-bel').style.display = 'inline-flex';
     document.getElementById('new-hk-mode-toggle').style.display = 'none';
   } else {
+    const std = getBelStandard();
     const last = await getLastBeleuchtung(currentProjektId);
-    const defaults = last ? {
-      gebaeude: last.gebaeude,
-      geschoss: last.geschoss,
-      raumnr: last.raumnr,
-      raumdecke: last.raumdecke,
-      installationsart: last.installationsart,
-      installationsartSub: last.installationsartSub,
-      leuchtenart: last.leuchtenart,
-      leuchtmittelKategorie: last.leuchtmittelKategorie,
-      vorschaltgeraet: last.vorschaltgeraet
+    const src = std || last;
+    const defaults = src ? {
+      gebaeude: last ? last.gebaeude : (src.gebaeude || ''),
+      geschoss: last ? last.geschoss : (src.geschoss || ''),
+      raumnr: last ? last.raumnr : ''
     } : null;
     bel = newBeleuchtung(currentProjektId, defaults);
+    if (src) {
+      for (const f of BEL_STANDARD_FIELDS) bel[f] = src[f] || '';
+    }
 
     const all = await getBeleuchtungByProjekt(currentProjektId);
     const maxNr = all.reduce((max, b) => Math.max(max, Number(b.gruppenNr) || 0), 0);
@@ -897,6 +930,10 @@ function fillBelForm(bel) {
       }, 0);
     } else if (kat === 'led') {
       sv('f-lm-led-text', bel.leuchtmittelTyp || '');
+    } else if (kat === 'glühbirne') {
+      sv('f-lm-gluehbirne-fassung', bel.fassung || '');
+      updateGluehbirneWattage();
+      sv('f-lm-gluehbirne-wattage', bel.leuchtmittelWattage || '');
     }
   }, 0);
 
@@ -952,6 +989,13 @@ function readBelFormIntoObj(bel) {
     bel.leuchtmittelLaenge = '';
     bel.wendelanzahl = '';
     bel.fassung = '';
+  } else if (kat === 'glühbirne') {
+    const fassung = document.getElementById('f-lm-gluehbirne-fassung').value;
+    bel.leuchtmittelTyp = 'Glühbirne' + (fassung ? ' ' + fassung : '');
+    bel.leuchtmittelWattage = document.getElementById('f-lm-gluehbirne-wattage').value;
+    bel.fassung = fassung;
+    bel.leuchtmittelLaenge = '';
+    bel.wendelanzahl = '';
   } else {
     bel.leuchtmittelTyp = '';
     bel.leuchtmittelWattage = '';
@@ -988,6 +1032,7 @@ function readBelFormIntoObj(bel) {
 async function saveBelForm() {
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
+  checkAndSaveBelStandard(bel);
   await saveBeleuchtung(bel);
   await renderHkList();
   navigate('screen-hk-list');
@@ -997,6 +1042,7 @@ async function saveBelForm() {
 async function saveBelAndNextGroup() {
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
+  checkAndSaveBelStandard(bel);
   await saveBeleuchtung(bel);
   await renderHkList();
 
@@ -1025,6 +1071,7 @@ async function saveBelAndNextGroup() {
 async function saveBelAndNextRoom() {
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
+  checkAndSaveBelStandard(bel);
   await saveBeleuchtung(bel);
   await renderHkList();
 
@@ -1205,6 +1252,7 @@ function updateLeuchtmittelFields() {
   document.getElementById('lm-dulux-fields').style.display = 'none';
   document.getElementById('lm-sonstige-fields').style.display = 'none';
   document.getElementById('lm-led-fields').style.display = 'none';
+  document.getElementById('lm-gluehbirne-fields').style.display = 'none';
 
   if (kat === 't5' || kat === 't8') {
     document.getElementById('lm-linear-fields').style.display = 'block';
@@ -1241,6 +1289,10 @@ function updateLeuchtmittelFields() {
 
   } else if (kat === 'led') {
     document.getElementById('lm-led-fields').style.display = 'block';
+
+  } else if (kat === 'glühbirne') {
+    document.getElementById('lm-gluehbirne-fields').style.display = 'block';
+    updateGluehbirneWattage();
   }
 }
 
@@ -1253,12 +1305,38 @@ function updateSonstigeLmFields() {
     const wattages = data.wattages || (data.entries ? data.entries.map(e => e.w) : []);
     dlEl.innerHTML = wattages.map(w => `<option value="${w}">`).join('');
   }
-  // Fassung-Feld bei Strahler-Typen anzeigen (MR11, MR16, GU10, HQI/HIT)
-  const fassungTypes = ['MR11', 'MR16', 'GU10', 'HQI/HIT'];
+  // Fassung-Feld bei allen Sonstige-Typen anzeigen
   const fassungGroup = document.getElementById('group-fassung');
-  if (fassungGroup) {
-    fassungGroup.style.display = fassungTypes.includes(typ) ? 'block' : 'none';
-    if (!fassungTypes.includes(typ)) document.getElementById('f-lm-fassung').value = '';
+  const fassungEl = document.getElementById('f-lm-fassung');
+  if (fassungGroup && fassungEl) {
+    fassungGroup.style.display = typ ? 'block' : 'none';
+    // Auto-Fassung für bekannte Sockeltypen
+    const autoFassung = {
+      'MR11': 'GU4', 'MR16': 'GU5,3', 'GU10': 'GU10', 'GU5,3': 'GU5,3',
+      'GY6,35': 'GY6,35', 'T5 Ring': '2GX13', 'T9 Ring': 'G10q', 'SQ': 'GR8'
+    };
+    if (autoFassung[typ]) {
+      fassungEl.value = autoFassung[typ];
+      fassungEl.readOnly = true;
+    } else {
+      fassungEl.readOnly = false;
+      if (!typ) fassungEl.value = '';
+    }
+  }
+}
+
+// Glühbirne Wattage nach Fassung filtern
+function updateGluehbirneWattage() {
+  const fassung = document.getElementById('f-lm-gluehbirne-fassung').value;
+  const dlEl = document.getElementById('dl-lm-gluehbirne-wattage');
+  if (!dlEl) return;
+  const db = LEUCHTMITTEL_DB['glühbirne'];
+  if (fassung && db[fassung]) {
+    dlEl.innerHTML = db[fassung].wattages.map(w => `<option value="${w}">`).join('');
+  } else {
+    const allW = new Set();
+    Object.values(db).forEach(f => f.wattages.forEach(w => allW.add(w)));
+    dlEl.innerHTML = [...allW].sort((a, b) => a - b).map(w => `<option value="${w}">`).join('');
   }
 }
 
