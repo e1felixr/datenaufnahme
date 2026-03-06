@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.9.0';
-const APP_BUILD_DATE = '06.03.2026 08:55'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.9.1';
+const APP_BUILD_DATE = '06.03.2026 10:46'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -835,64 +835,68 @@ async function openBelForm(belId) {
 }
 
 function fillBelForm(bel) {
-  document.getElementById('f-gebaeude').value = bel.gebaeude || '';
-  document.getElementById('f-geschoss').value = bel.geschoss || '';
-  document.getElementById('f-raumnr').value = bel.raumnr || '';
-  document.getElementById('f-raumbezeichnung').value = bel.raumbezeichnung || '';
-  document.getElementById('f-gruppenNr').value = bel.gruppenNr || '';
-  document.getElementById('f-raumdecke').value = bel.raumdecke || '';
-  document.getElementById('f-anzahlReihen').value = bel.anzahlReihen || '';
-  document.getElementById('f-leuchtenJeReihe').value = bel.leuchtenJeReihe || '';
-  document.getElementById('f-leuchtmittelJeLeuchte').value = bel.leuchtmittelJeLeuchte || '';
-  document.getElementById('f-installationsart').value = bel.installationsart || '';
-  document.getElementById('f-installationsartSub').value = bel.installationsartSub || '';
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
+
+  setVal('f-gebaeude', bel.gebaeude || '');
+  setVal('f-geschoss', bel.geschoss || '');
+  setVal('f-raumnr', bel.raumnr || '');
+  setVal('f-raumbezeichnung', bel.raumbezeichnung || '');
+  setVal('f-gruppenNr', bel.gruppenNr || '');
+  setVal('f-raumdecke', bel.raumdecke || '');
+  setVal('f-anzahlReihen', bel.anzahlReihen || '');
+  setVal('f-leuchtenJeReihe', bel.leuchtenJeReihe || '');
+  setVal('f-leuchtmittelJeLeuchte', bel.leuchtmittelJeLeuchte || '');
+  setVal('f-installationsart', bel.installationsart || '');
+  setVal('f-installationsartSub', bel.installationsartSub || '');
   updateInstallationsartFields();
-  document.getElementById('f-leuchtenart').value = bel.leuchtenart || '';
-  document.getElementById('f-vorschaltgeraet').value = bel.vorschaltgeraet || '';
-  document.getElementById('f-leuchtmittelKategorie').value = bel.leuchtmittelKategorie || '';
+  setVal('f-leuchtenart', bel.leuchtenart || '');
+  setVal('f-vorschaltgeraet', bel.vorschaltgeraet || '');
+  setVal('f-leuchtmittelKategorie', bel.leuchtmittelKategorie || '');
 
   // Steuerung checkboxen
   const steuerung = bel.steuerung || '';
-  document.getElementById('f-steuerung-bwm').checked = steuerung.includes('BWM');
-  document.getElementById('f-steuerung-dimmbar').checked = steuerung.includes('dimmbar');
-  document.getElementById('f-steuerung-dali').checked = steuerung.includes('DALI');
-  document.getElementById('f-steuerung-knx').checked = steuerung.includes('KNX');
-  document.getElementById('f-steuerung-defekt').checked = steuerung.includes('defekt');
+  setChk('f-steuerung-bwm', steuerung.includes('BWM'));
+  setChk('f-steuerung-dimmbar', steuerung.includes('dimmbar'));
+  setChk('f-steuerung-dali', steuerung.includes('DALI'));
+  setChk('f-steuerung-knx', steuerung.includes('KNX'));
+  setChk('f-steuerung-defekt', steuerung.includes('defekt'));
 
   // Zustand checkboxen
   const zustand = bel.zustand || '';
-  document.getElementById('f-zustand-defekt').checked = zustand.includes('defekt');
-  document.getElementById('f-zustand-beschaedigt').checked = zustand.includes('beschädigt');
-  document.getElementById('f-zustand-verschmutzt').checked = zustand.includes('stark verschmutzt');
-  document.getElementById('f-zustand-abgaengig').checked = zustand.includes('abgängig');
-  document.getElementById('f-zustand-erreichbar').checked = zustand.includes('schlecht erreichbar');
-  document.getElementById('f-lph').value = bel.lph || '';
+  setChk('f-zustand-defekt', zustand.includes('defekt'));
+  setChk('f-zustand-beschaedigt', zustand.includes('beschädigt'));
+  setChk('f-zustand-verschmutzt', zustand.includes('stark verschmutzt'));
+  setChk('f-zustand-abgaengig', zustand.includes('abgängig'));
+  setChk('f-zustand-erreichbar', zustand.includes('schlecht erreichbar'));
+  setVal('f-lph', bel.lph || '');
   toggleLph();
 
-  document.getElementById('f-bel-bemerkung').value = bel.bemerkung || '';
+  setVal('f-bel-bemerkung', bel.bemerkung || '');
 
   // Leuchtmittel Sub-Felder laden
   updateLeuchtmittelFields();
 
   // Sub-Felder nachsetzen (nach updateLeuchtmittelFields, das die Selects befüllt)
   setTimeout(() => {
+    const sv = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     const kat = bel.leuchtmittelKategorie || '';
     if (kat === 't5' || kat === 't8') {
-      document.getElementById('f-lm-linear-laenge').value = bel.leuchtmittelLaenge || '';
-      document.getElementById('f-lm-linear-wattage').value = bel.leuchtmittelWattage || '';
+      sv('f-lm-linear-laenge', bel.leuchtmittelLaenge || '');
+      sv('f-lm-linear-wattage', bel.leuchtmittelWattage || '');
     } else if (kat === 'dulux') {
-      document.getElementById('f-lm-dulux-wattage').value = bel.leuchtmittelWattage || '';
-      document.getElementById('f-lm-dulux-wendel').value = bel.wendelanzahl || '';
-      document.getElementById('f-lm-dulux-typ').value = bel.leuchtmittelTyp || '';
+      sv('f-lm-dulux-wattage', bel.leuchtmittelWattage || '');
+      sv('f-lm-dulux-wendel', bel.wendelanzahl || '');
+      sv('f-lm-dulux-typ', bel.leuchtmittelTyp || '');
     } else if (kat === 'sonstige') {
-      document.getElementById('f-lm-sonstige-typ').value = bel.leuchtmittelTyp || '';
+      sv('f-lm-sonstige-typ', bel.leuchtmittelTyp || '');
       updateSonstigeLmFields();
       setTimeout(() => {
-        document.getElementById('f-lm-sonstige-wattage').value = bel.leuchtmittelWattage || '';
-        document.getElementById('f-lm-fassung').value = bel.fassung || '';
+        sv('f-lm-sonstige-wattage', bel.leuchtmittelWattage || '');
+        sv('f-lm-fassung', bel.fassung || '');
       }, 0);
     } else if (kat === 'led') {
-      document.getElementById('f-lm-led-text').value = bel.leuchtmittelTyp || '';
+      sv('f-lm-led-text', bel.leuchtmittelTyp || '');
     }
   }, 0);
 
