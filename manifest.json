@@ -1,7 +1,7 @@
 {
-  "name": "HK-Aufnahme",
-  "short_name": "HK-Aufnahme",
-  "description": "Heizkörper-Aufnahme App für Gebäudebegehung",
+  "name": "E1 Begehung",
+  "short_name": "E1 Begehung",
+  "description": "E1 Energiemanagement — Datenerfassung bei Gebäudebegehungen",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "natural",

@@ -1,5 +1,9 @@
 # Changelog
 
+### v3.12
+
+* ~~App umbenannt: "HK-Aufnahme" → "E1 Begehung"~~ **erledigt v3.12.0** (title, manifest, SW-Cache-Prefix; DB_NAME bleibt für Datenkompatibilität)
+
 ### v3.11
 
 * ~~Google-Suchvorschläge-Popup auf Smartphone unterbunden~~ **erledigt v3.11.7** (autocomplete="off" auf allen Text-Inputs)
