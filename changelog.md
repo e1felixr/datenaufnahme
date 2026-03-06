@@ -1,5 +1,20 @@
 # Changelog
 
+### v3.11
+
+* ~~Gluehbirne als eigene Leuchtmittel-Kategorie~~ **erledigt v3.11** (E14: 25/40/60W, E27: 25/40/60/75/100W, eigene Sub-Felder mit Fassung+Wattage)
+* ~~Neue Sockeltypen: GU5,3 / GY6,35~~ **erledigt v3.11** (GU5,3 mit 20/35/45/50W, GY6,35 mit 28/40W unter Sonstige)
+* ~~MR16 Wattage +45W, GU10 +25W~~ **erledigt v3.11** (MR16: [20,35,45,50], GU10: [25,35,50])
+* ~~T9 Ring neu unter Sonstige~~ **erledigt v3.11** (22/32/40W, Sockel G10q)
+* ~~SQ28 korrigiert zu SQ~~ **erledigt v3.11** (Wattages [16,28], Sockel GR8)
+* ~~Dulux L 80W entfernt~~ **erledigt v3.11** (nur noch bis 55W)
+* ~~Fassung auto-setzen bei bekannten Sockeltypen~~ **erledigt v3.11** (MR11→GU4, MR16→GU5,3, GU10→GU10, GY6,35→GY6,35, T5Ring→2GX13, T9Ring→G10q, SQ→GR8; readonly)
+* ~~Fassung von Select zu Input+Datalist~~ **erledigt v3.11** (alle gaengigen Sockel als Vorschlaege)
+* ~~dulux.png Info-Symbol bei Wendelanzahl~~ **erledigt v3.11** (?-Button oeffnet hilfe/bel/dulux.png)
+* ~~montageart.png Info-Symbol bei Montageart~~ **erledigt v3.11** (?-Button oeffnet hilfe/bel/montageart.png)
+* ~~"Diese Leuchte als Standard" Feature~~ **erledigt v3.11** (BEL_STANDARD_FIELDS, localStorage bel-standard, analog zu HK-Standard)
+* ~~leuchtmittel.txt synchronisiert~~ **erledigt v3.11** (alle DB-Aenderungen uebernommen)
+
 ### v3.10
 
 * ~~Wendelanzahl filtert Dulux-Wattage vor~~ **erledigt v3.10** (updateDuluxWattageFilter() filtert Datalist nach Wendel+VSG, Wattage-Feld als Input+Datalist)

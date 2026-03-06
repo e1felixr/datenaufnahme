@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'hk-aufnahme-v53';
+const CACHE_NAME = 'hk-aufnahme-v54';
 const ASSETS = [
   './',
   './index.html',
@@ -20,7 +20,9 @@ const ASSETS = [
   './hilfe/hzg/entflueftung.jpg',
   './hilfe/hzg/entleerung.jpg',
   './hilfe/hzg/rlverschraubung.jpg',
-  './hilfe/hzg/voreinstellbar.jpg'
+  './hilfe/hzg/voreinstellbar.jpg',
+  './hilfe/bel/dulux.png',
+  './hilfe/bel/montageart.png'
 ];
 
 self.addEventListener('install', (event) => {
