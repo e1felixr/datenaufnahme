@@ -15,7 +15,7 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 const APP_VERSION = 'v3.14.0';
-const APP_BUILD_DATE = '06.03.2026 22:38'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '06.03.2026 22:43'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1570,31 +1570,18 @@ function handlePhotoInput(input) {
 }
 
 function compressImage(file, callback, directDataUrl) {
-  const MAX_BYTES = 2_000_000;
-
   function processImage(src) {
     const img = new Image();
     img.onerror = () => {
       showToast('Foto konnte nicht geladen werden');
     };
     img.onload = () => {
+      // Original-Qualität beibehalten, nur als JPEG konvertieren
       const canvas = document.createElement('canvas');
-      let w = img.width, h = img.height;
-      const maxW = 2560;
-      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-
-      let quality = 0.92;
-      let dataUrl = canvas.toDataURL('image/jpeg', quality);
-      let bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
-
-      while (bytes > MAX_BYTES && quality > 0.5) {
-        quality -= 0.05;
-        dataUrl = canvas.toDataURL('image/jpeg', quality);
-        bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
-      }
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
       callback(dataUrl);
     };
     img.src = src;
