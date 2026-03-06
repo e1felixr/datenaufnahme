@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.8.0';
-const APP_BUILD_DATE = '05.03.2026 23:23'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.9.0';
+const APP_BUILD_DATE = '06.03.2026 08:55'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -46,7 +46,7 @@ const LEUCHTMITTEL_DB = {
   t5: [
     { w: 8, mm: 288 }, { w: 14, mm: 549 }, { w: 21, mm: 849 }, { w: 24, mm: 549 },
     { w: 28, mm: 1149 }, { w: 35, mm: 1449 }, { w: 39, mm: 849 },
-    { w: 49, mm: 1149 }, { w: 54, mm: 1149 }, { w: 80, mm: 1449 }
+    { w: 49, mm: 1449 }, { w: 54, mm: 1149 }, { w: 80, mm: 1449 }
   ],
   t8: [
     { w: 18, mm: 604 }, { w: 30, mm: 909 }, { w: 36, mm: 1213 },
@@ -106,33 +106,6 @@ window.addEventListener('popstate', (e) => {
     navigate('screen-projekte', false);
   }
 });
-
-// ── Toggle-Button Picker (ersetzt Select-Dropdowns) ──
-
-function pickToggle(event, fieldId, callback) {
-  const btn = event.target.closest('.toggle-btn');
-  if (!btn) return;
-  const group = btn.parentElement;
-  const input = document.getElementById(fieldId);
-  const wasActive = btn.classList.contains('active');
-  group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-  if (wasActive) {
-    input.value = '';
-  } else {
-    btn.classList.add('active');
-    input.value = btn.dataset.val;
-  }
-  if (callback) callback();
-}
-
-function syncToggles(fieldId) {
-  const input = document.getElementById(fieldId);
-  const group = input.nextElementSibling;
-  if (!group || !group.classList.contains('toggle-group-auto')) return;
-  group.querySelectorAll('.toggle-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.val === input.value);
-  });
-}
 
 // ── Toast ──
 
@@ -437,6 +410,7 @@ async function openHkForm(hkId) {
   // Sektionen anzeigen/verstecken
   document.getElementById('hk-form-section').style.display = 'block';
   document.getElementById('bel-form-section').style.display = 'none';
+  document.getElementById('section-title-raum').className = 'section-title section-title-hk';
 
   if (hkId) {
     hk = await getHeizkoerper(hkId);
@@ -817,6 +791,7 @@ async function openBelForm(belId) {
 
   document.getElementById('hk-form-section').style.display = 'none';
   document.getElementById('bel-form-section').style.display = 'block';
+  document.getElementById('section-title-raum').className = 'section-title section-title-bel';
 
   if (belId) {
     bel = await getBeleuchtung(belId);
@@ -870,14 +845,11 @@ function fillBelForm(bel) {
   document.getElementById('f-leuchtenJeReihe').value = bel.leuchtenJeReihe || '';
   document.getElementById('f-leuchtmittelJeLeuchte').value = bel.leuchtmittelJeLeuchte || '';
   document.getElementById('f-installationsart').value = bel.installationsart || '';
-  syncToggles('f-installationsart');
   document.getElementById('f-installationsartSub').value = bel.installationsartSub || '';
   updateInstallationsartFields();
   document.getElementById('f-leuchtenart').value = bel.leuchtenart || '';
   document.getElementById('f-vorschaltgeraet').value = bel.vorschaltgeraet || '';
-  syncToggles('f-vorschaltgeraet');
   document.getElementById('f-leuchtmittelKategorie').value = bel.leuchtmittelKategorie || '';
-  syncToggles('f-leuchtmittelKategorie');
 
   // Steuerung checkboxen
   const steuerung = bel.steuerung || '';
@@ -885,6 +857,7 @@ function fillBelForm(bel) {
   document.getElementById('f-steuerung-dimmbar').checked = steuerung.includes('dimmbar');
   document.getElementById('f-steuerung-dali').checked = steuerung.includes('DALI');
   document.getElementById('f-steuerung-knx').checked = steuerung.includes('KNX');
+  document.getElementById('f-steuerung-defekt').checked = steuerung.includes('defekt');
 
   // Zustand checkboxen
   const zustand = bel.zustand || '';
@@ -946,7 +919,7 @@ function readBelFormIntoObj(bel) {
   bel.installationsart = document.getElementById('f-installationsart').value;
   bel.installationsartSub = document.getElementById('f-installationsartSub').value;
   bel.leuchtenart = document.getElementById('f-leuchtenart').value;
-  bel.leuchtmittelKategorie = document.getElementById('f-leuchtmittelKategorie').value;
+  bel.leuchtmittelKategorie = document.getElementById('f-leuchtmittelKategorie').value.toLowerCase();
   bel.vorschaltgeraet = document.getElementById('f-vorschaltgeraet').value;
 
   // Leuchtmittel aus aktiver Kategorie lesen
@@ -999,6 +972,7 @@ function readBelFormIntoObj(bel) {
   if (document.getElementById('f-steuerung-dimmbar').checked) steuerungParts.push('dimmbar');
   if (document.getElementById('f-steuerung-dali').checked) steuerungParts.push('DALI');
   if (document.getElementById('f-steuerung-knx').checked) steuerungParts.push('KNX');
+  if (document.getElementById('f-steuerung-defekt').checked) steuerungParts.push('defekt');
   bel.steuerung = steuerungParts.join(', ');
 
   bel.bemerkung = document.getElementById('f-bel-bemerkung').value.trim();
@@ -1116,7 +1090,7 @@ function toggleLph() {
 // Hilfsfunktion: alle Linear-Einträge über alle Typen sammeln
 // Bidirektionaler Smart-Lookup für T5/T8
 function onLinearFieldChange(changedField) {
-  const kat = document.getElementById('f-leuchtmittelKategorie').value;
+  const kat = document.getElementById('f-leuchtmittelKategorie').value.toLowerCase();
   const laengeEl = document.getElementById('f-lm-linear-laenge');
   const wattEl = document.getElementById('f-lm-linear-wattage');
   const vsg = document.getElementById('f-vorschaltgeraet').value;
@@ -1184,7 +1158,6 @@ function updateDuluxTyp() {
       // EVG auto-setzen wenn eindeutig
       if (best.info.evg === true && !vsg) {
         document.getElementById('f-vorschaltgeraet').value = 'EVG';
-        syncToggles('f-vorschaltgeraet');
       }
     }
     // Falls keine Wendel-Match, Dulux F/L prüfen
@@ -1201,7 +1174,7 @@ function updateDuluxTyp() {
 }
 
 function updateLeuchtmittelFields() {
-  const kat = document.getElementById('f-leuchtmittelKategorie').value;
+  const kat = document.getElementById('f-leuchtmittelKategorie').value.toLowerCase();
   const vsg = document.getElementById('f-vorschaltgeraet').value;
 
   // Alle Sub-Felder verstecken

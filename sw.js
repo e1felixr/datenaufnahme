@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'hk-aufnahme-v50';
+const CACHE_NAME = 'hk-aufnahme-v51';
 const ASSETS = [
   './',
   './index.html',
@@ -50,7 +50,9 @@ self.addEventListener('message', (event) => {
 // version.json wird NICHT gecacht (muss immer frisch vom Server kommen)
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('version.json') || event.request.url.includes('gebaeudedaten.xlsx')) {
-    event.respondWith(fetch(event.request));
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request) || new Response('', { status: 404 }))
+    );
     return;
   }
   event.respondWith(

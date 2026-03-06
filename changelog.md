@@ -1,5 +1,30 @@
 # Changelog
 
+### v3.9
+
+* ~~Installationsart/VSG/Leuchtmittel: Toggle-Buttons durch Eingabefelder mit Datalist-Vorschlaegen ersetzt~~ **erledigt v3.9** (Input+Datalist statt Toggle-Buttons, Auto-Advance bei Auswahl)
+* ~~Section-Titel "Raum" vereinheitlicht~~ **erledigt v3.9** (dynamische Klasse section-title-hk/section-title-bel je nach Modul)
+* ~~Zwischenueberschrift "Beleuchtung" entfernt~~ **erledigt v3.9**
+* ~~Bemerkung: Placeholder "z.B. besondere Lichtfarbe"~~ **erledigt v3.9**
+* ~~Steuerung: "defekt" Checkbox hinzugefuegt~~ **erledigt v3.9** (in DB/Formular/Export integriert)
+* ~~T5-Laengen korrigiert: 49W = 1449mm~~ **erledigt v3.9** (war faelschlicherweise 1149mm)
+* ~~SW.js: gebaeudedaten.xlsx Fallback bei Offline~~ **erledigt v3.9** (fetch().catch() mit Cache-Fallback)
+* ~~Meta-Tag mobile-web-app-capable ergaenzt~~ **erledigt v3.9** (Deprecation-Warning behoben)
+* ~~Checkbox-Abstaende vereinheitlicht~~ **erledigt v3.9** (14px, box-sizing border-box, einheitliche Gaps)
+
+### v3.8
+
+* ~~Auto-Advance bei Datalist/Select-Auswahl~~ **erledigt v3.8** (setupAutoAdvance() mit Event-Delegation)
+* ~~Datalist: Feld leeren bei Fokus fuer erneute Vorschlaege~~ **erledigt v3.8** (focusin/focusout mit _dlPrev)
+* ~~Header Version/Zeitstempel persistent~~ **erledigt v3.8** (navigate-Override setzt APP_VERSION+APP_BUILD_DATE)
+* ~~Robuster Auto-Update-Mechanismus~~ **erledigt v3.8** (CDN Cache-Buster ?_update=timestamp)
+* ~~LPH Komma/Punkt Dezimaleingabe~~ **erledigt v3.8** (inputmode decimal, Komma→Punkt Konvertierung)
+
+### v3.7
+
+* ~~Kompakte Raumliste~~ **erledigt v3.7** (padding/margin reduziert, Chips kompakter)
+* ~~Buttons nach Ctrl+Shift+R repariert~~ **erledigt v3.7** (globaler Error-Handler, navigate-Init)
+
 ### v3.6
 
 * ~~Baumdarstellung Leuchtmittel-DB~~ **erledigt v3.6** (als Text ausgegeben)
