@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.11.3';
-const APP_BUILD_DATE = '06.03.2026 13:46'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.11.4';
+const APP_BUILD_DATE = '06.03.2026 14:01'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1614,6 +1614,7 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
     const raum = new Set();
     const raumDetails = {};
     const geschossRaum = {}; // Geschoss → [Raum-Nrn]
+    let lastGeb = '', lastGes = ''; // für altes Format: Werte über leere Zeilen merken
 
     // Format erkennen anhand Header-Zeile
     const header = (rows[0] || []).map(h => String(h || '').trim().toLowerCase());
@@ -1641,9 +1642,9 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
         }
       } else {
         // Altes Format: A=Gebäude, C=Geschoss, E=Raum, F=Fläche, G=Nutzung, H=Barcode
-        if (row[0] != null && String(row[0]).trim()) gebaeude.add(String(row[0]).trim());
-        const ges = (row[2] != null && String(row[2]).trim()) ? String(row[2]).trim() : '';
-        if (ges) geschoss.add(ges);
+        // Gebäude/Geschoss stehen oft nur in der ersten Zeile einer Gruppe → lastGeb/lastGes merken
+        if (row[0] != null && String(row[0]).trim()) { lastGeb = String(row[0]).trim(); gebaeude.add(lastGeb); }
+        if (row[2] != null && String(row[2]).trim()) { lastGes = String(row[2]).trim(); geschoss.add(lastGes); }
         if (row[4] != null && String(row[4]).trim()) {
           const rNr = String(row[4]).trim();
           raum.add(rNr);
@@ -1652,9 +1653,9 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
             nutzung: row[6] != null ? String(row[6]).trim() : '',
             barcode: row[7] != null ? String(row[7]).trim() : ''
           };
-          if (ges) {
-            if (!geschossRaum[ges]) geschossRaum[ges] = [];
-            if (!geschossRaum[ges].includes(rNr)) geschossRaum[ges].push(rNr);
+          if (lastGes) {
+            if (!geschossRaum[lastGes]) geschossRaum[lastGes] = [];
+            if (!geschossRaum[lastGes].includes(rNr)) geschossRaum[lastGes].push(rNr);
           }
         }
       }
