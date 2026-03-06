@@ -326,18 +326,18 @@
       </div>
     </div>
 
-    <!-- T5/T8 Sub-Felder (Länge + Wattage direkt) -->
+    <!-- T5/T8 Sub-Felder (Wattage zuerst, Länge wird auto-gefüllt) -->
     <div id="lm-linear-fields" style="display:none">
       <div class="form-row">
-        <div class="form-group">
-          <label>Länge [mm]</label>
-          <input type="text" id="f-lm-linear-laenge" inputmode="numeric" list="dl-lm-laenge" oninput="onLinearFieldChange('laenge')" onchange="onLinearFieldChange('laenge')" autocomplete="off">
-          <datalist id="dl-lm-laenge"></datalist>
-        </div>
         <div class="form-group">
           <label>Wattage [W]</label>
           <input type="text" id="f-lm-linear-wattage" inputmode="numeric" list="dl-lm-wattage" oninput="onLinearFieldChange('wattage')" onchange="onLinearFieldChange('wattage')" autocomplete="off">
           <datalist id="dl-lm-wattage"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Länge [mm]</label>
+          <input type="text" id="f-lm-linear-laenge" inputmode="numeric" list="dl-lm-laenge" oninput="onLinearFieldChange('laenge')" onchange="onLinearFieldChange('laenge')" autocomplete="off">
+          <datalist id="dl-lm-laenge"></datalist>
         </div>
       </div>
     </div>
@@ -593,6 +593,20 @@
       <input type="range" id="set-fieldpadding" min="4" max="16" step="1" value="10">
       <span class="range-value" id="val-fieldpadding">10px</span>
     </div>
+  </div>
+
+  <div class="settings-group">
+    <label for="set-modulDefault">Standard-Erfassungsart</label>
+    <select id="set-modulDefault">
+      <option value="hk">HK</option>
+      <option value="beleuchtung" selected>Beleuchtung</option>
+      <option value="beides">Beides</option>
+    </select>
+  </div>
+
+  <div class="settings-group">
+    <label for="set-gebaeude">Standard-Gebäude</label>
+    <input type="text" id="set-gebaeude" list="dl-gebaeude" autocomplete="off" placeholder="z.B. Gebäude 1">
   </div>
 
   <div class="form-actions">

@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.12.0';
-const APP_BUILD_DATE = '06.03.2026 14:57'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.13.0';
+const APP_BUILD_DATE = '06.03.2026 15:27'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -221,7 +221,8 @@ function showNewProjektDialog() {
   const keys = Object.keys(allGebaeudeDaten);
   document.getElementById('dl-liegenschaften').innerHTML = keys.map(k => `<option value="${esc(k)}">`).join('');
   if (keys.length === 1) inp.value = keys[0];
-  setModulToggle('beleuchtung');
+  const modulDefault = localStorage.getItem('modul-default') || 'beleuchtung';
+  setModulToggle(modulDefault);
   inp.focus();
 }
 
@@ -440,11 +441,12 @@ async function openHkForm(hkId) {
     const std = getHkStandard();
     const last = await getLastHeizkoerper(currentProjektId);
     const defaults = std || last;
+    const defGeb = localStorage.getItem('default-gebaeude') || '';
     hk = newHeizkoerper(currentProjektId, defaults ? {
       gebaeude: defaults.gebaeude,
       geschoss: defaults.geschoss,
       raumnr: last ? last.raumnr : ''
-    } : null);
+    } : (defGeb ? { gebaeude: defGeb } : null));
     if (defaults) {
       for (const f of STANDARD_FIELDS) {
         hk[f] = defaults[f] || '';
@@ -848,11 +850,12 @@ async function openBelForm(belId) {
     const std = getBelStandard();
     const last = await getLastBeleuchtung(currentProjektId);
     const src = std || last;
+    const defGeb = localStorage.getItem('default-gebaeude') || '';
     const defaults = src ? {
       gebaeude: last ? last.gebaeude : (src.gebaeude || ''),
       geschoss: last ? last.geschoss : (src.geschoss || ''),
       raumnr: last ? last.raumnr : ''
-    } : null;
+    } : (defGeb ? { gebaeude: defGeb } : null);
     bel = newBeleuchtung(currentProjektId, defaults);
     if (src) {
       for (const f of BEL_STANDARD_FIELDS) bel[f] = src[f] || '';
@@ -1142,6 +1145,28 @@ function updateInstallationsartFields() {
   checkBelSonstigeHinweis();
 }
 
+// ── Smart-Defaults bei Leuchtenart ──
+
+function applyLeuchtenartDefaults() {
+  const art = document.getElementById('f-leuchtenart').value;
+  const lmJe = document.getElementById('f-leuchtmittelJeLeuchte');
+  const montage = document.getElementById('f-installationsart');
+  const lmKat = document.getElementById('f-leuchtmittelKategorie');
+
+  // Nur leere Felder setzen (User-Eingabe nicht überschreiben)
+  if (!lmJe.value && ['Strahler','Spot','Downlight','Panel','Freistrahler'].includes(art)) {
+    lmJe.value = '1';
+  }
+  if (!montage.value && ['Downlight','Panel'].includes(art)) {
+    montage.value = 'Einbau';
+    updateInstallationsartFields();
+  }
+  if (!lmKat.value && art === 'Panel') {
+    lmKat.value = 'LED';
+    updateLeuchtmittelFields();
+  }
+}
+
 function toggleLph() {
   const checked = document.getElementById('f-zustand-erreichbar').checked;
   document.getElementById('group-lph').style.display = checked ? 'block' : 'none';
@@ -1183,13 +1208,18 @@ function onLinearFieldChange(changedField) {
   document.getElementById('dl-lm-laenge').innerHTML = [...new Set(laengen)].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
   document.getElementById('dl-lm-wattage').innerHTML = [...new Set(wattages)].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
 
-  // Auto-fill wenn eindeutig
+  // Auto-fill wenn eindeutig + nächstes Feld fokussieren
   if (changedField === 'laenge' && curLaenge) {
     const matching = entries.filter(e => e.mm === curLaenge);
     if (matching.length === 1) wattEl.value = matching[0].w;
   } else if (changedField === 'wattage' && curWatt) {
     const matching = entries.filter(e => e.w === curWatt);
-    if (matching.length === 1) laengeEl.value = matching[0].mm;
+    if (matching.length === 1) {
+      laengeEl.value = matching[0].mm;
+      // Länge auto-gefüllt → nächstes Feld (LM je Leuchte) fokussieren
+      const next = document.getElementById('f-leuchtmittelJeLeuchte');
+      if (next) setTimeout(() => next.focus(), 50);
+    }
   }
 }
 
@@ -2073,12 +2103,14 @@ function loadSettings() {
   const fontSize = localStorage.getItem('ui-font-size') || '13';
   const fieldPadding = localStorage.getItem('ui-field-padding') || '10';
   const erfasser = localStorage.getItem('erfasser-name') || '';
+  const modulDefault = localStorage.getItem('modul-default') || 'beleuchtung';
+  const defaultGebaeude = localStorage.getItem('default-gebaeude') || '';
 
   document.documentElement.style.setProperty('--ui-font-size', fontSize + 'px');
   document.documentElement.style.setProperty('--ui-field-padding', fieldPadding + 'px');
 
   settingsReady = !!erfasser;
-  return { fontSize, fieldPadding, erfasser };
+  return { fontSize, fieldPadding, erfasser, modulDefault, defaultGebaeude };
 }
 
 function openSettings() {
@@ -2088,6 +2120,8 @@ function openSettings() {
   document.getElementById('val-fontsize').textContent = s.fontSize + 'px';
   document.getElementById('set-fieldpadding').value = s.fieldPadding;
   document.getElementById('val-fieldpadding').textContent = s.fieldPadding + 'px';
+  document.getElementById('set-modulDefault').value = s.modulDefault;
+  document.getElementById('set-gebaeude').value = s.defaultGebaeude;
 
   document.getElementById('btn-settings-cancel').style.display = settingsReady ? '' : 'none';
 
@@ -2104,9 +2138,14 @@ function saveSettings() {
   const fontSize = document.getElementById('set-fontsize').value;
   const fieldPadding = document.getElementById('set-fieldpadding').value;
 
+  const modulDefault = document.getElementById('set-modulDefault').value;
+  const defaultGebaeude = document.getElementById('set-gebaeude').value.trim();
+
   localStorage.setItem('erfasser-name', erfasser);
   localStorage.setItem('ui-font-size', fontSize);
   localStorage.setItem('ui-field-padding', fieldPadding);
+  localStorage.setItem('modul-default', modulDefault);
+  localStorage.setItem('default-gebaeude', defaultGebaeude);
 
   loadSettings();
   navigate('screen-projekte');
@@ -2168,16 +2207,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('f-artThermostatkopf').addEventListener('change', checkSonstigeHinweis);
 
     // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
+    // Bei Auto-Fill direkt zum nächsten Abschnitt springen (Montageart bei Bel, Typ bei HK)
     document.getElementById('f-raumnr').addEventListener('change', () => {
       const rNr = document.getElementById('f-raumnr').value.trim();
       const data = getActiveGebaeudeDaten();
       const details = data.raumDetails && data.raumDetails[rNr];
       if (details && details.nutzung) {
         document.getElementById('f-raumbezeichnung').value = details.nutzung;
+        // Auto-Skip: Raumbezeichnung wurde auto-gefüllt → direkt zum nächsten Abschnitt
+        const belVisible = document.getElementById('bel-form-section').style.display !== 'none';
+        const target = belVisible ? document.getElementById('f-installationsart') : document.getElementById('f-typ');
+        if (target) setTimeout(() => target.focus(), 50);
       } else {
         document.getElementById('f-raumbezeichnung').value = '';
       }
     });
+
+    // Leuchtenart Smart-Defaults
+    document.getElementById('f-leuchtenart').addEventListener('change', applyLeuchtenartDefaults);
 
     // Gebäude-Filter: Geschoss-Datalist filtern
     document.getElementById('f-gebaeude').addEventListener('change', () => {

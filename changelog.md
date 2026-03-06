@@ -1,5 +1,13 @@
 # Changelog
 
+### v3.13
+
+* ~~Smart-Defaults bei Leuchtenart~~ **erledigt v3.13.0** (Strahler/Spot/Downlight/Panel/Freistrahler→LM=1; Downlight/Panel→Einbau; Panel→LED; nur leere Felder)
+* ~~Einstellungen: Standard-Erfassungsart + Standard-Gebäude~~ **erledigt v3.13.0**
+* ~~T5/T8: Wattage vor Länge, Länge auto-gefüllt + Auto-Skip~~ **erledigt v3.13.0**
+* ~~Raumnummer Auto-Skip: bei auto-gefüllter Raumbezeichnung direkt zu Montageart/Typ~~ **erledigt v3.13.0**
+* ~~Checkbox-Abstände konsistent (gap 6px, padding-left entfernt)~~ **erledigt v3.13.0**
+
 ### v3.12
 
 * ~~App umbenannt: "HK-Aufnahme" → "E1 Begehung"~~ **erledigt v3.12.0** (title, manifest, SW-Cache-Prefix; DB_NAME bleibt für Datenkompatibilität)
