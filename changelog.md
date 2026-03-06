@@ -2,6 +2,8 @@
 
 ### v3.11
 
+* ~~Steuerung: 5 Checkboxen in einer Zeile~~ **erledigt v3.11.1** (steuerung-grid auf repeat(5, auto))
+* ~~Sonstiges: 3-Spalten-Layout~~ **erledigt v3.11.1** (Raumdecke/Erreichbarkeit/LPH in form-row-3, Zustand-Grid auf 3 Spalten, "schlecht erreichbar" mit Label in Kapitaelchen)
 * ~~Gluehbirne als eigene Leuchtmittel-Kategorie~~ **erledigt v3.11** (E14: 25/40/60W, E27: 25/40/60/75/100W, eigene Sub-Felder mit Fassung+Wattage)
 * ~~Neue Sockeltypen: GU5,3 / GY6,35~~ **erledigt v3.11** (GU5,3 mit 20/35/45/50W, GY6,35 mit 28/40W unter Sonstige)
 * ~~MR16 Wattage +45W, GU10 +25W~~ **erledigt v3.11** (MR16: [20,35,45,50], GU10: [25,35,50])
