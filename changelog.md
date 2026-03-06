@@ -2,6 +2,7 @@
 
 ### v3.11
 
+* ~~Google-Suchvorschläge-Popup auf Smartphone unterbunden~~ **erledigt v3.11.7** (autocomplete="off" auf allen Text-Inputs)
 * ~~App hängt auf Splash Screen: fehlende hilfe/bel/ Bilder im Git verursachten SW-Cache-Fehler~~ **erledigt v3.11.6** (dulux.png + montageart.png committed)
 * ~~Orientation: Querformat nur wenn Gerät es erlaubt~~ **erledigt v3.11.6** (manifest.json orientation "any"→"natural")
 * ~~Sonstiges-Bereich: 2 Spalten statt 3, Erreichbarkeit-Label entfernt, LPH unter Checkbox~~ **erledigt v3.11.5**

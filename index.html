@@ -35,7 +35,7 @@
 <!-- ════════ SCREEN: Liste (HK / Beleuchtung / Beides) ════════ -->
 <div class="screen" id="screen-hk-list">
   <div class="filter-bar">
-    <input type="text" id="filter-text" placeholder="Filter (Gebäude, Geschoss, Raum...)">
+    <input type="text" id="filter-text" placeholder="Filter (Gebäude, Geschoss, Raum...)" autocomplete="off">
     <select id="sort-select" onchange="renderHkList()" title="Sortierung">
       <option value="raumnr">Raumnr</option>
       <option value="gebaeude">Gebäude</option>
@@ -70,17 +70,17 @@
   <div class="form-row">
     <div class="form-group">
       <label>Gebäude</label>
-      <input type="text" id="f-gebaeude" list="dl-gebaeude">
+      <input type="text" id="f-gebaeude" list="dl-gebaeude" autocomplete="off">
     </div>
     <div class="form-group">
       <label>Geschoss</label>
-      <input type="text" id="f-geschoss" list="dl-geschoss">
+      <input type="text" id="f-geschoss" list="dl-geschoss" autocomplete="off">
     </div>
   </div>
   <div class="form-row">
     <div class="form-group">
       <label>Raum-Nr.</label>
-      <input type="text" id="f-raumnr" list="dl-raumnr">
+      <input type="text" id="f-raumnr" list="dl-raumnr" autocomplete="off">
     </div>
     <div class="form-group">
       <label>Raumbezeichnung</label>
@@ -126,11 +126,11 @@
     <div class="form-row" id="group-baumasseRow">
       <div class="form-group" id="group-baulaenge">
         <label>Baulänge [mm]</label>
-        <input type="text" id="f-baulaenge" inputmode="numeric" list="dl-baulaenge" placeholder="z.B. 1000">
+        <input type="text" id="f-baulaenge" inputmode="numeric" list="dl-baulaenge" placeholder="z.B. 1000" autocomplete="off">
       </div>
       <div class="form-group" id="group-bauhoehe">
         <label>Bauhöhe [mm]</label>
-        <input type="text" id="f-bauhoehe" inputmode="numeric" list="dl-bauhoehe" placeholder="z.B. 600" onchange="onBauhoeheChange()">
+        <input type="text" id="f-bauhoehe" inputmode="numeric" list="dl-bauhoehe" placeholder="z.B. 600" onchange="onBauhoeheChange()" autocomplete="off">
       </div>
     </div>
 
@@ -139,11 +139,11 @@
     <div class="form-row">
       <div class="form-group">
         <label>Nabenabstand [mm]</label>
-        <input type="text" id="f-nabenabstand" inputmode="numeric" list="dl-nabenabstand" placeholder="z.B. 500" onchange="onNabenabstandChange()">
+        <input type="text" id="f-nabenabstand" inputmode="numeric" list="dl-nabenabstand" placeholder="z.B. 500" onchange="onNabenabstandChange()" autocomplete="off">
       </div>
       <div class="form-group">
         <label>DN Ventil</label>
-        <input type="text" id="f-dnVentil" list="dl-dnVentil" placeholder="z.B. DN15">
+        <input type="text" id="f-dnVentil" list="dl-dnVentil" placeholder="z.B. DN15" autocomplete="off">
         <datalist id="dl-dnVentil"></datalist>
       </div>
     </div>
@@ -207,13 +207,13 @@
     <div id="group-ventilWert" style="display:none;margin-top:6px">
       <div class="form-group">
         <label>Voreinstellwert</label>
-        <input type="text" id="f-ventilVoreinstellbarWert" placeholder="z.B. 3.5" inputmode="decimal">
+        <input type="text" id="f-ventilVoreinstellbarWert" placeholder="z.B. 3.5" inputmode="decimal" autocomplete="off">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>Strang-Nr.</label>
-        <input type="text" id="f-strang" inputmode="decimal" placeholder="z.B. 1.1">
+        <input type="text" id="f-strang" inputmode="decimal" placeholder="z.B. 1.1" autocomplete="off">
       </div>
     </div>
     <div class="form-group">
@@ -257,7 +257,7 @@
     <div class="form-row">
       <div class="form-group">
         <label>Montageart <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/montageart.png','Montagearten')" title="Hilfe: Montagearten">?</button></label>
-        <input type="text" id="f-installationsart" list="dl-installationsart" onchange="updateInstallationsartFields()">
+        <input type="text" id="f-installationsart" list="dl-installationsart" onchange="updateInstallationsartFields()" autocomplete="off">
         <datalist id="dl-installationsart">
           <option value="Einbau"><option value="Anbau"><option value="Pendel"><option value="Sonstige">
         </datalist>
@@ -312,14 +312,14 @@
     <div class="form-row">
       <div class="form-group">
         <label>VSG <button class="btn-help-inline" onclick="event.stopPropagation();showInfo('VSG erkennen','VSG = Vorschaltgerät\n\nTipp 1: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\nFlimmert das Bild? → KVG/VVG (konventionell)\nKein Flimmern? → EVG (elektronisch)\n\nTipp 2: Bei Kompaktleuchtstofflampen (Dulux, PL-S/C/T) Sockelbezeichnung prüfen:\n• q in Sockelbez. → 4-Pin → immer EVG\n• d in Sockelbez. → 2-Pin → immer KVG\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: VSG erkennen">?</button></label>
-        <input type="text" id="f-vorschaltgeraet" list="dl-vorschaltgeraet" onchange="updateLeuchtmittelFields()">
+        <input type="text" id="f-vorschaltgeraet" list="dl-vorschaltgeraet" onchange="updateLeuchtmittelFields()" autocomplete="off">
         <datalist id="dl-vorschaltgeraet">
           <option value="KVG/VVG"><option value="EVG">
         </datalist>
       </div>
       <div class="form-group">
         <label>Leuchtmittel</label>
-        <input type="text" id="f-leuchtmittelKategorie" list="dl-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()">
+        <input type="text" id="f-leuchtmittelKategorie" list="dl-leuchtmittelKategorie" onchange="updateLeuchtmittelFields()" autocomplete="off">
         <datalist id="dl-leuchtmittelKategorie">
           <option value="T5"><option value="T8"><option value="Dulux"><option value="Glühbirne"><option value="LED"><option value="Sonstige">
         </datalist>
@@ -331,12 +331,12 @@
       <div class="form-row">
         <div class="form-group">
           <label>Länge [mm]</label>
-          <input type="text" id="f-lm-linear-laenge" inputmode="numeric" list="dl-lm-laenge" oninput="onLinearFieldChange('laenge')" onchange="onLinearFieldChange('laenge')">
+          <input type="text" id="f-lm-linear-laenge" inputmode="numeric" list="dl-lm-laenge" oninput="onLinearFieldChange('laenge')" onchange="onLinearFieldChange('laenge')" autocomplete="off">
           <datalist id="dl-lm-laenge"></datalist>
         </div>
         <div class="form-group">
           <label>Wattage [W]</label>
-          <input type="text" id="f-lm-linear-wattage" inputmode="numeric" list="dl-lm-wattage" oninput="onLinearFieldChange('wattage')" onchange="onLinearFieldChange('wattage')">
+          <input type="text" id="f-lm-linear-wattage" inputmode="numeric" list="dl-lm-wattage" oninput="onLinearFieldChange('wattage')" onchange="onLinearFieldChange('wattage')" autocomplete="off">
           <datalist id="dl-lm-wattage"></datalist>
         </div>
       </div>
@@ -347,7 +347,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Wattage [W]</label>
-          <input type="text" id="f-lm-dulux-wattage" inputmode="numeric" list="dl-lm-dulux-wattage" oninput="updateDuluxTyp()" onchange="updateDuluxTyp()">
+          <input type="text" id="f-lm-dulux-wattage" inputmode="numeric" list="dl-lm-dulux-wattage" oninput="updateDuluxTyp()" onchange="updateDuluxTyp()" autocomplete="off">
           <datalist id="dl-lm-dulux-wattage"></datalist>
         </div>
         <div class="form-group">
@@ -362,7 +362,7 @@
       </div>
       <div class="form-group">
         <label>Ermittelter Typ</label>
-        <input type="text" id="f-lm-dulux-typ" readonly style="background:#f5f5f5">
+        <input type="text" id="f-lm-dulux-typ" readonly style="background:#f5f5f5" autocomplete="off">
       </div>
     </div>
 
@@ -377,14 +377,14 @@
         </div>
         <div class="form-group">
           <label>Wattage [W]</label>
-          <input type="text" id="f-lm-sonstige-wattage" inputmode="numeric" list="dl-lm-sonstige-wattage" placeholder="Wattage">
+          <input type="text" id="f-lm-sonstige-wattage" inputmode="numeric" list="dl-lm-sonstige-wattage" placeholder="Wattage" autocomplete="off">
           <datalist id="dl-lm-sonstige-wattage"></datalist>
         </div>
       </div>
       <div id="group-fassung" style="display:none">
         <div class="form-group">
           <label>Fassung <button class="btn-help-inline" onclick="event.stopPropagation();showInfo('Fassung','E14/E27/E40 = LED-Ersatz möglich\nSonstige = kein direkter LED-Ersatz')" title="Hilfe: Fassung">?</button></label>
-          <input type="text" id="f-lm-fassung" list="dl-lm-fassung">
+          <input type="text" id="f-lm-fassung" list="dl-lm-fassung" autocomplete="off">
           <datalist id="dl-lm-fassung">
             <option value="E14"><option value="E27"><option value="E40">
             <option value="GU4"><option value="GU5,3"><option value="GU10">
@@ -399,7 +399,7 @@
     <div id="lm-led-fields" style="display:none">
       <div class="form-group">
         <label>Beschreibung</label>
-        <input type="text" id="f-lm-led-text" placeholder="z.B. LED Panel 40W">
+        <input type="text" id="f-lm-led-text" placeholder="z.B. LED Panel 40W" autocomplete="off">
       </div>
     </div>
 
@@ -416,7 +416,7 @@
         </div>
         <div class="form-group">
           <label>Wattage [W]</label>
-          <input type="text" id="f-lm-gluehbirne-wattage" inputmode="numeric" list="dl-lm-gluehbirne-wattage">
+          <input type="text" id="f-lm-gluehbirne-wattage" inputmode="numeric" list="dl-lm-gluehbirne-wattage" autocomplete="off">
           <datalist id="dl-lm-gluehbirne-wattage"></datalist>
         </div>
       </div>
@@ -456,7 +456,7 @@
         </label>
         <div id="group-lph" style="display:none;margin-top:4px">
           <label>LPH [m] <button class="btn-help-inline" onclick="event.stopPropagation();showInfo('LPH','LPH = Lichtpunkthöhe\n\nHöhe der Leuchte über dem Boden in Metern.\nWichtig für die Planung von Wartung und Leuchtmitteltausch.')" title="Hilfe: LPH">?</button></label>
-          <input type="text" id="f-lph" inputmode="decimal" placeholder="z.B. 4.5">
+          <input type="text" id="f-lph" inputmode="decimal" placeholder="z.B. 4.5" autocomplete="off">
         </div>
       </div>
     </div>
@@ -613,7 +613,7 @@
     <h2>Neues Projekt</h2>
     <div class="form-group">
       <label>Liegenschaft</label>
-      <input type="text" id="input-projekt-name" list="dl-liegenschaften" placeholder="z.B. Musterstraße 12">
+      <input type="text" id="input-projekt-name" list="dl-liegenschaften" placeholder="z.B. Musterstraße 12" autocomplete="off">
       <datalist id="dl-liegenschaften"></datalist>
     </div>
     <div class="form-group">
