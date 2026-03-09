@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.15.1';
-const APP_BUILD_DATE = '09.03.2026 16:04'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.15.2';
+const APP_BUILD_DATE = '09.03.2026 16:11'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2358,6 +2358,25 @@ if (location.search.includes('_update=')) {
   history.replaceState(null, '', location.pathname + location.hash);
 }
 
+// Update-Loop-Schutz: max 2 Update-Versuche innerhalb von 60s
+function canAttemptUpdate() {
+  const now = Date.now();
+  const last = parseInt(sessionStorage.getItem('updateAttempt') || '0');
+  const count = parseInt(sessionStorage.getItem('updateCount') || '0');
+  if (now - last > 60000) {
+    sessionStorage.setItem('updateCount', '1');
+    sessionStorage.setItem('updateAttempt', String(now));
+    return true;
+  }
+  if (count >= 2) {
+    console.warn('Update-Loop erkannt – überspringe Update-Check');
+    return false;
+  }
+  sessionStorage.setItem('updateCount', String(count + 1));
+  sessionStorage.setItem('updateAttempt', String(now));
+  return true;
+}
+
 async function checkForUpdate() {
   try {
     const resp = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
@@ -2365,7 +2384,9 @@ async function checkForUpdate() {
     const data = await resp.json();
     if (data.version && data.version !== APP_VERSION) {
       console.log(`Update verfügbar: ${APP_VERSION} → ${data.version}`);
-      await forceUpdate();
+      if (canAttemptUpdate()) {
+        await forceUpdate();
+      }
     }
   } catch {
     // Offline oder Fehler
@@ -2385,4 +2406,4 @@ async function forceUpdate() {
   window.location.href = location.pathname + '?_update=' + Date.now();
 }
 
-setTimeout(checkForUpdate, 2000);
+setTimeout(checkForUpdate, 3000);
