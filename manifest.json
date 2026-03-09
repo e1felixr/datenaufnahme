@@ -4,7 +4,7 @@
   "description": "E1 Energiemanagement — Datenerfassung bei Gebäudebegehungen",
   "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "natural",
+  "orientation": "any",
   "background_color": "#F5F5F5",
   "theme_color": "#1565C0",
   "icons": [
