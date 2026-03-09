@@ -14,12 +14,12 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.14.1';
-const APP_BUILD_DATE = '09.03.2026 15:57'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.15.0';
+const APP_BUILD_DATE = '09.03.2026 16:03'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
-  typ: ['Kompakt-HK', 'Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Sonstige'],
+  typ: ['Kompakt-HK', 'Röhren-HK', 'Glieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Sonstige'],
   subtypKompakt: ['10', '11', '20', '21', '22', '30', '33'],
   subtypKonvektoren: ['21', '22', '32', '43', '54'],
   subtypStahlplatte: ['ER', 'EK', 'DR', 'C', 'DK', 'T', 'TK1', 'TK2', 'TK3'],
@@ -37,7 +37,7 @@ const CONFIG = {
   dnVentil: ['DN10', 'DN15', 'DN20', 'DN25'],
   ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck'],
   artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde', 'Fernversteller', 'fehlt', 'Sonstiges'],
-  einbausituationCheckboxes: ['verkleidung', 'bruestung', 'moebel', 'sonstige']
+  einbausituationCheckboxes: ['verkleidung', 'bruestung', 'moebel']
 };
 
 // ── Leuchtmittel-Datenbank ──
@@ -514,9 +514,9 @@ function fillForm(hk) {
 
   let typ = hk.typ || '';
   if (typ === 'Flach-HK profiliert' || typ === 'Flach-HK glatt') typ = 'Kompakt-HK';
-  else if (typ === 'Glieder') typ = 'Stahlglieder-HK';
+  else if (typ === 'Glieder' || typ === 'Stahlglieder-HK') typ = 'Glieder-HK';
   else if (typ === 'Konvektor') typ = 'Konvektoren';
-  else if (typ === 'Bad') typ = 'Stahlröhren-HK';
+  else if (typ === 'Bad' || typ === 'Stahlröhren-HK') typ = 'Röhren-HK';
   document.getElementById('f-typ').value = typ;
 
   document.getElementById('f-subtyp').value = hk.subtyp || hk.artFlach || '';
@@ -535,7 +535,6 @@ function fillForm(hk) {
   document.getElementById('f-einbau-verkleidung').checked = einbauStr.includes('hinter Verkleidung');
   document.getElementById('f-einbau-bruestung').checked = einbauStr.includes('unter Brüstung');
   document.getElementById('f-einbau-moebel').checked = einbauStr.includes('hinter Möbeln');
-  document.getElementById('f-einbau-sonstige').checked = einbauStr.includes('sonstige');
   document.getElementById('f-strang').value = hk.strang || '';
   document.getElementById('f-bemerkung').value = hk.bemerkung || '';
 
@@ -569,14 +568,14 @@ function updateTypFields() {
   if (typ === 'Kompakt-HK') subtypOptions = CONFIG.subtypKompakt;
   else if (typ === 'Konvektoren') subtypOptions = CONFIG.subtypKonvektoren;
 
-  const subtypSel = document.getElementById('f-subtyp');
-  const curSubtyp = subtypSel.value;
+  const subtypInput = document.getElementById('f-subtyp');
+  const curSubtyp = subtypInput.value;
   if (subtypOptions.length > 0) {
-    fillSelect('f-subtyp', subtypOptions, 'Bauart');
-    subtypSel.value = subtypOptions.includes(curSubtyp) ? curSubtyp : '';
+    fillDatalist('dl-subtyp', subtypOptions);
+    subtypInput.value = subtypOptions.includes(curSubtyp) ? curSubtyp : '';
     groupSubtyp.style.display = 'block';
   } else {
-    subtypSel.value = '';
+    subtypInput.value = '';
     groupSubtyp.style.display = 'none';
   }
 
@@ -587,7 +586,7 @@ function updateTypFields() {
     groupKonvektorBauart.style.display = 'none';
   }
 
-  const hasRoehren = ['Stahlröhren-HK', 'Stahlglieder-HK', 'Gussglieder-HK'].includes(typ);
+  const hasRoehren = ['Röhren-HK', 'Glieder-HK', 'Gussglieder-HK'].includes(typ);
   groupRoehrenGlieder.style.display = hasRoehren ? 'grid' : 'none';
   if (!hasRoehren) {
     document.getElementById('f-anzahlRoehren').value = '';
@@ -600,9 +599,9 @@ function updateTypFields() {
 
   let bauhoeheOpts;
   if (typ === 'Kompakt-HK' || typ === 'Konvektoren') bauhoeheOpts = CONFIG.bauhoeheKompakt;
-  else if (typ === 'Stahlröhren-HK') bauhoeheOpts = CONFIG.bauhoeheRoehren;
+  else if (typ === 'Röhren-HK') bauhoeheOpts = CONFIG.bauhoeheRoehren;
   else if (typ === 'Gussglieder-HK') bauhoeheOpts = CONFIG.bauhoeheGuss;
-  else if (typ === 'Stahlglieder-HK') bauhoeheOpts = CONFIG.bauhoeheStahl;
+  else if (typ === 'Glieder-HK') bauhoeheOpts = CONFIG.bauhoeheStahl;
   else bauhoeheOpts = [...CONFIG.bauhoeheKompakt, ...CONFIG.bauhoeheRoehren];
   fillDatalist('dl-bauhoehe', bauhoeheOpts);
   fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
@@ -622,7 +621,7 @@ function onBauhoeheChange() {
   if (!bh) return;
   let map = null;
   if (typ === 'Gussglieder-HK') map = CONFIG.gussBANA;
-  else if (typ === 'Stahlglieder-HK') map = CONFIG.stahlBANA;
+  else if (typ === 'Glieder-HK') map = CONFIG.stahlBANA;
   if (map && map[bh] !== undefined) {
     document.getElementById('f-nabenabstand').value = map[bh];
   }
@@ -634,7 +633,7 @@ function onNabenabstandChange() {
   if (!na) return;
   let map = null;
   if (typ === 'Gussglieder-HK') map = CONFIG.gussNaBA;
-  else if (typ === 'Stahlglieder-HK') map = CONFIG.stahlNaBA;
+  else if (typ === 'Glieder-HK') map = CONFIG.stahlNaBA;
   if (map && map[na] !== undefined) {
     document.getElementById('f-bauhoehe').value = map[na];
   }
@@ -683,7 +682,6 @@ function readFormIntoHk(hk) {
   if (document.getElementById('f-einbau-verkleidung').checked) einbauParts.push('hinter Verkleidung');
   if (document.getElementById('f-einbau-bruestung').checked) einbauParts.push('unter Brüstung');
   if (document.getElementById('f-einbau-moebel').checked) einbauParts.push('hinter Möbeln');
-  if (document.getElementById('f-einbau-sonstige').checked) einbauParts.push('sonstige');
   hk.einbausituation = einbauParts.length > 0 ? einbauParts.join(', ') : 'normal';
   hk.strang = document.getElementById('f-strang').value.trim();
   hk.bemerkung = document.getElementById('f-bemerkung').value.trim();
@@ -1546,10 +1544,8 @@ function checkSonstigeHinweis() {
   const hinweis = document.getElementById('sonstige-foto-hinweis');
   if (!hinweis) return;
   const typ = document.getElementById('f-typ').value;
-  const einbauSonstige = document.getElementById('f-einbau-sonstige');
   const thermo = document.getElementById('f-artThermostatkopf').value;
-  const einbauIsSonstige = einbauSonstige ? einbauSonstige.checked : false;
-  hinweis.style.display = (typ === 'Sonstige' || einbauIsSonstige || thermo === 'Sonstiges') ? 'block' : 'none';
+  hinweis.style.display = (typ === 'Sonstige' || thermo === 'Sonstiges') ? 'block' : 'none';
 }
 
 function triggerPhoto(index) {
@@ -1892,10 +1888,10 @@ async function buildExportZip(hks, bels, modul, safeName, onProgress) {
 // ── Dropdown füllen ──
 
 function populateDropdowns() {
-  fillSelect('f-typ', CONFIG.typ, 'Typ', { 'Sonstige': 'Sonstige → Foto!' });
+  fillDatalist('dl-typ', CONFIG.typ);
   fillSelect('f-anzahlRoehren', CONFIG.anzahlRoehren.map(String), 'Anz. Röhren');
   fillDatalist('dl-dnVentil', CONFIG.dnVentil);
-  fillSelect('f-ventilform', CONFIG.ventilform, 'Ventilform');
+  fillDatalist('dl-ventilform', CONFIG.ventilform);
   fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf, 'Thermostatkopf', { 'Sonstiges': 'Sonstiges → Foto!' });
   fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
   fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
@@ -2171,7 +2167,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderProjekte();
 
     // HK Event-Listener
-    document.getElementById('f-typ').addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
+    const typInput = document.getElementById('f-typ');
+    typInput.addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
+    typInput.addEventListener('input', () => { updateTypFields(); checkSonstigeHinweis(); });
     document.getElementById('f-artThermostatkopf').addEventListener('change', checkSonstigeHinweis);
 
     // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
