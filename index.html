@@ -100,20 +100,21 @@
       </div>
       <div class="form-group">
         <label>Heizkörper-Typ <button class="btn-help-inline" onclick="openHelpImage('hilfe/hzg/hk-typen.png','Heizkörpertypen')" title="Hilfe: Heizkörpertypen">?</button></label>
-        <select id="f-typ"></select>
+        <input type="text" id="f-typ" list="dl-typ" autocomplete="off" placeholder="Typ wählen">
+        <datalist id="dl-typ"></datalist>
       </div>
     </div>
     <div class="form-group" id="group-subtyp" style="display:none">
       <label>Bauart <button class="btn-help-inline" onclick="openHelpImage('hilfe/hzg/hilfe_kompakt.jpg','Typen Kompaktheizkörper')" title="Hilfe: Kompaktübersicht">?</button></label>
-      <select id="f-subtyp"></select>
+      <input type="text" id="f-subtyp" list="dl-subtyp" autocomplete="off" placeholder="Bauart wählen">
+      <datalist id="dl-subtyp"></datalist>
     </div>
     <div class="form-group" id="group-konvektorBauart" style="display:none">
       <label>Bauart</label>
-      <select id="f-konvektorBauart">
-        <option value="">Bauart wählen</option>
-        <option value="Normal">Normal</option>
-        <option value="Unterflur">Unterflur</option>
-      </select>
+      <input type="text" id="f-konvektorBauart" list="dl-konvektorBauart" autocomplete="off" placeholder="Bauart wählen">
+      <datalist id="dl-konvektorBauart">
+        <option value="Normal"><option value="Unterflur">
+      </datalist>
     </div>
     <div class="form-row" id="group-roehrenGlieder" style="display:none">
       <div class="form-group">
@@ -152,7 +153,8 @@
     <div class="form-row">
       <div class="form-group">
         <label>Ventiltyp <button class="btn-help-inline" onclick="openHelpImage('hilfe/hzg/ventiltypen.png','Ventiltypen')" title="Hilfe: Ventiltypen">?</button></label>
-        <select id="f-ventilform"></select>
+        <input type="text" id="f-ventilform" list="dl-ventilform" autocomplete="off" placeholder="Ventiltyp wählen">
+        <datalist id="dl-ventilform"></datalist>
       </div>
       <div class="form-group">
         <label>Art Thermostatkopf <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/thermostatkoepfe.jpg','Thermostatköpfe')" title="Hilfe: Thermostatköpfe">?</button></label>
@@ -175,10 +177,6 @@
       <label class="checkbox-row">
         <input type="checkbox" id="f-einbau-moebel">
         <span>hinter Möbeln?</span>
-      </label>
-      <label class="checkbox-row">
-        <input type="checkbox" id="f-einbau-sonstige" onchange="checkSonstigeHinweis()">
-        <span>Sonstige Einbau?</span>
       </label>
       <label class="checkbox-row">
         <input type="checkbox" id="f-hahnblock">
@@ -583,13 +581,15 @@
   <div class="settings-group">
     <label for="set-fontsize">Schriftgröße</label>
     <div class="settings-range-row">
-      <input type="range" id="set-fontsize" min="10" max="18" step="1" value="13">
+      <input type="range" id="set-fontsize" min="8" max="18" step="1" value="13">
       <span class="range-value" id="val-fontsize">13px</span>
     </div>
   </div>
 
   <div class="settings-group">
-    <label for="set-fieldpadding">Feldgröße (Padding)</label>
+    <label for="set-fieldpadding">Feldgröße (Padding)
+      <button class="btn-help-inline" onclick="event.preventDefault();alert('Padding bestimmt den Innenabstand in Eingabefeldern und Buttons.\n\nKleinere Werte = kompaktere Darstellung, mehr Felder sichtbar.\nGrößere Werte = größere Klickflächen, einfacher zu treffen.')" title="Hilfe: Padding">?</button>
+    </label>
     <div class="settings-range-row">
       <input type="range" id="set-fieldpadding" min="4" max="16" step="1" value="10">
       <span class="range-value" id="val-fieldpadding">10px</span>
