@@ -4,11 +4,20 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v3.15.3 · **Letzte Änderung:** 09.03.2026 16:31
+**aktuelle Version:** v3.15.3 · **Letzte Änderung:** 09.03.2026 16:33
 
-### ⚠️ Neuinstallation erforderlich ab v3.15.3
+### Muss ich neu installieren?
 
-Wer aktuell **v3.15.2 oder älter** auf dem Gerät hat, muss die App **einmal deinstallieren und neu installieren** (Manifest-Änderung: Querformat-Unterstützung). Daten gehen dabei nicht verloren.
+Die meisten Updates (Code, Styles, Funktionen) werden **automatisch** geladen, sobald das Gerät online ist. Manche Änderungen betreffen aber das App-Manifest (z.B. Orientierung, Icons, App-Name) – diese greifen erst nach einer **Neuinstallation**.
+
+**Mindestversion für aktuelle Manifest-Änderungen: v3.15.3**
+
+| Deine Version auf dem Gerät | Was tun? |
+|------------------------------|----------|
+| v3.15.3 oder neuer | Nichts – alles aktuell |
+| älter als v3.15.3 | App deinstallieren & neu installieren* |
+
+*Daten (Projekte, Einträge) gehen dabei **nicht** verloren.*
 
 > App vom Startbildschirm entfernen → im Browser neu öffnen → erneut installieren
 
