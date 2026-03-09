@@ -22,7 +22,8 @@
   --ui-field-padding: 6px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
+input, textarea, select, [contenteditable] { -webkit-user-select: text; user-select: text; }
 
 html {
   font-size: var(--ui-font-size, 13px);
