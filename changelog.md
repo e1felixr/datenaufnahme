@@ -1,5 +1,9 @@
 # Changelog
 
+### v3.17
+
+* ~~Taschenrechner bei Anz. Reihen und Leuchten/Reihe~~ **erledigt v3.17.0** (=-Button öffnet Rechner-Modal, Ausdrücke wie 14*6+11+11+64+5+8 werden live ausgewertet)
+
 ### v3.16
 
 * ~~Cross-Modul-Prompt: Im Modus "Beides" fragt +Raum automatisch ob Beleuchtung/HK für selben Raum erfasst werden soll~~ **erledigt v3.16.0** (Modal mit Ja/Nein, Raumdaten werden übernommen)

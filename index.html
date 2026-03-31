@@ -288,11 +288,11 @@
     </div>
     <div class="form-row-3">
       <div class="form-group">
-        <label>Anz. Reihen</label>
+        <label>Anz. Reihen <button class="btn-calc-inline" onclick="openCalc('f-anzahlReihen')" title="Rechner">=</button></label>
         <input type="number" id="f-anzahlReihen" inputmode="numeric" min="1" placeholder="z.B. 2">
       </div>
       <div class="form-group">
-        <label>Leuchten/Reihe</label>
+        <label>Leuchten/Reihe <button class="btn-calc-inline" onclick="openCalc('f-leuchtenJeReihe')" title="Rechner">=</button></label>
         <input type="number" id="f-leuchtenJeReihe" inputmode="numeric" min="1" placeholder="z.B. 4">
       </div>
       <div class="form-group">
@@ -679,6 +679,17 @@
     <p id="cross-module-room-info" style="margin:4px 0 12px;color:#666"></p>
     <button class="btn btn-module" id="btn-cross-yes" style="width:100%"></button>
     <button class="btn btn-outline" id="btn-cross-no" style="margin-top:8px;width:100%">Nein, weiter</button>
+  </div>
+</div>
+
+<!-- ════════ Modal: Taschenrechner ════════ -->
+<div class="modal-overlay" id="modal-calc" style="display:none" onclick="if(event.target===this)closeCalc()">
+  <div class="modal">
+    <h2>Rechner</h2>
+    <input type="text" id="calc-input" inputmode="text" autocomplete="off" placeholder="z.B. 14*6+11+11+64+5+8" style="font-size:1.1rem;text-align:right;margin-bottom:4px">
+    <div id="calc-result" style="font-size:1.4rem;font-weight:700;text-align:right;min-height:2em;line-height:2em;color:#333">—</div>
+    <button class="btn btn-primary" id="btn-calc-apply" style="width:100%;margin-top:8px">Übernehmen</button>
+    <button class="btn btn-outline" onclick="closeCalc()" style="width:100%;margin-top:6px">Abbrechen</button>
   </div>
 </div>
 

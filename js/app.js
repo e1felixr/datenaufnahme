@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.16.0';
-const APP_BUILD_DATE = '31.03.2026 09:02'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.17.0';
+const APP_BUILD_DATE = '31.03.2026 09:12'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -853,6 +853,65 @@ async function openBelFormWithRoom(roomSrc) {
   document.getElementById('new-hk-mode-toggle').style.display = 'none';
   filterDatalistsForGeschoss(roomSrc.geschoss);
 }
+
+// ── Taschenrechner für Zahlenfelder ──
+
+let calcTargetId = null;
+
+function openCalc(fieldId) {
+  calcTargetId = fieldId;
+  const modal = document.getElementById('modal-calc');
+  const input = document.getElementById('calc-input');
+  const result = document.getElementById('calc-result');
+  const current = document.getElementById(fieldId).value;
+  input.value = current || '';
+  result.textContent = current || '—';
+  modal.style.display = 'flex';
+  setTimeout(() => input.focus(), 50);
+}
+
+function closeCalc() {
+  document.getElementById('modal-calc').style.display = 'none';
+  calcTargetId = null;
+}
+
+function evalCalcExpr(expr) {
+  // Nur Zahlen, +, -, *, x, ×, Leerzeichen, Klammern, Punkt, Komma erlaubt
+  const sanitized = expr.replace(/,/g, '.').replace(/[x×]/gi, '*');
+  if (!/^[\d\s+\-*/.()]+$/.test(sanitized)) return null;
+  try {
+    const val = Function('"use strict"; return (' + sanitized + ')')();
+    return typeof val === 'number' && isFinite(val) ? val : null;
+  } catch { return null; }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('calc-input');
+  const result = document.getElementById('calc-result');
+  const btnApply = document.getElementById('btn-calc-apply');
+
+  if (input) {
+    input.addEventListener('input', () => {
+      const val = evalCalcExpr(input.value);
+      result.textContent = val !== null ? val : '—';
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnApply.click();
+      }
+    });
+  }
+  if (btnApply) {
+    btnApply.addEventListener('click', () => {
+      const val = evalCalcExpr(document.getElementById('calc-input').value);
+      if (val !== null && calcTargetId) {
+        document.getElementById(calcTargetId).value = Math.round(val);
+      }
+      closeCalc();
+    });
+  }
+});
 
 async function saveAndNextHk() {
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
