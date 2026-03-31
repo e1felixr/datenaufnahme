@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.18.0';
-const APP_BUILD_DATE = '31.03.2026 11:41'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.18.1';
+const APP_BUILD_DATE = '31.03.2026 11:45'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1346,12 +1346,13 @@ function updateInstallationsartFields() {
 
 const LEUCHTENART_LM_MAP = {
   'Langfeldleuchte':   ['T8', 'T5', 'Dulux L', 'LED'],
+  'Downlight':         ['Dulux S', 'LED'],  // nur S/D/T + LED (kein L/F)
   'Anbauleuchte':      ['Dulux', 'LED'],  // Dulux S/D/T, Dulux L, Dulux F
   'Tafelbeleuchtung':  ['T8', 'T5', 'Dulux L', 'LED'],
   'Rasterleuchte':     ['T8', 'T5', 'Dulux L', 'LED'],  // nur Dulux L + F (keine S/D/T)
-  'Freistrahler':      ['T8', 'T5', 'Dulux L', 'LED'],
-  'Downlight':         ['Dulux', 'LED'],
+  'Freistrahler':      ['T5', 'T8'],
   'Spot':              ['Sonstige'],  // GU5.3, MR16, GY6.35 sind unter Sonstige
+  'Strahler':          ['LED', 'Sonstige'],
 };
 
 function filterLeuchtmittelByLeuchtenart() {
@@ -1361,13 +1362,13 @@ function filterLeuchtmittelByLeuchtenart() {
   const allowed = LEUCHTENART_LM_MAP[art];
 
   if (!allowed) {
-    // Keine Einschränkung (Strahler, Stehleuchte, Sonstige, leer)
+    // Keine Einschränkung (Stehleuchte, Sonstige, leer)
     dlEl.innerHTML = allOptions.map(o => `<option value="${o}">`).join('');
   } else {
-    // Spezialfall: "Dulux L" = nur Dulux-Kategorie (aber nur L-Typ)
+    // 'Dulux L' = nur L/F, 'Dulux S' = nur S/D/T, 'Dulux' = alle → jeweils Kategorie "Dulux"
     const cats = new Set();
     for (const a of allowed) {
-      if (a === 'Dulux L') cats.add('Dulux');
+      if (a === 'Dulux L' || a === 'Dulux S') cats.add('Dulux');
       else cats.add(a);
     }
     dlEl.innerHTML = [...cats].map(o => `<option value="${o}">`).join('');
@@ -1376,9 +1377,8 @@ function filterLeuchtmittelByLeuchtenart() {
   // Falls aktuelles Leuchtmittel nicht mehr erlaubt → zurücksetzen
   const curKat = document.getElementById('f-leuchtmittelKategorie').value;
   if (curKat && allowed) {
-    const curUpper = curKat.charAt(0).toUpperCase() + curKat.slice(1).toLowerCase();
     const valid = allowed.some(a => {
-      if (a === 'Dulux L') return curKat.toLowerCase() === 'dulux';
+      if (a === 'Dulux L' || a === 'Dulux S') return curKat.toLowerCase() === 'dulux';
       return a.toLowerCase() === curKat.toLowerCase();
     });
     if (!valid) {
@@ -1445,19 +1445,30 @@ function onLinearFieldChange(changedField) {
 }
 
 // Dulux Wattage-Filter nach Wendelanzahl + VSG
+function getDuluxMode() {
+  const art = document.getElementById('f-leuchtenart').value;
+  const map = LEUCHTENART_LM_MAP[art];
+  if (!map) return 'all';
+  if (map.includes('Dulux')) return 'all';       // alle Dulux-Typen
+  if (map.includes('Dulux S')) return 'sdt';     // nur S/D/T (mit Wendel)
+  if (map.includes('Dulux L')) return 'lf';      // nur L/F (ohne Wendel)
+  return 'all';
+}
+
 function updateDuluxWattageFilter() {
   const wendel = document.getElementById('f-lm-dulux-wendel').value;
   const vsg = document.getElementById('f-vorschaltgeraet').value;
   const dlEl = document.getElementById('dl-lm-dulux-wattage');
   if (!dlEl) return;
 
-  // Prüfen ob nur Dulux L/F erlaubt (Wendel ausgeblendet)
-  const wendelHidden = document.getElementById('f-lm-dulux-wendel').closest('.form-group').style.display === 'none';
+  const mode = getDuluxMode();
 
   const allWattages = new Set();
   for (const info of Object.values(LEUCHTMITTEL_DB.dulux)) {
-    // Bei ausgeblendeter Wendel: nur L/F (wendel === null)
-    if (wendelHidden && info.wendel !== null) continue;
+    // L/F-Modus: nur wendel === null
+    if (mode === 'lf' && info.wendel !== null) continue;
+    // S/D/T-Modus: nur wendel !== null
+    if (mode === 'sdt' && info.wendel === null) continue;
     // Filter nach Wendel (wenn gewählt)
     if (wendel && info.wendel !== null && info.wendel !== wendel) continue;
     // Filter nach VSG: bei EVG nur evg-kompatible, bei KVG/VVG nur nicht-evg
@@ -1475,10 +1486,10 @@ function updateDuluxTyp() {
   const vsg = document.getElementById('f-vorschaltgeraet').value;
   let ermittelt = '';
 
-  const wendelHidden = document.getElementById('f-lm-dulux-wendel').closest('.form-group').style.display === 'none';
+  const mode = getDuluxMode();
 
-  if (wattage && (wendel || wendelHidden)) {
-    if (wendelHidden) {
+  if (wattage && (wendel || mode === 'lf')) {
+    if (mode === 'lf') {
       // Nur Dulux L/F (wendel === null)
       for (const name of ['Dulux L', 'Dulux F']) {
         if (LEUCHTMITTEL_DB.dulux[name].wattages.includes(wattage)) {
@@ -1553,11 +1564,9 @@ function updateLeuchtmittelFields() {
 
   } else if (kat === 'dulux') {
     document.getElementById('lm-dulux-fields').style.display = 'block';
-    // Bei Leuchtenarten mit 'Dulux L' in der Map: nur L/F erlaubt → Wendel ausblenden
-    const art = document.getElementById('f-leuchtenart').value;
-    const duluxRestricted = LEUCHTENART_LM_MAP[art] && LEUCHTENART_LM_MAP[art].includes('Dulux L') && !LEUCHTENART_LM_MAP[art].includes('Dulux');
+    const mode = getDuluxMode();
     const wendelRow = document.getElementById('f-lm-dulux-wendel').closest('.form-group');
-    if (duluxRestricted) {
+    if (mode === 'lf') {
       wendelRow.style.display = 'none';
       document.getElementById('f-lm-dulux-wendel').value = '';
     } else {
