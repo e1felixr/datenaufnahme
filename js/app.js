@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.18.7';
-const APP_BUILD_DATE = '31.03.2026 13:40'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.18.8';
+const APP_BUILD_DATE = '31.03.2026 13:43'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1412,20 +1412,10 @@ function onLinearFieldChange(changedField) {
   const curLaenge = laengeEl.value ? Number(laengeEl.value) : null;
   const curWatt = wattEl.value ? Number(wattEl.value) : null;
 
-  // Datalists aktualisieren (gefiltert nach Eingaben)
-  let laengen, wattages;
-  if (curWatt && changedField !== 'laenge') {
-    const matching = entries.filter(e => e.w === curWatt);
-    laengen = matching.length > 0 ? matching.map(e => e.mm) : entries.map(e => e.mm);
-  } else {
-    laengen = entries.map(e => e.mm);
-  }
-  if (curLaenge && changedField !== 'wattage') {
-    const matching = entries.filter(e => e.mm === curLaenge);
-    wattages = matching.length > 0 ? matching.map(e => e.w) : entries.map(e => e.w);
-  } else {
-    wattages = entries.map(e => e.w);
-  }
+  // Datalists aktualisieren
+  // Beim Fokussieren eines Felds: alle Optionen anbieten (nicht nach dem anderen filtern)
+  const laengen = entries.map(e => e.mm);
+  const wattages = entries.map(e => e.w);
   document.getElementById('dl-lm-laenge').innerHTML = [...new Set(laengen)].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
   document.getElementById('dl-lm-wattage').innerHTML = [...new Set(wattages)].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
 
