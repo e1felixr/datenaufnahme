@@ -684,7 +684,8 @@
 <div class="modal-overlay" id="modal-calc" style="display:none" onclick="if(event.target===this)closeCalc()">
   <div class="modal">
     <h2>Rechner</h2>
-    <input type="text" id="calc-input" inputmode="text" autocomplete="off" placeholder="z.B. 14*6+11+11+64+5+8" style="font-size:1.1rem;text-align:right;margin-bottom:4px">
+    <p style="margin:0 0 6px;font-size:.8rem;color:#666">x funktioniert als Mal-Zeichen (z.B. 2x4 = 8)</p>
+    <input type="text" id="calc-input" inputmode="text" autocomplete="off" placeholder="z.B. 14x6+11+11+64+5+8" style="font-size:1.1rem;text-align:right;margin-bottom:4px">
     <div id="calc-result" style="font-size:1.4rem;font-weight:700;text-align:right;min-height:2em;line-height:2em;color:#333">—</div>
     <button class="btn btn-primary" id="btn-calc-apply" style="width:100%;margin-top:8px">Übernehmen</button>
     <button class="btn btn-outline" onclick="closeCalc()" style="width:100%;margin-top:6px">Abbrechen</button>
