@@ -921,6 +921,29 @@ body {
   color: var(--module-text);
 }
 
+.btn-calc-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--module-color);
+  background: var(--module-color-light);
+  color: var(--module-color);
+  font-size: .7rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+  vertical-align: middle;
+  padding: 0;
+  line-height: 1;
+}
+.btn-calc-inline:active {
+  background: var(--module-color);
+  color: var(--module-text);
+}
+
 /* ── Help Image Modal ── */
 .help-image-modal {
   background: var(--card);
