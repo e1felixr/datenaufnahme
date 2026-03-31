@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.17.11';
-const APP_BUILD_DATE = '31.03.2026 11:39'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.18.0';
+const APP_BUILD_DATE = '31.03.2026 11:41'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1316,10 +1316,28 @@ async function confirmDeleteBel(id) {
 
 // ── Installationsart Sub-Select ──
 
+const ALL_LEUCHTENARTEN = ['Langfeldleuchte','Downlight','Anbauleuchte','Tafelbeleuchtung','Rasterleuchte','Freistrahler','Spot','Strahler','Stehleuchte','Sonstige'];
+const MONTAGE_LEUCHTENART_MAP = {
+  '3Phasen-Schiene': ['Spot', 'Strahler']
+};
+
 function updateInstallationsartFields() {
   const art = document.getElementById('f-installationsart').value;
   document.getElementById('group-installationsartSub').style.display = art === 'Pendel' ? 'block' : 'none';
   if (art !== 'Pendel') document.getElementById('f-installationsartSub').value = '';
+
+  // Leuchtenart-Optionen filtern bei bestimmten Montagearten
+  const sel = document.getElementById('f-leuchtenart');
+  const allowed = MONTAGE_LEUCHTENART_MAP[art] || ALL_LEUCHTENARTEN;
+  const curVal = sel.value;
+  sel.innerHTML = '<option value="">Bitte wählen</option>';
+  for (const la of allowed) {
+    const label = la === 'Sonstige' ? 'Sonstige \u2192 Foto!' : la;
+    sel.innerHTML += `<option value="${la}">${label}</option>`;
+  }
+  sel.value = allowed.includes(curVal) ? curVal : '';
+  if (!sel.value && curVal) filterLeuchtmittelByLeuchtenart();
+
   checkBelSonstigeHinweis();
 }
 
