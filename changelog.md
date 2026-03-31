@@ -1,5 +1,9 @@
 # Changelog
 
+### v3.16
+
+* ~~Cross-Modul-Prompt: Im Modus "Beides" fragt +Raum automatisch ob Beleuchtung/HK für selben Raum erfasst werden soll~~ **erledigt v3.16.0** (Modal mit Ja/Nein, Raumdaten werden übernommen)
+
 ### v3.14
 
 * ~~LED als Leuchtmittel mit optionaler Wattage~~ **erledigt v3.14.0**
