@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.17.8';
-const APP_BUILD_DATE = '31.03.2026 11:34'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.17.9';
+const APP_BUILD_DATE = '31.03.2026 11:35'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1330,6 +1330,8 @@ const LEUCHTENART_LM_MAP = {
   'Langfeldleuchte':   ['T8', 'T5', 'Dulux L', 'LED'],
   'Anbauleuchte':      ['Dulux', 'LED'],  // Dulux S/D/T, Dulux L, Dulux F
   'Tafelbeleuchtung':  ['T8', 'T5', 'Dulux L', 'LED'],
+  'Rasterleuchte':     ['T8', 'T5', 'LED'],
+  'Freistrahler':      ['T8', 'T5', 'Dulux L', 'LED'],
   'Downlight':         ['Dulux', 'LED'],
   'Spot':              ['Sonstige'],  // GU5.3, MR16, GY6.35 sind unter Sonstige
 };
