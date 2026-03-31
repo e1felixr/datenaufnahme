@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.17.0';
-const APP_BUILD_DATE = '31.03.2026 09:12'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.17.1';
+const APP_BUILD_DATE = '31.03.2026 09:15'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -24,17 +24,17 @@ const CONFIG = {
   subtypKonvektoren: ['21', '22', '32', '43', '54'],
   subtypStahlplatte: ['ER', 'EK', 'DR', 'C', 'DK', 'T', 'TK1', 'TK2', 'TK3'],
   anzahlRoehren: [2, 3, 4, 5, 6],
-  baulaengeOpts: [400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1800,2000,2200,2400,2600,2800,3000],
-  bauhoeheKompakt: [200,300,400,500,600,700,800,900,1000],
-  bauhoeheRoehren: [190,300,350,400,450,500,550,600,750,900,1000,1100,1200,1500,1800,2000,2500,2800],
-  bauhoeheGuss:    [280,430,580,680,980],
-  bauhoeheStahl:   [300,400,600,1000],
+  baulaengeOpts: ['n.g.',400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1800,2000,2200,2400,2600,2800,3000],
+  bauhoeheKompakt: ['n.g.',200,300,400,500,600,700,800,900,1000],
+  bauhoeheRoehren: ['n.g.',190,300,350,400,450,500,550,600,750,900,1000,1100,1200,1500,1800,2000,2500,2800],
+  bauhoeheGuss:    ['n.g.',280,430,580,680,980],
+  bauhoeheStahl:   ['n.g.',300,400,600,1000],
   gussNaBA: { 280:200, 430:350, 580:500, 680:600, 980:900 },
   gussBANA: { 200:280, 350:430, 500:580, 600:680, 900:980 },
   stahlNaBA: { 300:200, 400:350, 600:500, 1000:900 },
   stahlBANA: { 200:300, 350:400, 500:600, 900:1000 },
-  nabenabstandOpts: [100,150,200,300,350,500,600,900],
-  dnVentil: ['DN10', 'DN15', 'DN20', 'DN25'],
+  nabenabstandOpts: ['n.g.',100,150,200,300,350,500,600,900],
+  dnVentil: ['n.g.', 'DN10', 'DN15', 'DN20', 'DN25'],
   ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck'],
   artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde', 'Fernversteller', 'fehlt', 'Sonstiges'],
   einbausituationCheckboxes: ['verkleidung', 'bruestung', 'moebel']
