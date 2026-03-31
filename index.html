@@ -440,17 +440,23 @@
 
     <!-- Sonstiges -->
     <div class="section-title section-title-bel">Sonstiges</div>
-    <div class="form-group">
-      <label>Raumdecke <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/raumdecken.jpg','Deckentypen')" title="Hilfe: Deckentypen">?</button></label>
-      <select id="f-raumdecke" onchange="checkBelSonstigeHinweis()">
-        <option value="">Bitte wählen</option>
-        <option value="nicht auffällig">nicht auffällig</option>
-        <option value="abgehängt">abgehängt</option>
-        <option value="Holz">Holz</option>
-        <option value="Metall">Metall</option>
-        <option value="Akustikdecke">Akustikdecke</option>
-        <option value="Sonstige">Sonstige &rarr; Foto!</option>
-      </select>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Raumdecke <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/raumdecken.jpg','Deckentypen')" title="Hilfe: Deckentypen">?</button></label>
+        <select id="f-raumdecke" onchange="checkBelSonstigeHinweis()">
+          <option value="">Bitte wählen</option>
+          <option value="nicht auffällig">nicht auffällig</option>
+          <option value="abgehängt">abgehängt</option>
+          <option value="Holz">Holz</option>
+          <option value="Metall">Metall</option>
+          <option value="Akustikdecke">Akustikdecke</option>
+          <option value="Sonstige">Sonstige &rarr; Foto!</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Bemerkung</label>
+        <textarea id="f-bel-bemerkung" rows="1" placeholder="z.B. besondere Lichtfarbe"></textarea>
+      </div>
     </div>
     <div class="zustand-grid-2col">
         <label class="checkbox-row">
@@ -486,11 +492,6 @@
     <div id="group-lph" style="display:none;margin-top:4px">
       <label>LPH [m] <button class="btn-help-inline" onclick="event.stopPropagation();showInfo('LPH','LPH = Lichtpunkthöhe\n\nHöhe der Leuchte über dem Boden in Metern.\nWichtig für die Planung von Wartung und Leuchtmitteltausch.')" title="Hilfe: LPH">?</button></label>
       <input type="text" id="f-lph" inputmode="decimal" placeholder="z.B. 4.5" autocomplete="off">
-    </div>
-
-    <div class="form-group">
-      <label>Bemerkung</label>
-      <textarea id="f-bel-bemerkung" rows="2" placeholder="z.B. besondere Lichtfarbe"></textarea>
     </div>
 
     <!-- Bel Sonstige-Hinweis -->

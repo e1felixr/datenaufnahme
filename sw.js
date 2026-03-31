@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'e1-begehung-v91';
+const CACHE_NAME = 'e1-begehung-v92';
 const ASSETS = [
   './',
   './index.html',
