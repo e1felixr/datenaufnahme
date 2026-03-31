@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.18.1';
-const APP_BUILD_DATE = '31.03.2026 11:45'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.18.2';
+const APP_BUILD_DATE = '31.03.2026 11:49'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1429,13 +1429,17 @@ function onLinearFieldChange(changedField) {
   document.getElementById('dl-lm-laenge').innerHTML = [...new Set(laengen)].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
   document.getElementById('dl-lm-wattage').innerHTML = [...new Set(wattages)].sort((a,b) => a-b).map(v => `<option value="${v}">`).join('');
 
-  // Auto-fill wenn eindeutig + nächstes Feld fokussieren
+  // Auto-fill wenn eindeutig
   if (changedField === 'laenge' && curLaenge) {
     const matching = entries.filter(e => e.mm === curLaenge);
-    if (matching.length === 1) wattEl.value = matching[0].w;
+    if (matching.length === 1) {
+      wattEl._autoFilled = true;
+      wattEl.value = matching[0].w;
+    }
   } else if (changedField === 'wattage' && curWatt) {
     const matching = entries.filter(e => e.w === curWatt);
     if (matching.length === 1) {
+      laengeEl._autoFilled = true;
       laengeEl.value = matching[0].mm;
       // Länge auto-gefüllt → nächstes Feld (LM je Leuchte) fokussieren
       const next = document.getElementById('f-leuchtmittelJeLeuchte');
@@ -2448,6 +2452,8 @@ function setupAutoAdvance() {
   formScreen.addEventListener('input', (e) => {
     const el = e.target;
     if (el.tagName !== 'INPUT' || !el.list) return;
+    // Auto-gefüllte Felder: kein Auto-Advance
+    if (el._autoFilled) { el._autoFilled = false; return; }
     const opts = Array.from(el.list.options).map(o => o.value);
     if (el.value && opts.includes(el.value)) {
       el._dlPrev = null; // Vorauswahl zurücksetzen
