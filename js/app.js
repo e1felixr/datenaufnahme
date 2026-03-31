@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.15.3';
-const APP_BUILD_DATE = '10.03.2026 09:24'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.16.0';
+const APP_BUILD_DATE = '31.03.2026 09:02'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -752,6 +752,14 @@ async function saveAndNextRoom() {
   await saveHeizkoerper(hk);
   await renderHkList();
 
+  if (currentProjektModul === 'beides') {
+    showCrossModulePrompt(hk, 'hk');
+    return;
+  }
+  continueHkNextRoom(hk);
+}
+
+function continueHkNextRoom(hk) {
   const nextHk = newHeizkoerper(currentProjektId);
   nextHk.gebaeude = hk.gebaeude;
   nextHk.geschoss = hk.geschoss;
@@ -773,11 +781,77 @@ async function saveAndNextRoom() {
   document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
   document.getElementById('btn-delete-hk').style.display = 'none';
   fillForm(nextHk);
-  const allHks = await getHeizkoerperByProjekt(currentProjektId);
-  suggestNeighborRooms(hk.raumnr, allHks);
+  getHeizkoerperByProjekt(currentProjektId).then(allHks => suggestNeighborRooms(hk.raumnr, allHks));
   window.scrollTo(0, 0);
   document.getElementById('f-raumnr').focus();
   showToast(`HK ${hk.hkNr} gespeichert → neuer Raum`);
+}
+
+// ── Cross-Modul-Prompt (Modus "beides") ──
+
+function showCrossModulePrompt(savedEntry, fromModule) {
+  const modal = document.getElementById('modal-cross-module');
+  const title = document.getElementById('cross-module-title');
+  const info = document.getElementById('cross-module-room-info');
+  const btnYes = document.getElementById('btn-cross-yes');
+  const btnNo = document.getElementById('btn-cross-no');
+  const roomLabel = [savedEntry.raumnr, savedEntry.raumbezeichnung].filter(Boolean).join(' – ');
+
+  if (fromModule === 'hk') {
+    title.textContent = 'Beleuchtung für diesen Raum?';
+    info.textContent = roomLabel;
+    btnYes.textContent = 'Beleuchtung erfassen';
+    btnYes.style.background = '#FFCC00';
+    btnYes.style.color = '#000';
+  } else {
+    title.textContent = 'Heizkörper für diesen Raum?';
+    info.textContent = roomLabel;
+    btnYes.textContent = 'Heizkörper erfassen';
+    btnYes.style.background = '#FF6633';
+    btnYes.style.color = '#fff';
+  }
+
+  btnYes.onclick = () => {
+    modal.style.display = 'none';
+    if (fromModule === 'hk') {
+      openBelFormWithRoom(savedEntry);
+    } else {
+      openHkFormWithRoom(savedEntry);
+    }
+  };
+  btnNo.onclick = () => {
+    modal.style.display = 'none';
+    if (fromModule === 'hk') {
+      continueHkNextRoom(savedEntry);
+    } else {
+      continueBelNextRoom(savedEntry);
+    }
+  };
+
+  modal.style.display = 'flex';
+  showToast(fromModule === 'hk'
+    ? `HK ${savedEntry.hkNr} gespeichert`
+    : 'Leuchte gespeichert');
+}
+
+async function openHkFormWithRoom(roomSrc) {
+  await openHkForm();
+  document.getElementById('f-gebaeude').value = roomSrc.gebaeude || '';
+  document.getElementById('f-geschoss').value = roomSrc.geschoss || '';
+  document.getElementById('f-raumnr').value = roomSrc.raumnr || '';
+  document.getElementById('f-raumbezeichnung').value = roomSrc.raumbezeichnung || '';
+  document.getElementById('new-hk-mode-toggle').style.display = 'none';
+  filterDatalistsForGeschoss(roomSrc.geschoss);
+}
+
+async function openBelFormWithRoom(roomSrc) {
+  await openBelForm();
+  document.getElementById('f-gebaeude').value = roomSrc.gebaeude || '';
+  document.getElementById('f-geschoss').value = roomSrc.geschoss || '';
+  document.getElementById('f-raumnr').value = roomSrc.raumnr || '';
+  document.getElementById('f-raumbezeichnung').value = roomSrc.raumbezeichnung || '';
+  document.getElementById('new-hk-mode-toggle').style.display = 'none';
+  filterDatalistsForGeschoss(roomSrc.geschoss);
 }
 
 async function saveAndNextHk() {
@@ -1091,6 +1165,14 @@ async function saveBelAndNextRoom() {
   await saveBeleuchtung(bel);
   await renderHkList();
 
+  if (currentProjektModul === 'beides') {
+    showCrossModulePrompt(bel, 'beleuchtung');
+    return;
+  }
+  await continueBelNextRoom(bel);
+}
+
+async function continueBelNextRoom(bel) {
   // Ersten Eintrag des Raums als Vorlage (nicht den zuletzt gespeicherten)
   const allBels = await getBeleuchtungByProjekt(currentProjektId);
   const firstInRoom = allBels.find(b => b.raumnr === bel.raumnr && b.geschoss === bel.geschoss);
