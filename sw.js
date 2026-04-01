@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'e1-begehung-v95';
+const CACHE_NAME = 'e1-begehung-v96';
 const ASSETS = [
   './',
   './index.html',
@@ -23,7 +23,8 @@ const ASSETS = [
   './hilfe/hzg/voreinstellbar.jpg',
   './hilfe/bel/dulux.png',
   './hilfe/bel/montageart.png',
-  './hilfe/bel/deckentypen.png'
+  './hilfe/bel/deckentypen.png',
+  './hilfe/bel/leuchtenarten.png'
 ];
 
 self.addEventListener('install', (event) => {
