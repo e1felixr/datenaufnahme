@@ -609,6 +609,12 @@
     <button class="btn btn-outline" id="btn-settings-cancel" onclick="history.back()">Abbrechen</button>
   </div>
 
+  <div class="settings-group">
+    <label>App-Update</label>
+    <button class="btn btn-outline btn-sm" onclick="forceUpdate()">Update prüfen &amp; installieren</button>
+    <p class="hint">Erzwingt das Neuladen aller App-Dateien vom Server.</p>
+  </div>
+
   <div class="settings-danger-zone">
     <div class="section-title" style="color:var(--danger)">Daten zurücksetzen</div>
     <button class="btn btn-danger" onclick="resetAllData()">Alle Daten zurücksetzen</button>
