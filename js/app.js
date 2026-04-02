@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.0.1';
-const APP_BUILD_DATE = '02.04.2026 15:13'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.0.2';
+const APP_BUILD_DATE = '02.04.2026 15:17'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2670,6 +2670,7 @@ async function registerServiceWorker() {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
       refreshing = true;
+      sessionStorage.setItem('justUpdated', '1');
       window.location.reload();
     });
   } catch (e) {
@@ -2749,6 +2750,14 @@ if (screen.orientation && screen.orientation.unlock && Math.min(screen.width, sc
 // Cache-Buster-Parameter nach erfolgreichem Update entfernen
 if (location.search.includes('_update=')) {
   history.replaceState(null, '', location.pathname + location.hash);
+}
+
+// Nach einem Update (controllerchange → reload) sofort nochmal prüfen
+// damit gestaffelte Updates (v1→v2→v3) nahtlos durchlaufen
+const justUpdated = sessionStorage.getItem('justUpdated');
+if (justUpdated) {
+  sessionStorage.removeItem('justUpdated');
+  setTimeout(() => checkForUpdate(), 500);
 }
 
 // Automatischer Update-Check 3s nach Start
