@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.19.2';
-const APP_BUILD_DATE = '02.04.2026 14:51'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.20.0';
+const APP_BUILD_DATE = '02.04.2026 14:56'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1960,22 +1960,46 @@ function updateGebaeudedatenInfo() {
   }
 }
 
-async function fetchGebaeudedatenFromServer() {
+async function fetchGebaeudedatenFromServer(silent) {
   try {
-    const resp = await fetch('gebaeudedaten.xlsx', { cache: 'no-cache' });
+    const resp = await fetch('gebaeudedaten.xlsx?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) return false;
     const buf = await resp.arrayBuffer();
-    allGebaeudeDaten = parseGebaeudedatenXlsx(buf);
+    const newHash = await hashArrayBuffer(buf);
+    const oldHash = localStorage.getItem('gebaeudedaten-server-hash') || '';
+    if (oldHash && oldHash === newHash) {
+      if (!silent) showToast('Server-Gebäudedaten unverändert');
+      return true;
+    }
+    const serverData = parseGebaeudedatenXlsx(buf);
+    // Server-Daten mit vorhandenen lokalen Daten mergen (lokal importierte Liegenschaften bleiben erhalten)
+    for (const [k, v] of Object.entries(serverData)) {
+      allGebaeudeDaten[k] = v;
+    }
     localStorage.setItem('gebaeudedaten', JSON.stringify(allGebaeudeDaten));
+    localStorage.setItem('gebaeudedaten-server-hash', newHash);
+    localStorage.setItem('gebaeudedaten-import-date', new Date().toISOString());
     renderDatalists();
+    updateGebaeudedatenInfo();
+    const keys = Object.keys(serverData);
+    const totalRaeume = keys.reduce((s, k) => s + serverData[k].raum.length, 0);
+    if (!silent) showToast(`Server: ${keys.length} Lieg., ${totalRaeume} Räume aktualisiert`);
     return true;
   } catch {
     return false;
   }
 }
 
+async function refreshGebaeudedaten() {
+  // 1) Server-Check im Hintergrund
+  const serverPromise = fetchGebaeudedatenFromServer(false);
+  // 2) Gleichzeitig Dateiauswahl öffnen
+  document.getElementById('file-gebaeudedaten').click();
+  await serverPromise;
+}
+
 async function loadGebaeudedaten() {
-  const fetched = await fetchGebaeudedatenFromServer();
+  const fetched = await fetchGebaeudedatenFromServer(true);
   if (!fetched) {
     const stored = localStorage.getItem('gebaeudedaten');
     if (stored) {

@@ -30,7 +30,7 @@
 
 <!-- ════════ SCREEN: Projektliste ════════ -->
 <div class="screen active" id="screen-projekte">
-  <div id="projekte-import-banner" class="import-banner" style="display:none" onclick="document.getElementById('file-gebaeudedaten').click()">
+  <div id="projekte-import-banner" class="import-banner" style="display:none" onclick="refreshGebaeudedaten()">
     <span id="projekte-import-text"></span>
   </div>
   <div id="projekt-list"></div>
@@ -50,7 +50,7 @@
   </div>
   <div class="action-bar">
     <button class="btn btn-module btn-sm" onclick="showSendDialog()">Versenden</button>
-    <button class="btn btn-outline btn-sm" onclick="document.getElementById('file-gebaeudedaten').click()">Gebäudedaten</button>
+    <button class="btn btn-outline btn-sm" onclick="refreshGebaeudedaten()">Gebäudedaten</button>
     <input type="file" id="file-gebaeudedaten" accept=".xlsx" style="display:none" onchange="importGebaeudedaten(this.files[0])">
     <span id="gebaeudedaten-info" class="import-info"></span>
     <span id="hk-count" class="count-badge" style="align-self:center;white-space:nowrap">0</span>
@@ -601,7 +601,7 @@
   <div class="settings-group">
     <label>Gebäudedaten</label>
     <div class="import-info-box" id="settings-import-info">Keine Gebäudedaten importiert</div>
-    <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="document.getElementById('file-gebaeudedaten').click()">Gebäudedaten importieren / aktualisieren</button>
+    <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="refreshGebaeudedaten()">Gebäudedaten importieren / aktualisieren</button>
   </div>
 
   <div class="form-actions">
