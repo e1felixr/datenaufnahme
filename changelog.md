@@ -1,5 +1,11 @@
 # Changelog
 
+### v4.1
+
+* ~~Pendel-Typ: Select → Datalist~~ **erledigt v4.1.0** (direkt/direkt-indirekt jetzt als Vorschlagfeld statt Dropdown)
+* ~~T5/T8 Auto-Fill Cursor-Bug~~ **erledigt v4.1.0** (nach Wattage→Länge auto-fill sprang Cursor zurück auf LM/Leuchte — focusin leert auto-gefüllte Felder nicht mehr)
+* ~~Update-Banner entfernt~~ **erledigt v4.0.5** (Update nur noch über Einstellungen)
+
 ### v4.0
 
 * ~~Robustes PWA-Update-System~~ **erledigt v4.0.0** (kontrollierter SW-Lifecycle: skipWaiting nur auf Anfrage, updatefound/controllerchange Listeners, Update-Banner "Neue Version verfügbar", kein Datenverlust bei Updates)

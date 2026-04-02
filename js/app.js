@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.0.5';
-const APP_BUILD_DATE = '02.04.2026 15:37'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.1.0';
+const APP_BUILD_DATE = '02.04.2026 15:41'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2556,9 +2556,11 @@ function setupAutoAdvance() {
   });
 
   // Datalist-Inputs: Klick auf gefülltes Feld → leeren, damit alle Vorschläge erscheinen
+  // Aber NICHT bei auto-gefüllten Feldern (z.B. T5/T8 Länge nach Wattage)
   formScreen.addEventListener('focusin', (e) => {
     const el = e.target;
     if (el.tagName !== 'INPUT' || !el.list || !el.value) return;
+    if (el._autoFilled) return;
     el._dlPrev = el.value;
     el.value = '';
   });
