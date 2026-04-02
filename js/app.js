@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.0.0';
-const APP_BUILD_DATE = '02.04.2026 15:11'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.0.1';
+const APP_BUILD_DATE = '02.04.2026 15:13'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1999,21 +1999,19 @@ async function refreshGebaeudedaten() {
 }
 
 async function loadGebaeudedaten() {
-  const fetched = await fetchGebaeudedatenFromServer(true);
-  if (!fetched) {
-    const stored = localStorage.getItem('gebaeudedaten');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed.gebaeude && Array.isArray(parsed.gebaeude)) {
-        allGebaeudeDaten = { Standard: parsed };
-      } else {
-        allGebaeudeDaten = parsed;
-      }
+  // Zuerst lokale Daten aus localStorage laden
+  const stored = localStorage.getItem('gebaeudedaten');
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    if (parsed.gebaeude && Array.isArray(parsed.gebaeude)) {
+      allGebaeudeDaten = { Standard: parsed };
     } else {
-      allGebaeudeDaten = {};
+      allGebaeudeDaten = parsed;
     }
-    renderDatalists();
   }
+  // Dann Server-Check (merged neue Daten rein, falls vorhanden)
+  await fetchGebaeudedatenFromServer(true);
+  renderDatalists();
 }
 
 function getActiveGebaeudeDaten() {
