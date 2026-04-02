@@ -1,5 +1,24 @@
 # Changelog
 
+### v4.0
+
+* ~~Robustes PWA-Update-System~~ **erledigt v4.0.0** (kontrollierter SW-Lifecycle: skipWaiting nur auf Anfrage, updatefound/controllerchange Listeners, Update-Banner "Neue Version verfügbar", kein Datenverlust bei Updates)
+* ~~Update-Button in Einstellungen~~ **erledigt v4.0.0** ("Update prüfen" + "Update erzwingen (Notfall)" mit Bestätigung)
+
+### v3.20
+
+* ~~Gebäudedaten: Server-XLSX automatisch prüfen~~ **erledigt v3.20.0** (refreshGebaeudedaten() prüft Server + öffnet Dateiauswahl gleichzeitig, Server-Hash, Merge mit lokalen Daten)
+* ~~Rechner-Button: "=" → "Rechner"~~ **erledigt v3.20.1** (Pillenform statt Kreis, gleicher Stil)
+
+### v3.19
+
+* ~~Gebäudedaten-Import: Hash-Vergleich und Diff-Anzeige~~ **erledigt v3.19.0** (SHA-256 Hash, bei Re-Import zeigt +neu/−entfernt, Import-Datum in Action-Bar/Einstellungen/Startseite)
+* ~~XLSX-Parser: dynamische Spaltenerkennung~~ **erledigt v3.19.1** (Spalten per Header erkannt statt fester Formate, Synonyme: Gebäude/Liegenschaft/Haus, Geschoss/Etage/Stockwerk etc.)
+
+### v3.18
+
+* ~~Hilfe-Bild Leuchtenarten~~ **erledigt v3.18.13** (?-Button bei Leuchtenart, leuchtenarten.png in SW-Cache)
+
 ### v3.17
 
 * ~~Taschenrechner bei Anz. Reihen und Leuchten/Reihe~~ **erledigt v3.17.0** (=-Button öffnet Rechner-Modal, Ausdrücke wie 14*6+11+11+64+5+8 werden live ausgewertet)

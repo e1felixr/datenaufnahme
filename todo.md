@@ -2,7 +2,7 @@ Oberhalb der gepunkteten Linie dürften stets nur die offenen Aufgaben stehen!!
 
 Offene Punkte:
 
-* Hilfe-Bilder für Beleuchtung bereitstellen: Deckentypen, Installationsarten, BAP-Leuchte, Freistrahler, Wendelanzahl (S/D/T) — müssen vom User erstellt/bereitgestellt werden. Platzhalter-Button bei Rauminfo vorhanden (hilfe/bel/raumdecken.jpg fehlt noch).
+* Hilfe-Bilder für Beleuchtung: Installationsarten-Details, Wendelanzahl (S/D/T) — müssen noch erstellt/bereitgestellt werden. (Deckentypen + Leuchtenarten + Montagearten + Dulux sind bereits vorhanden.)
 
 IMMER:
 * Bei relevanten Änderungen Version hochzählen
