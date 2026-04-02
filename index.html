@@ -28,6 +28,15 @@
   <button class="btn-settings" id="btn-settings" onclick="openSettings()" title="Einstellungen">&#9881;</button>
 </div>
 
+<!-- ════════ Update-Banner ════════ -->
+<div id="update-banner" class="update-banner" style="display:none">
+  <span>Neue Version verfügbar!</span>
+  <div>
+    <button class="btn btn-sm" style="background:#fff;color:#1565c0;font-weight:700" onclick="applyUpdate()">Jetzt aktualisieren</button>
+    <button class="btn btn-sm" style="background:transparent;color:#fff;border:1px solid #fff" onclick="dismissUpdate()">Später</button>
+  </div>
+</div>
+
 <!-- ════════ SCREEN: Projektliste ════════ -->
 <div class="screen active" id="screen-projekte">
   <div id="projekte-import-banner" class="import-banner" style="display:none" onclick="refreshGebaeudedaten()">
@@ -611,8 +620,9 @@
 
   <div class="settings-group">
     <label>App-Update</label>
-    <button class="btn btn-outline btn-sm" onclick="forceUpdate()">Update prüfen &amp; installieren</button>
-    <p class="hint">Erzwingt das Neuladen aller App-Dateien vom Server.</p>
+    <button class="btn btn-outline btn-sm" onclick="manualUpdateCheck()">Update prüfen</button>
+    <p class="hint">Prüft ob eine neue Version auf dem Server verfügbar ist. Daten bleiben erhalten.</p>
+    <button class="btn btn-outline btn-sm" style="margin-top:8px;color:#888;border-color:#ccc" onclick="if(confirm('Cache komplett löschen und App neu laden?\n\nDeine Projektdaten bleiben erhalten, aber die App muss alle Dateien neu herunterladen.'))forceUpdate()">Update erzwingen (Notfall)</button>
   </div>
 
   <div class="settings-danger-zone">

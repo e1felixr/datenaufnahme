@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.20.2';
-const APP_BUILD_DATE = '02.04.2026 15:01'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.0.0';
+const APP_BUILD_DATE = '02.04.2026 15:10'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2644,78 +2644,114 @@ function filterDatalistsForGeschoss() {
   }
 }
 
-// ── Service Worker Registrierung ──
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+// ── Service Worker Registrierung + Update-System ──
+let swRegistration = null;
+
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    swRegistration = await navigator.serviceWorker.register('sw.js');
+
+    // Prüfe ob ein Update bereits wartet (z.B. von vorherigem Besuch)
+    if (swRegistration.waiting) showUpdateBanner();
+
+    // Listener: neuer SW wird installiert
+    swRegistration.addEventListener('updatefound', () => {
+      const newWorker = swRegistration.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        // Neue Version fertig installiert + alter SW kontrolliert noch → Update bereit
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdateBanner();
+        }
+      });
+    });
+
+    // Listener: Controller wechselt (nach SKIP_WAITING) → Seite neu laden
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  } catch (e) {
+    console.error('SW-Registration fehlgeschlagen:', e);
+  }
 }
+
+function showUpdateBanner() {
+  const banner = document.getElementById('update-banner');
+  if (banner) banner.style.display = 'flex';
+}
+
+function dismissUpdate() {
+  const banner = document.getElementById('update-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+function applyUpdate() {
+  if (swRegistration && swRegistration.waiting) {
+    swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    // controllerchange-Listener macht automatisch reload
+  } else {
+    // Kein wartender SW → Fallback: Seite einfach neu laden
+    window.location.reload();
+  }
+}
+
+async function checkForUpdate() {
+  if (!swRegistration) return;
+  try {
+    await swRegistration.update();
+  } catch { /* offline */ }
+}
+
+async function manualUpdateCheck() {
+  if (!swRegistration) { showToast('Kein Service Worker aktiv'); return; }
+  showToast('Prüfe auf Updates...');
+  try {
+    await swRegistration.update();
+  } catch { /* offline */ }
+  // Wenn Update gefunden → updatefound-Listener zeigt Banner automatisch
+  setTimeout(() => {
+    if (swRegistration.waiting) {
+      showUpdateBanner();
+    } else {
+      showToast('App ist aktuell (' + APP_VERSION + ')');
+    }
+  }, 2000);
+}
+
+// Notfall-Fallback: Caches löschen + SW deregistrieren + Reload
+async function forceUpdate() {
+  showToast('Erzwinge Update...');
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    await new Promise(r => setTimeout(r, 500));
+    window.location.replace(location.pathname + '?_update=' + Date.now());
+  } catch {
+    window.location.reload();
+  }
+}
+
+registerServiceWorker();
 
 // ── Orientation: auf Tablets (>600px) Rotation freigeben ──
 if (screen.orientation && screen.orientation.unlock && Math.min(screen.width, screen.height) > 600) {
   try { screen.orientation.unlock(); } catch {}
 }
 
-// ── Automatischer Versionscheck beim Start ──
-
 // Cache-Buster-Parameter nach erfolgreichem Update entfernen
 if (location.search.includes('_update=')) {
   history.replaceState(null, '', location.pathname + location.hash);
 }
 
-// Update-Loop-Schutz: max 2 Update-Versuche innerhalb von 60s
-function canAttemptUpdate() {
-  const now = Date.now();
-  const last = parseInt(sessionStorage.getItem('updateAttempt') || '0');
-  const count = parseInt(sessionStorage.getItem('updateCount') || '0');
-  if (now - last > 60000) {
-    sessionStorage.setItem('updateCount', '1');
-    sessionStorage.setItem('updateAttempt', String(now));
-    return true;
-  }
-  if (count >= 2) {
-    console.warn('Update-Loop erkannt – überspringe Update-Check');
-    return false;
-  }
-  sessionStorage.setItem('updateCount', String(count + 1));
-  sessionStorage.setItem('updateAttempt', String(now));
-  return true;
-}
-
-async function checkForUpdate() {
-  try {
-    const resp = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
-    if (!resp.ok) return;
-    const data = await resp.json();
-    if (data.version && data.version !== APP_VERSION) {
-      console.log(`Update verfügbar: ${APP_VERSION} → ${data.version}`);
-      if (canAttemptUpdate()) {
-        await forceUpdate();
-      }
-    }
-  } catch {
-    // Offline oder Fehler
-  }
-}
-
-async function forceUpdate() {
-  try {
-    // 1. Alle Caches löschen
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k)));
-    }
-    // 2. Service Worker deregistrieren
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r => r.unregister()));
-    }
-    // 3. Kurz warten, damit SW-Deregistrierung greift
-    await new Promise(r => setTimeout(r, 300));
-    // 4. Hard Reload
-    window.location.replace(location.pathname + '?_update=' + Date.now());
-  } catch (e) {
-    // Fallback: einfacher Reload
-    window.location.reload(true);
-  }
-}
-
-setTimeout(checkForUpdate, 3000);
+// Automatischer Update-Check 3s nach Start
+setTimeout(() => checkForUpdate(), 3000);
