@@ -4,6 +4,10 @@
 
 * ~~Robustes PWA-Update-System~~ **erledigt v4.0.0** (kontrollierter SW-Lifecycle: skipWaiting nur auf Anfrage, updatefound/controllerchange Listeners, Update-Banner "Neue Version verfügbar", kein Datenverlust bei Updates)
 * ~~Update-Button in Einstellungen~~ **erledigt v4.0.0** ("Update prüfen" + "Update erzwingen (Notfall)" mit Bestätigung)
+* ~~Gebäudedaten beim Start immer aus localStorage laden~~ **erledigt v4.0.1** (erst localStorage, dann Server-Merge)
+* ~~Nach Update sofort auf neuere Version prüfen~~ **erledigt v4.0.2** (justUpdated-Flag für gestaffelte Updates)
+* ~~Update-Kette: Folge-Updates automatisch durchziehen~~ **erledigt v4.0.3** (autoUpdate-Flag nach User-Zustimmung, kein doppeltes Banner)
+* ~~manualUpdateCheck zeigt Server-Version~~ **erledigt v4.0.4** (version.json abfragen statt gecachte APP_VERSION anzeigen)
 
 ### v3.20
 
