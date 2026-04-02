@@ -954,18 +954,17 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
   height: 18px;
-  border-radius: 50%;
+  border-radius: 9px;
   border: 1.5px solid var(--module-color);
   background: var(--module-color-light);
   color: var(--module-color);
-  font-size: .7rem;
+  font-size: .6rem;
   font-weight: 700;
   cursor: pointer;
   margin-left: 4px;
   vertical-align: middle;
-  padding: 0;
+  padding: 0 5px;
   line-height: 1;
 }
 .btn-calc-inline:active {
