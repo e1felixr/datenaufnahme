@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.0.2';
-const APP_BUILD_DATE = '02.04.2026 15:17'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.0.3';
+const APP_BUILD_DATE = '02.04.2026 15:19'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2650,17 +2650,28 @@ async function registerServiceWorker() {
   try {
     swRegistration = await navigator.serviceWorker.register('sw.js');
 
-    // Prüfe ob ein Update bereits wartet (z.B. von vorherigem Besuch)
-    if (swRegistration.waiting) showUpdateBanner();
+    // Prüfe ob ein Update bereits wartet
+    if (swRegistration.waiting) {
+      if (sessionStorage.getItem('autoUpdate')) {
+        // User hat bereits zugestimmt → automatisch weiter-updaten
+        swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        showUpdateBanner();
+      }
+    }
 
     // Listener: neuer SW wird installiert
     swRegistration.addEventListener('updatefound', () => {
       const newWorker = swRegistration.installing;
       if (!newWorker) return;
       newWorker.addEventListener('statechange', () => {
-        // Neue Version fertig installiert + alter SW kontrolliert noch → Update bereit
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          showUpdateBanner();
+          if (sessionStorage.getItem('autoUpdate')) {
+            // Ketten-Update: automatisch aktivieren
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          } else {
+            showUpdateBanner();
+          }
         }
       });
     });
@@ -2689,6 +2700,9 @@ function dismissUpdate() {
 }
 
 function applyUpdate() {
+  // Flag setzen: Folge-Updates automatisch durchziehen ohne nochmal zu fragen
+  sessionStorage.setItem('autoUpdate', '1');
+  dismissUpdate();
   if (swRegistration && swRegistration.waiting) {
     swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
     // controllerchange-Listener macht automatisch reload
@@ -2752,12 +2766,19 @@ if (location.search.includes('_update=')) {
   history.replaceState(null, '', location.pathname + location.hash);
 }
 
-// Nach einem Update (controllerchange → reload) sofort nochmal prüfen
-// damit gestaffelte Updates (v1→v2→v3) nahtlos durchlaufen
-const justUpdated = sessionStorage.getItem('justUpdated');
-if (justUpdated) {
+// Nach einem Update sofort nochmal prüfen, damit gestaffelte Updates nahtlos durchlaufen
+if (sessionStorage.getItem('justUpdated')) {
   sessionStorage.removeItem('justUpdated');
-  setTimeout(() => checkForUpdate(), 500);
+  // Sofort nach neuerer Version suchen — autoUpdate-Flag sorgt für automatische Aktivierung
+  setTimeout(async () => {
+    await checkForUpdate();
+    // Wenn nach dem Check kein weiterer SW wartet → fertig, Flag aufräumen
+    setTimeout(() => {
+      if (!swRegistration || !swRegistration.waiting) {
+        sessionStorage.removeItem('autoUpdate');
+      }
+    }, 2000);
+  }, 500);
 }
 
 // Automatischer Update-Check 3s nach Start
