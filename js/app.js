@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.20.1';
-const APP_BUILD_DATE = '02.04.2026 14:58'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.20.2';
+const APP_BUILD_DATE = '02.04.2026 15:01'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2697,16 +2697,25 @@ async function checkForUpdate() {
 }
 
 async function forceUpdate() {
-  if ('caches' in window) {
-    const keys = await caches.keys();
-    await Promise.all(keys.map(k => caches.delete(k)));
+  try {
+    // 1. Alle Caches löschen
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    // 2. Service Worker deregistrieren
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    // 3. Kurz warten, damit SW-Deregistrierung greift
+    await new Promise(r => setTimeout(r, 300));
+    // 4. Hard Reload
+    window.location.replace(location.pathname + '?_update=' + Date.now());
+  } catch (e) {
+    // Fallback: einfacher Reload
+    window.location.reload(true);
   }
-  if ('serviceWorker' in navigator) {
-    const regs = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(regs.map(r => r.unregister()));
-  }
-  // Cache-Buster: erzwingt frische Dateien auch bei CDN-Caching
-  window.location.href = location.pathname + '?_update=' + Date.now();
 }
 
 setTimeout(checkForUpdate, 3000);
