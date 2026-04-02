@@ -2,7 +2,7 @@ Oberhalb der gepunkteten Linie dürften stets nur die offenen Aufgaben stehen!!
 
 Offene Punkte:
 
-* Hilfe-Bilder für Beleuchtung: Installationsarten-Details, Wendelanzahl (S/D/T) — müssen noch erstellt/bereitgestellt werden. (Deckentypen + Leuchtenarten + Montagearten + Dulux sind bereits vorhanden.)
+(keine offenen Punkte)
 
 IMMER:
 * Bei relevanten Änderungen Version hochzählen
