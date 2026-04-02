@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.19.0';
-const APP_BUILD_DATE = '02.04.2026 14:43'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.19.1';
+const APP_BUILD_DATE = '02.04.2026 14:46'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1808,33 +1808,47 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
     const geschossRaum = {}; // Geschoss → [Raum-Nrn]
     let lastGeb = '', lastGes = ''; // für altes Format: Werte über leere Zeilen merken
 
-    // Format erkennen anhand Header-Zeile
+    // Spalten dynamisch anhand Header-Zeile erkennen
     const header = (rows[0] || []).map(h => String(h || '').trim().toLowerCase());
-    const isNewFormat = header[0] && header[0].includes('geschoss') && header[1] && header[1].includes('raum');
+    const col = { geb: -1, ges: -1, raum: -1, nutzung: -1, flaeche: -1, barcode: -1 };
+    for (let c = 0; c < header.length; c++) {
+      const h = header[c];
+      if (!h) continue;
+      if (col.geb < 0 && /geb[äa]ude|liegenschaft|haus|objekt|standort/.test(h)) col.geb = c;
+      else if (col.ges < 0 && /geschoss|etage|stockwerk|ebene/.test(h)) col.ges = c;
+      else if (col.raum < 0 && /raum/.test(h)) col.raum = c;
+      else if (col.nutzung < 0 && /nutzung|bezeichnung|raumbezeichnung|funktion|typ/.test(h)) col.nutzung = c;
+      else if (col.flaeche < 0 && /fl[äa]che|m²|qm|boden|gr[öo]ße/.test(h)) col.flaeche = c;
+      else if (col.barcode < 0 && /barcode|code|kennung|id/.test(h)) col.barcode = c;
+    }
+    const hasHeader = col.raum >= 0 || col.ges >= 0;
 
-    for (let i = 1; i < rows.length; i++) {
+    for (let i = hasHeader ? 1 : 0; i < rows.length; i++) {
       const row = rows[i];
+      const cell = (c) => c >= 0 && row[c] != null ? String(row[c]).trim() : '';
 
-      if (isNewFormat) {
-        // Neues Format: A=Geschoss, B=Raum Nr., C=Raumbezeichnung, D=Bodenfläche
-        const ges = (row[0] != null && String(row[0]).trim()) ? String(row[0]).trim() : '';
-        if (ges) geschoss.add(ges);
-        if (row[1] != null && String(row[1]).trim()) {
-          const rNr = String(row[1]).trim();
-          raum.add(rNr);
-          raumDetails[rNr] = {
-            nutzung: row[2] != null ? String(row[2]).trim() : '',
-            flaeche: row[3] != null ? String(row[3]).trim() : '',
-            barcode: ''
+      if (hasHeader) {
+        // Dynamisches Format: Spalten per Header erkannt
+        const g = cell(col.geb);
+        const s = cell(col.ges);
+        const r = cell(col.raum);
+        if (g) { lastGeb = g; gebaeude.add(g); }
+        if (s) { lastGes = s; geschoss.add(s); }
+        if (r) {
+          raum.add(r);
+          raumDetails[r] = {
+            nutzung: cell(col.nutzung),
+            flaeche: cell(col.flaeche),
+            barcode: cell(col.barcode)
           };
+          const ges = s || lastGes;
           if (ges) {
             if (!geschossRaum[ges]) geschossRaum[ges] = [];
-            if (!geschossRaum[ges].includes(rNr)) geschossRaum[ges].push(rNr);
+            if (!geschossRaum[ges].includes(r)) geschossRaum[ges].push(r);
           }
         }
       } else {
-        // Altes Format: A=Gebäude, C=Geschoss, E=Raum, F=Fläche, G=Nutzung, H=Barcode
-        // Gebäude/Geschoss stehen oft nur in der ersten Zeile einer Gruppe → lastGeb/lastGes merken
+        // Fallback altes Format ohne erkennbaren Header: A=Gebäude, C=Geschoss, E=Raum, F=Fläche, G=Nutzung, H=Barcode
         if (row[0] != null && String(row[0]).trim()) { lastGeb = String(row[0]).trim(); gebaeude.add(lastGeb); }
         if (row[2] != null && String(row[2]).trim()) { lastGes = String(row[2]).trim(); geschoss.add(lastGes); }
         if (row[4] != null && String(row[4]).trim()) {
