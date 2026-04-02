@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.0.3';
-const APP_BUILD_DATE = '02.04.2026 15:19'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.0.4';
+const APP_BUILD_DATE = '02.04.2026 15:21'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2725,12 +2725,23 @@ async function manualUpdateCheck() {
   try {
     await swRegistration.update();
   } catch { /* offline */ }
-  // Wenn Update gefunden → updatefound-Listener zeigt Banner automatisch
-  setTimeout(() => {
+  setTimeout(async () => {
     if (swRegistration.waiting) {
       showUpdateBanner();
+      return;
+    }
+    // Server-Version prüfen statt lokale APP_VERSION zu zeigen
+    let serverVersion = APP_VERSION;
+    try {
+      const resp = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (resp.ok) { const d = await resp.json(); if (d.version) serverVersion = d.version; }
+    } catch {}
+    if (serverVersion !== APP_VERSION) {
+      showToast('Update auf ' + serverVersion + ' wird vorbereitet...');
+      sessionStorage.setItem('autoUpdate', '1');
+      forceUpdate();
     } else {
-      showToast('App ist aktuell (' + APP_VERSION + ')');
+      showToast('App ist aktuell (' + serverVersion + ')');
     }
   }, 2000);
 }
