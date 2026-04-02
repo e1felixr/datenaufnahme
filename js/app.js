@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v3.18.13';
-const APP_BUILD_DATE = '01.04.2026 11:33'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v3.19.0';
+const APP_BUILD_DATE = '02.04.2026 14:43'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1865,19 +1865,85 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
   return result;
 }
 
-function importGebaeudedaten(file) {
+async function hashArrayBuffer(buf) {
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function importGebaeudedaten(file) {
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    allGebaeudeDaten = parseGebaeudedatenXlsx(e.target.result);
-    localStorage.setItem('gebaeudedaten', JSON.stringify(allGebaeudeDaten));
-    renderDatalists();
-    const keys = Object.keys(allGebaeudeDaten);
-    const totalRaeume = keys.reduce((s, k) => s + allGebaeudeDaten[k].raum.length, 0);
+  const buf = await file.arrayBuffer();
+  const newHash = await hashArrayBuffer(buf);
+  const oldHash = localStorage.getItem('gebaeudedaten-hash') || '';
+  const oldData = oldHash ? allGebaeudeDaten : null;
+
+  allGebaeudeDaten = parseGebaeudedatenXlsx(buf);
+  localStorage.setItem('gebaeudedaten', JSON.stringify(allGebaeudeDaten));
+  localStorage.setItem('gebaeudedaten-hash', newHash);
+  localStorage.setItem('gebaeudedaten-import-date', new Date().toISOString());
+  renderDatalists();
+  updateGebaeudedatenInfo();
+
+  const keys = Object.keys(allGebaeudeDaten);
+  const totalRaeume = keys.reduce((s, k) => s + allGebaeudeDaten[k].raum.length, 0);
+
+  if (oldHash && oldHash === newHash) {
+    showToast('Gebäudedaten unverändert — keine Aktualisierung nötig');
+  } else if (oldData) {
+    const diff = diffGebaeudeDaten(oldData, allGebaeudeDaten);
+    showToast(`Aktualisiert: ${totalRaeume} Räume (${diff})`);
+  } else {
     showToast(`${keys.length} Liegenschaft(en), ${totalRaeume} Räume importiert`);
-  };
-  reader.readAsArrayBuffer(file);
+  }
   document.getElementById('file-gebaeudedaten').value = '';
+}
+
+function diffGebaeudeDaten(oldD, newD) {
+  const oldRaeume = new Set(); const newRaeume = new Set();
+  for (const k of Object.keys(oldD)) oldD[k].raum.forEach(r => oldRaeume.add(k + '/' + r));
+  for (const k of Object.keys(newD)) newD[k].raum.forEach(r => newRaeume.add(k + '/' + r));
+  const added = [...newRaeume].filter(r => !oldRaeume.has(r)).length;
+  const removed = [...oldRaeume].filter(r => !newRaeume.has(r)).length;
+  const parts = [];
+  if (added) parts.push(`+${added} neu`);
+  if (removed) parts.push(`−${removed} entfernt`);
+  return parts.length ? parts.join(', ') : 'Struktur geändert';
+}
+
+function updateGebaeudedatenInfo() {
+  const dateStr = localStorage.getItem('gebaeudedaten-import-date');
+  const keys = Object.keys(allGebaeudeDaten);
+  const totalRaeume = keys.reduce((s, k) => s + allGebaeudeDaten[k].raum.length, 0);
+  const noData = !dateStr;
+  let fmt = '';
+  if (!noData) {
+    const d = new Date(dateStr);
+    fmt = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Action-Bar Info
+  const el = document.getElementById('gebaeudedaten-info');
+  if (el) el.textContent = noData ? '' : `${fmt} · ${totalRaeume} R.`;
+
+  // Settings Info
+  const sEl = document.getElementById('settings-import-info');
+  if (sEl) {
+    sEl.textContent = noData
+      ? 'Keine Gebäudedaten importiert'
+      : `Letzter Import: ${fmt}\n${keys.length} Liegenschaft(en), ${totalRaeume} Räume`;
+    sEl.style.whiteSpace = 'pre-line';
+  }
+
+  // Startseite Banner
+  const banner = document.getElementById('projekte-import-banner');
+  const bannerText = document.getElementById('projekte-import-text');
+  if (banner && bannerText) {
+    banner.style.display = '';
+    bannerText.textContent = noData
+      ? 'Gebäudedaten importieren (tippen zum Auswählen)'
+      : `Gebäudedaten: ${fmt} · ${keys.length} Lieg., ${totalRaeume} Räume (tippen zum Aktualisieren)`;
+  }
 }
 
 async function fetchGebaeudedatenFromServer() {
@@ -2278,6 +2344,7 @@ function openSettings() {
   document.getElementById('set-fieldpadding').value = s.fieldPadding;
   document.getElementById('val-fieldpadding').textContent = s.fieldPadding + 'px';
   document.getElementById('btn-settings-cancel').style.display = settingsReady ? '' : 'none';
+  updateGebaeudedatenInfo();
 
   navigate('screen-settings');
 }
@@ -2354,6 +2421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateDropdowns();
     setupDatalistFilters();
     await loadGebaeudedaten();
+    updateGebaeudedatenInfo();
     await renderProjekte();
 
     // HK Event-Listener
