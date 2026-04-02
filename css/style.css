@@ -582,6 +582,17 @@ body {
   color: #B8860B;
   border-bottom-color: #FFF9C4;
 }
+.compact-toggle {
+  float: right;
+  font-size: .75rem;
+  font-weight: 400;
+  color: #888;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.compact-toggle input { margin: 0; }
 
 /* ── Toast ── */
 .toast {

@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.1.0';
-const APP_BUILD_DATE = '02.04.2026 15:41'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.2.0';
+const APP_BUILD_DATE = '02.04.2026 15:57'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1102,8 +1102,17 @@ function readBelFormIntoObj(bel) {
   bel.raumbezeichnung = document.getElementById('f-raumbezeichnung').value.trim();
   bel.gruppenNr = document.getElementById('f-gruppenNr').value || bel.gruppenNr || '';
   bel.raumdecke = document.getElementById('f-raumdecke').value;
-  bel.anzahlReihen = document.getElementById('f-anzahlReihen').value.trim();
-  bel.leuchtenJeReihe = document.getElementById('f-leuchtenJeReihe').value.trim();
+  if (document.getElementById('f-compact-mode').checked) {
+    // Kompakt: Anz. Leuchten → als 1 Reihe mit X Leuchten speichern
+    const anz = document.getElementById('f-anzahlLeuchten').value.trim();
+    bel.anzahlReihen = anz ? '1' : '';
+    bel.leuchtenJeReihe = anz || '';
+  } else {
+    bel.anzahlReihen = document.getElementById('f-anzahlReihen').value.trim();
+    bel.leuchtenJeReihe = document.getElementById('f-leuchtenJeReihe').value.trim();
+    // Default: wenn Leuchten/Reihe angegeben aber Anz. Reihen leer → 1
+    if (!bel.anzahlReihen && bel.leuchtenJeReihe) bel.anzahlReihen = '1';
+  }
   bel.leuchtmittelJeLeuchte = document.getElementById('f-leuchtmittelJeLeuchte').value.trim();
   bel.installationsart = document.getElementById('f-installationsart').value;
   bel.installationsartSub = document.getElementById('f-installationsartSub').value;
@@ -1321,10 +1330,18 @@ const MONTAGE_LEUCHTENART_MAP = {
   '3Phasen-Schiene': ['Spot', 'Strahler']
 };
 
+function toggleCompactMode(on) {
+  const section = document.getElementById('bel-form-section');
+  section.querySelectorAll('.bel-full-only').forEach(el => el.style.display = on ? 'none' : '');
+  section.querySelectorAll('.bel-compact-only').forEach(el => el.style.display = on ? '' : 'none');
+}
+
 function updateInstallationsartFields() {
   const art = document.getElementById('f-installationsart').value;
-  document.getElementById('group-installationsartSub').style.display = art === 'Pendel' ? 'block' : 'none';
-  if (art !== 'Pendel') document.getElementById('f-installationsartSub').value = '';
+  const leuchtenart = document.getElementById('f-leuchtenart').value;
+  const showPendel = art === 'Pendel' && leuchtenart === 'Langfeldleuchte';
+  document.getElementById('group-installationsartSub').style.display = showPendel ? 'block' : 'none';
+  if (!showPendel) document.getElementById('f-installationsartSub').value = '';
 
   // Leuchtenart-Optionen filtern bei bestimmten Montagearten
   const sel = document.getElementById('f-leuchtenart');

@@ -257,8 +257,10 @@
     <input type="hidden" id="f-gruppenNr" value="">
 
     <!-- Leuchteninfo -->
-    <div class="section-title section-title-bel">Leuchteninfo</div>
-    <div class="form-row">
+    <div class="section-title section-title-bel">Leuchteninfo
+      <label class="compact-toggle"><input type="checkbox" id="f-compact-mode" onchange="toggleCompactMode(this.checked)"> kompakt</label>
+    </div>
+    <div class="form-row bel-full-only">
       <div class="form-group">
         <label>Montageart <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/montageart.png','Montagearten')" title="Hilfe: Montagearten">?</button></label>
         <input type="text" id="f-installationsart" list="dl-installationsart" onchange="updateInstallationsartFields()" autocomplete="off">
@@ -268,7 +270,7 @@
       </div>
       <div class="form-group">
         <label>Leuchtenart <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/leuchtenarten.png','Leuchtenarten')" title="Hilfe: Leuchtenarten">?</button></label>
-        <select id="f-leuchtenart" onchange="checkBelSonstigeHinweis()">
+        <select id="f-leuchtenart" onchange="checkBelSonstigeHinweis();updateInstallationsartFields()">
           <option value="">Bitte wählen</option>
           <option value="Langfeldleuchte">Langfeldleuchte</option>
           <option value="Downlight">Downlight</option>
@@ -290,7 +292,11 @@
         <option value="direkt"><option value="direkt-indirekt">
       </datalist>
     </div>
-    <div class="form-row-3">
+    <div class="form-group bel-compact-only" style="display:none">
+      <label>Anz. Leuchten</label>
+      <input type="number" id="f-anzahlLeuchten" inputmode="numeric" min="1" placeholder="z.B. 12">
+    </div>
+    <div class="form-row-3 bel-full-only">
       <div class="form-group">
         <label>Anz. Reihen <button class="btn-calc-inline" onclick="openCalc('f-anzahlReihen')" title="Taschenrechner">Rechner</button></label>
         <input type="number" id="f-anzahlReihen" inputmode="numeric" min="1" placeholder="z.B. 2">
@@ -317,7 +323,7 @@
         <label>VSG <button class="btn-help-inline" onclick="event.stopPropagation();showInfo('VSG erkennen','VSG = Vorschaltgerät\n\nTipp 1: Kamera auf die Leuchte richten und auf dem Handybildschirm schauen.\nFlimmert das Bild? → KVG/VVG (konventionell)\nWenig Flimmern? → EVG (elektronisch)\n\nTipp 2: Bei Kompaktleuchtstofflampen (Dulux, PL-S/C/T) Sockelbezeichnung prüfen:\n• q in Sockelbez. → 4-Pin → immer EVG\n• d in Sockelbez. → 2-Pin → immer KVG\n\nHinweis: /E-Suffix bei Dulux = EVG-Typ')" title="Hilfe: VSG erkennen">?</button></label>
         <input type="text" id="f-vorschaltgeraet" list="dl-vorschaltgeraet" onchange="updateLeuchtmittelFields()" autocomplete="off">
         <datalist id="dl-vorschaltgeraet">
-          <option value="KVG/VVG"><option value="EVG">
+          <option value="KVG/VVG"><option value="EVG"><option value="?">
         </datalist>
       </div>
       <div class="form-group">
@@ -443,24 +449,6 @@
 
     <!-- Sonstiges -->
     <div class="section-title section-title-bel">Sonstiges</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Raumdecke <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/deckentypen.png','Deckentypen')" title="Hilfe: Deckentypen">?</button></label>
-        <select id="f-raumdecke" onchange="checkBelSonstigeHinweis()">
-          <option value="">Bitte wählen</option>
-          <option value="nicht auffällig">nicht auffällig</option>
-          <option value="abgehängt">abgehängt</option>
-          <option value="Holz">Holz</option>
-          <option value="Metall">Metall</option>
-          <option value="Akustikdecke">Akustikdecke</option>
-          <option value="Sonstige">Sonstige &rarr; Foto!</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Bemerkung</label>
-        <textarea id="f-bel-bemerkung" rows="1" placeholder="z.B. besondere Lichtfarbe"></textarea>
-      </div>
-    </div>
     <div class="zustand-grid-2col">
         <label class="checkbox-row">
           <input type="checkbox" id="f-zustand-erreichbar" onchange="checkBelSonstigeHinweis();toggleLph()">
@@ -495,6 +483,24 @@
     <div id="group-lph" style="display:none;margin-top:4px">
       <label>LPH [m] <button class="btn-help-inline" onclick="event.stopPropagation();showInfo('LPH','LPH = Lichtpunkthöhe\n\nHöhe der Leuchte über dem Boden in Metern.\nWichtig für die Planung von Wartung und Leuchtmitteltausch.')" title="Hilfe: LPH">?</button></label>
       <input type="text" id="f-lph" inputmode="decimal" placeholder="z.B. 4.5" autocomplete="off">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Raumdecke <button class="btn-help-inline" onclick="openHelpImage('hilfe/bel/deckentypen.png','Deckentypen')" title="Hilfe: Deckentypen">?</button></label>
+        <select id="f-raumdecke" onchange="checkBelSonstigeHinweis()">
+          <option value="">Bitte wählen</option>
+          <option value="nicht auffällig">nicht auffällig</option>
+          <option value="abgehängt">abgehängt</option>
+          <option value="Holz">Holz</option>
+          <option value="Metall">Metall</option>
+          <option value="Akustikdecke">Akustikdecke</option>
+          <option value="Sonstige">Sonstige &rarr; Foto!</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Bemerkung</label>
+        <textarea id="f-bel-bemerkung" rows="1" placeholder="z.B. besondere Lichtfarbe"></textarea>
+      </div>
     </div>
 
     <!-- Bel Sonstige-Hinweis -->

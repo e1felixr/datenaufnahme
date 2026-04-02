@@ -1,5 +1,13 @@
 # Changelog
 
+### v4.2
+
+* ~~Pendel-Typ nur bei Langfeldleuchte~~ **erledigt v4.2.0** (Sichtbarkeit prüft Montageart=Pendel UND Leuchtenart=Langfeldleuchte)
+* ~~Kompakte Eingabe~~ **erledigt v4.2.0** (Toggle "kompakt" bei Leuchteninfo: nur Anz. Leuchten, LM/Leuchte, VSG, Leuchtmittel, Wattage)
+* ~~Anz. Reihen Default = 1~~ **erledigt v4.2.0** (wenn Leuchten/Reihe gefüllt aber Reihen leer → 1×X)
+* ~~VSG: Option "?"~~ **erledigt v4.2.0** (dritte Option in Datalist wenn nicht bestimmbar)
+* ~~Zustand-Checkboxen über Raumdecke+Bemerkung~~ **erledigt v4.2.0** (6 Checkboxen direkt nach "Sonstiges"-Titel)
+
 ### v4.1
 
 * ~~Pendel-Typ: Select → Datalist~~ **erledigt v4.1.0** (direkt/direkt-indirekt jetzt als Vorschlagfeld statt Dropdown)
