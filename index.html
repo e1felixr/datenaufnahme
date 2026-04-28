@@ -317,6 +317,14 @@
       </div>
     </div>
 
+    <!-- Maßnahme -->
+    <div class="section-title section-title-bel">Maßnahme</div>
+    <div class="mode-toggle">
+      <button type="button" class="mode-btn active" id="btn-massnahme-konversion" onclick="setMassnahmeType('konversion')">Leuchtmitteltausch</button>
+      <button type="button" class="mode-btn" id="btn-massnahme-neue" onclick="setMassnahmeType('neue-leuchte')">Neue Leuchte</button>
+    </div>
+    <input type="hidden" id="f-konversionTyp" value="konversion">
+
     <!-- VSG + Leuchtmittel -->
     <div class="form-row">
       <div class="form-group">

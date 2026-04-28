@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.2.0';
-const APP_BUILD_DATE = '02.04.2026 15:57'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.3.0';
+const APP_BUILD_DATE = '28.04.2026 15:52'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -404,9 +404,13 @@ async function renderHkList() {
       const chipFotos = fotoCount > 0 ? `<span class="chip-fotos">${'📷'.repeat(fotoCount)}</span>` : '';
       const lmInfo = bel.leuchtmittelTyp || bel.leuchtmittelKategorie || '';
       const artInfo = bel.leuchtenart || '';
+      const massnahmeBadge = bel.konversionTyp === 'neue-leuchte'
+        ? `<span class="badge" style="background:#FFE082;color:#5D4037" title="Neue Leuchte">N</span>`
+        : `<span class="badge" style="background:#C8E6C9;color:#1B5E20" title="Leuchtmitteltausch">K</span>`;
       html += `
         <div class="room-bel-chip" onclick="openBelForm('${bel.id}')">
           <span class="room-bel-nr">${esc(artInfo || 'BEL')}</span>
+          ${massnahmeBadge}
           ${lmInfo ? `<span class="badge" style="background:#FFF9C4;color:#B8860B">${esc(lmInfo)}</span>` : ''}
           ${chipFotos}
           <button class="room-bel-del" onclick="event.stopPropagation();confirmDeleteBel('${bel.id}')" title="Löschen">&times;</button>
@@ -1012,6 +1016,16 @@ async function openBelForm(belId) {
   navigate('screen-form');
 }
 
+function setMassnahmeType(type) {
+  const t = type === 'neue-leuchte' ? 'neue-leuchte' : 'konversion';
+  const hidden = document.getElementById('f-konversionTyp');
+  if (hidden) hidden.value = t;
+  const btnK = document.getElementById('btn-massnahme-konversion');
+  const btnN = document.getElementById('btn-massnahme-neue');
+  if (btnK) btnK.classList.toggle('active', t === 'konversion');
+  if (btnN) btnN.classList.toggle('active', t === 'neue-leuchte');
+}
+
 function fillBelForm(bel) {
   const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
   const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
@@ -1030,6 +1044,7 @@ function fillBelForm(bel) {
   updateInstallationsartFields();
   setVal('f-leuchtenart', bel.leuchtenart || '');
   filterLeuchtmittelByLeuchtenart();
+  setMassnahmeType(bel.konversionTyp || 'konversion');
   setVal('f-vorschaltgeraet', bel.vorschaltgeraet || '');
   setVal('f-leuchtmittelKategorie', bel.leuchtmittelKategorie || '');
 
@@ -1117,6 +1132,7 @@ function readBelFormIntoObj(bel) {
   bel.installationsart = document.getElementById('f-installationsart').value;
   bel.installationsartSub = document.getElementById('f-installationsartSub').value;
   bel.leuchtenart = document.getElementById('f-leuchtenart').value;
+  bel.konversionTyp = (document.getElementById('f-konversionTyp')?.value === 'neue-leuchte') ? 'neue-leuchte' : 'konversion';
   bel.leuchtmittelKategorie = document.getElementById('f-leuchtmittelKategorie').value.toLowerCase();
   bel.vorschaltgeraet = document.getElementById('f-vorschaltgeraet').value;
 
@@ -1214,7 +1230,8 @@ async function saveBelAndNextGroup() {
     installationsartSub: bel.installationsartSub,
     leuchtenart: bel.leuchtenart,
     leuchtmittelKategorie: bel.leuchtmittelKategorie,
-    vorschaltgeraet: bel.vorschaltgeraet
+    vorschaltgeraet: bel.vorschaltgeraet,
+    konversionTyp: bel.konversionTyp
   });
   nextBel.gruppenNr = (Number(bel.gruppenNr) || 0) + 1;
 

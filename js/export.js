@@ -54,6 +54,7 @@ function hkToRow(hk) {
 
 const BEL_EXPORT_HEADERS = [
   'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'Gruppen-Nr.',
+  'Maßnahme',
   'Raumdecke', 'Anzahl Reihen', 'Leuchten je Reihe', 'Leuchtmittel je Leuchte',
   'Installationsart', 'Installationsart Detail', 'Leuchtenart',
   'Leuchtmittel Kategorie', 'Leuchtmittel Typ', 'Leuchtmittel Länge [mm]', 'Leuchtmittel Wattage [W]',
@@ -64,6 +65,7 @@ const BEL_EXPORT_HEADERS = [
 
 const BEL_EXPORT_FIELDS = [
   'gebaeude', 'geschoss', 'raumnr', 'raumbezeichnung', 'gruppenNr',
+  'konversionTyp',
   'raumdecke', 'anzahlReihen', 'leuchtenJeReihe', 'leuchtmittelJeLeuchte',
   'installationsart', 'installationsartSub', 'leuchtenart',
   'leuchtmittelKategorie', 'leuchtmittelTyp', 'leuchtmittelLaenge', 'leuchtmittelWattage',
@@ -85,6 +87,7 @@ function belToRow(bel) {
   const row = BEL_EXPORT_FIELDS.map(f => {
     const val = bel[f];
     if (f === 'erstelltAm') return formatErstelltAm(val);
+    if (f === 'konversionTyp') return val === 'neue-leuchte' ? 'Neue Leuchte' : 'Leuchtmitteltausch';
     if (typeof val === 'boolean') return val ? 'Ja' : 'Nein';
     return val != null ? String(val) : '';
   });

@@ -1,5 +1,9 @@
 # Changelog
 
+### v4.3
+
+* ~~BEL: Maßnahmen-Auswahl Leuchtmitteltausch / Neue Leuchte~~ **erledigt v4.3.0** (Mode-Toggle nach Leuchteninfo, Default Leuchtmitteltausch, K/N-Badge in Raum-Übersicht, neue Spalte "Maßnahme" im Excel-Export, Default wird zur nächsten Leuchte mitgenommen)
+
 ### v4.2
 
 * ~~Pendel-Typ nur bei Langfeldleuchte~~ **erledigt v4.2.0** (Sichtbarkeit prüft Montageart=Pendel UND Leuchtenart=Langfeldleuchte)

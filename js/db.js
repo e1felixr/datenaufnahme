@@ -161,6 +161,7 @@ function newBeleuchtung(projektId, defaults) {
     raumnr: defaults?.raumnr || '',
     raumbezeichnung: defaults?.raumbezeichnung || '',
     gruppenNr: defaults?.gruppenNr || '',
+    konversionTyp: defaults?.konversionTyp || 'konversion',
     raumdecke: defaults?.raumdecke || '',
     anzahlReihen: defaults?.anzahlReihen || '',
     leuchtenJeReihe: defaults?.leuchtenJeReihe || '',
