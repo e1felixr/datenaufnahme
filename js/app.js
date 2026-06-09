@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.4.0';
-const APP_BUILD_DATE = '09.06.2026 09:54'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.5.0';
+const APP_BUILD_DATE = '09.06.2026 15:29'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -84,7 +84,9 @@ let currentProjektModul = 'beleuchtung'; // 'hk' | 'beleuchtung' | 'beides'
 let currentHkId = null;
 let currentBelId = null;
 let formPhotos = [null, null];
+let formPhotoTimestamps = [null, null];
 let belFormPhotos = [null, null];
+let belFormPhotoTimestamps = [null, null];
 let settingsReady = false;
 let allGebaeudeDaten = {};
 let currentLiegenschaft = null;
@@ -553,9 +555,11 @@ function fillForm(hk) {
   updateTypFields();
 
   formPhotos = [null, null];
+  formPhotoTimestamps = [null, null];
   if (hk.fotos && hk.fotos.length > 0) {
     formPhotos = hk.fotos.map(f => f || null);
-    while (formPhotos.length < 2) formPhotos.push(null);
+    formPhotoTimestamps = formPhotos.map((_, i) => (hk.fotoTimestamps && hk.fotoTimestamps[i]) || null);
+    while (formPhotos.length < 2) { formPhotos.push(null); formPhotoTimestamps.push(null); }
   }
   renderPhotoSlots();
   checkSonstigeHinweis();
@@ -690,6 +694,7 @@ function readFormIntoHk(hk) {
   hk.strang = document.getElementById('f-strang').value.trim();
   hk.bemerkung = document.getElementById('f-bemerkung').value.trim();
   hk.fotos = formPhotos.filter(Boolean);
+  hk.fotoTimestamps = formPhotoTimestamps.filter((_, i) => !!formPhotos[i]);
   hk.erfasser = localStorage.getItem('erfasser-name') || '';
   return hk;
 }
@@ -739,7 +744,19 @@ function getBelStandard() {
   return stored ? JSON.parse(stored) : null;
 }
 
+// Pflichtfeld-Prüfung: leere Raumnummer abfangen, ggf. "k. A." setzen.
+function ensureRaumnrOrConfirm() {
+  const input = document.getElementById('f-raumnr');
+  const val = (input?.value || '').trim();
+  if (val) return true;
+  const ok = confirm('Keine Raumnummer eingegeben.\n\nOK = mit Raumnummer „k. A." speichern\nAbbrechen = zurück zum Feld');
+  if (!ok) { input?.focus(); return false; }
+  if (input) input.value = 'k. A.';
+  return true;
+}
+
 async function saveForm() {
+  if (!ensureRaumnrOrConfirm()) return;
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
@@ -750,6 +767,7 @@ async function saveForm() {
 }
 
 async function saveAndNextRoom() {
+  if (!ensureRaumnrOrConfirm()) return;
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
@@ -918,6 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function saveAndNextHk() {
+  if (!ensureRaumnrOrConfirm()) return;
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
@@ -937,6 +956,9 @@ async function saveAndNextHk() {
   nextHk.ventilform = hk.ventilform;
   nextHk.einbausituation = hk.einbausituation;
   nextHk.strang = hk.strang;
+  nextHk.artThermostatkopf = hk.artThermostatkopf;
+  nextHk.ventilVoreinstellbar = hk.ventilVoreinstellbar;
+  nextHk.ventilVoreinstellbarWert = hk.ventilVoreinstellbarWert;
 
   currentHkId = null;
   document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
@@ -1102,9 +1124,11 @@ function fillBelForm(bel) {
 
   // Fotos
   belFormPhotos = [null, null];
+  belFormPhotoTimestamps = [null, null];
   if (bel.fotos && bel.fotos.length > 0) {
     belFormPhotos = bel.fotos.map(f => f || null);
-    while (belFormPhotos.length < 2) belFormPhotos.push(null);
+    belFormPhotoTimestamps = belFormPhotos.map((_, i) => (bel.fotoTimestamps && bel.fotoTimestamps[i]) || null);
+    while (belFormPhotos.length < 2) { belFormPhotos.push(null); belFormPhotoTimestamps.push(null); }
   }
   renderBelPhotoSlots();
   checkBelSonstigeHinweis();
@@ -1199,11 +1223,13 @@ function readBelFormIntoObj(bel) {
   bel.ugr19 = document.getElementById('f-ugr19').checked;
   bel.bemerkung = document.getElementById('f-bel-bemerkung').value.trim();
   bel.fotos = belFormPhotos.filter(Boolean);
+  bel.fotoTimestamps = belFormPhotoTimestamps.filter((_, i) => !!belFormPhotos[i]);
   bel.erfasser = localStorage.getItem('erfasser-name') || '';
   return bel;
 }
 
 async function saveBelForm() {
+  if (!ensureRaumnrOrConfirm()) return;
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
   checkAndSaveBelStandard(bel);
@@ -1214,6 +1240,7 @@ async function saveBelForm() {
 }
 
 async function saveBelAndNextGroup() {
+  if (!ensureRaumnrOrConfirm()) return;
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
   checkAndSaveBelStandard(bel);
@@ -1244,6 +1271,7 @@ async function saveBelAndNextGroup() {
 }
 
 async function saveBelAndNextRoom() {
+  if (!ensureRaumnrOrConfirm()) return;
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
   checkAndSaveBelStandard(bel);
@@ -1706,6 +1734,7 @@ function renderBelPhotoSlots() {
 
 function addBelPhotoSlot() {
   belFormPhotos.push(null);
+  belFormPhotoTimestamps.push(null);
   const newIndex = belFormPhotos.length - 1;
   renderBelPhotoSlots();
   triggerBelPhoto(newIndex);
@@ -1721,8 +1750,10 @@ function handleBelPhotoInput(input) {
   const file = input.files[0];
   if (!file) return;
   const index = parseInt(input.dataset.index);
+  const ts = (file.lastModified && file.lastModified > 0) ? file.lastModified : Date.now();
   compressImage(file, (dataUrl) => {
     belFormPhotos[index] = dataUrl;
+    belFormPhotoTimestamps[index] = ts;
     renderBelPhotoSlots();
   });
   input.value = '';
@@ -1730,6 +1761,7 @@ function handleBelPhotoInput(input) {
 
 function removeBelPhoto(index) {
   belFormPhotos[index] = null;
+  belFormPhotoTimestamps[index] = null;
   renderBelPhotoSlots();
 }
 
@@ -1759,6 +1791,7 @@ function renderPhotoSlots() {
 
 function addPhotoSlot() {
   formPhotos.push(null);
+  formPhotoTimestamps.push(null);
   const newIndex = formPhotos.length - 1;
   renderPhotoSlots();
   triggerPhoto(newIndex);
@@ -1782,8 +1815,10 @@ function handlePhotoInput(input) {
   const file = input.files[0];
   if (!file) return;
   const index = parseInt(input.dataset.index);
+  const ts = (file.lastModified && file.lastModified > 0) ? file.lastModified : Date.now();
   compressImage(file, (dataUrl) => {
     formPhotos[index] = dataUrl;
+    formPhotoTimestamps[index] = ts;
     renderPhotoSlots();
   });
   input.value = '';
@@ -1821,6 +1856,7 @@ function compressImage(file, callback, directDataUrl) {
 
 function removePhoto(index) {
   formPhotos[index] = null;
+  formPhotoTimestamps[index] = null;
   renderPhotoSlots();
 }
 
@@ -1839,7 +1875,9 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
     const geschoss = new Set();
     const raum = new Set();
     const raumDetails = {};
-    const geschossRaum = {}; // Geschoss → [Raum-Nrn]
+    const raumDetailsByGebaeude = {}; // Gebäude → { raumnr: details }
+    const gebaeudeRaum = {};          // Gebäude → [Raum-Nrn]
+    const geschossRaum = {};          // Geschoss → [Raum-Nrn]
     let lastGeb = '', lastGes = ''; // für altes Format: Werte über leere Zeilen merken
 
     // Spalten dynamisch anhand Header-Zeile erkennen
@@ -1870,11 +1908,19 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
         if (s) { lastGes = s; geschoss.add(s); }
         if (r) {
           raum.add(r);
-          raumDetails[r] = {
+          const details = {
             nutzung: cell(col.nutzung),
             flaeche: cell(col.flaeche),
             barcode: cell(col.barcode)
           };
+          raumDetails[r] = details;
+          const geb = g || lastGeb;
+          if (geb) {
+            if (!raumDetailsByGebaeude[geb]) raumDetailsByGebaeude[geb] = {};
+            raumDetailsByGebaeude[geb][r] = details;
+            if (!gebaeudeRaum[geb]) gebaeudeRaum[geb] = [];
+            if (!gebaeudeRaum[geb].includes(r)) gebaeudeRaum[geb].push(r);
+          }
           const ges = s || lastGes;
           if (ges) {
             if (!geschossRaum[ges]) geschossRaum[ges] = [];
@@ -1888,11 +1934,18 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
         if (row[4] != null && String(row[4]).trim()) {
           const rNr = String(row[4]).trim();
           raum.add(rNr);
-          raumDetails[rNr] = {
+          const details = {
             flaeche: row[5] != null ? String(row[5]).trim() : '',
             nutzung: row[6] != null ? String(row[6]).trim() : '',
             barcode: row[7] != null ? String(row[7]).trim() : ''
           };
+          raumDetails[rNr] = details;
+          if (lastGeb) {
+            if (!raumDetailsByGebaeude[lastGeb]) raumDetailsByGebaeude[lastGeb] = {};
+            raumDetailsByGebaeude[lastGeb][rNr] = details;
+            if (!gebaeudeRaum[lastGeb]) gebaeudeRaum[lastGeb] = [];
+            if (!gebaeudeRaum[lastGeb].includes(rNr)) gebaeudeRaum[lastGeb].push(rNr);
+          }
           if (lastGes) {
             if (!geschossRaum[lastGes]) geschossRaum[lastGes] = [];
             if (!geschossRaum[lastGes].includes(rNr)) geschossRaum[lastGes].push(rNr);
@@ -1906,6 +1959,8 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
       geschoss: [...geschoss],
       raum: [...raum],
       raumDetails,
+      raumDetailsByGebaeude,
+      gebaeudeRaum,
       geschossRaum
     };
   }
@@ -2176,26 +2231,33 @@ async function buildExportZip(hks, bels, modul, safeName, onProgress) {
   const wb = XLSX.utils.book_new();
 
   if (hks.length > 0) {
-    const hkData = [EXPORT_HEADERS, ...hks.map(hkToRow)];
+    const hkMaxFotos = maxFotoCount(hks);
+    const hkHeaders = exportHeaders(hkMaxFotos);
+    const hkRows = hks.map(hk => hkToRow(hk, hkMaxFotos));
+    const hkData = [hkHeaders, ...hkRows];
     const wsHk = XLSX.utils.aoa_to_sheet(hkData);
-    wsHk['!cols'] = EXPORT_HEADERS.map((h, i) => ({
-      wch: Math.max(h.length, ...hks.map(hk => String(hkToRow(hk)[i] || '').length), 10)
+    wsHk['!cols'] = hkHeaders.map((h, i) => ({
+      wch: Math.max(h.length, ...hkRows.map(r => String(r[i] || '').length), 10)
     }));
     XLSX.utils.book_append_sheet(wb, wsHk, 'HK-Aufnahme');
   }
 
   if (bels.length > 0) {
-    const belData = [BEL_EXPORT_HEADERS, ...bels.map(belToRow)];
+    const belMaxFotos = maxFotoCount(bels);
+    const belHeaders = belExportHeaders(belMaxFotos);
+    const belRows = bels.map(b => belToRow(b, belMaxFotos));
+    const belData = [belHeaders, ...belRows];
     const wsBel = XLSX.utils.aoa_to_sheet(belData);
-    wsBel['!cols'] = BEL_EXPORT_HEADERS.map((h, i) => ({
-      wch: Math.max(h.length, ...bels.map(b => String(belToRow(b)[i] || '').length), 10)
+    wsBel['!cols'] = belHeaders.map((h, i) => ({
+      wch: Math.max(h.length, ...belRows.map(r => String(r[i] || '').length), 10)
     }));
     XLSX.utils.book_append_sheet(wb, wsBel, 'Beleuchtung');
   }
 
   const xlsxBytes = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
   const modulLabel = modul === 'hk' ? 'HK-Aufnahme' : modul === 'beleuchtung' ? 'Beleuchtung' : 'HK-Beleuchtung';
-  const zipFiles = [{ name: safeName + '_' + modulLabel + '.xlsx', data: new Uint8Array(xlsxBytes) }];
+  const now = Date.now();
+  const zipFiles = [{ name: safeName + '_' + modulLabel + '.xlsx', data: new Uint8Array(xlsxBytes), mtime: now }];
 
   // Fotos sammeln
   const allFotos = [];
@@ -2213,7 +2275,9 @@ async function buildExportZip(hks, bels, modul, safeName, onProgress) {
     results.forEach((data, j) => {
       const f = batch[j];
       const fname = f.type === 'hk' ? fotoFilename(f.item, f.i) : belFotoFilename(f.item, f.i);
-      zipFiles.push({ name: fname, data });
+      const ts = (f.item.fotoTimestamps && f.item.fotoTimestamps[f.i]) ||
+                 (f.item.erstelltAm ? new Date(f.item.erstelltAm).getTime() : null);
+      zipFiles.push({ name: fname, data, mtime: ts });
     });
     if (onProgress) onProgress(Math.min(b + BATCH, allFotos.length), allFotos.length);
     await new Promise(r => setTimeout(r, 0));
@@ -2516,8 +2580,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Bei Auto-Fill direkt zum nächsten Abschnitt springen (Montageart bei Bel, Typ bei HK)
     document.getElementById('f-raumnr').addEventListener('change', () => {
       const rNr = document.getElementById('f-raumnr').value.trim();
+      const geb = document.getElementById('f-gebaeude').value.trim();
       const data = getActiveGebaeudeDaten();
-      const details = data.raumDetails && data.raumDetails[rNr];
+      // Bevorzugt gebäudegenaue Details — fremde Bezeichnungen werden nicht eingeschleppt.
+      let details = null;
+      if (geb && data.raumDetailsByGebaeude && data.raumDetailsByGebaeude[geb]) {
+        details = data.raumDetailsByGebaeude[geb][rNr] || null;
+      } else if (!geb && data.raumDetails) {
+        details = data.raumDetails[rNr] || null;
+      }
       if (details && details.nutzung) {
         document.getElementById('f-raumbezeichnung').value = details.nutzung;
         // Auto-Skip: Raumbezeichnung wurde auto-gefüllt → direkt zum nächsten Abschnitt
@@ -2673,21 +2744,36 @@ function setupLandscapeKeyboardFix() {
 
 // ── Raum-Filterung ──
 
-function filterDatalistsForGebaeude() {
+// Raum-Datalist gefiltert nach aktuellem Gebäude und Geschoss.
+// Reihenfolge: Schnittmenge Gebäude ∩ Geschoss → Gebäude → Geschoss → alle.
+function applyRaumFilter() {
   const data = getActiveGebaeudeDaten();
-  // Aktuell keine gebäude-spezifische Filterung, da Gebäudedaten-Format das nicht direkt unterstützt
-  // Kann hier bei Bedarf erweitert werden
+  const geb = document.getElementById('f-gebaeude').value.trim();
+  const ges = document.getElementById('f-geschoss').value.trim();
+  const dlRaum = document.getElementById('dl-raumnr');
+  if (!dlRaum) return;
+  const inGeb = (geb && data.gebaeudeRaum && data.gebaeudeRaum[geb]) ? data.gebaeudeRaum[geb] : null;
+  const inGes = (ges && data.geschossRaum && data.geschossRaum[ges]) ? data.geschossRaum[ges] : null;
+  let list;
+  if (inGeb && inGes) {
+    const set = new Set(inGes);
+    list = inGeb.filter(r => set.has(r));
+  } else if (inGeb) {
+    list = inGeb;
+  } else if (inGes) {
+    list = inGes;
+  } else {
+    list = data.raum || [];
+  }
+  dlRaum.innerHTML = list.map(v => `<option value="${esc(v)}">`).join('');
+}
+
+function filterDatalistsForGebaeude() {
+  applyRaumFilter();
 }
 
 function filterDatalistsForGeschoss() {
-  const data = getActiveGebaeudeDaten();
-  const ges = document.getElementById('f-geschoss').value.trim();
-  const dlRaum = document.getElementById('dl-raumnr');
-  if (ges && data.geschossRaum && data.geschossRaum[ges]) {
-    dlRaum.innerHTML = data.geschossRaum[ges].map(v => `<option value="${esc(v)}">`).join('');
-  } else {
-    dlRaum.innerHTML = data.raum.map(v => `<option value="${esc(v)}">`).join('');
-  }
+  applyRaumFilter();
 }
 
 // ── Service Worker Registrierung + Update-System ──
@@ -2792,11 +2878,6 @@ async function forceUpdate() {
 }
 
 registerServiceWorker();
-
-// ── Orientation: auf Tablets (>600px) Rotation freigeben ──
-if (screen.orientation && screen.orientation.unlock && Math.min(screen.width, screen.height) > 600) {
-  try { screen.orientation.unlock(); } catch {}
-}
 
 // Cache-Buster-Parameter nach erfolgreichem Update entfernen
 if (location.search.includes('_update=')) {

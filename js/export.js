@@ -1,16 +1,36 @@
 // export.js - xlsx- und CSV-Export mit Foto-ZIP
 
+// Obergrenze für Foto-Spalten in der Excel — schützt vor Ausreißern,
+// die ZIP enthält ohnehin alle Bilder.
+const FOTO_HEADER_LIMIT = 10;
+
+function maxFotoCount(items) {
+  let max = 0;
+  for (const item of items || []) {
+    const n = (item.fotos || []).filter(Boolean).length;
+    if (n > max) max = n;
+  }
+  return Math.min(max, FOTO_HEADER_LIMIT);
+}
+
+function fotoHeaders(n) {
+  return Array.from({ length: n }, (_, i) => `Foto ${i + 1}`);
+}
+
 // ── HK Export ──
 
-const EXPORT_HEADERS = [
+const EXPORT_HEADERS_BASE = [
   'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'HK-Nr.',
   'Typ', 'Bauart', 'Bauart Konvektor', 'Baulänge [mm]', 'Bauhöhe [mm]', 'Anz. Röhren', 'Anz. Glieder',
   'Nabenabstand [mm]', 'DN Ventil', 'Ventiltyp',
   'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Entleerung',
   'Ventil voreinstellbar', 'Voreinstellwert', 'Art Thermostatkopf',
-  'Einbausituation', 'Strang-Nr.', 'Bemerkung', 'Erfasser', 'Erfasst am',
-  'Foto 1', 'Foto 2', 'Foto 3'
+  'Einbausituation', 'Strang-Nr.', 'Bemerkung', 'Erfasser', 'Erfasst am'
 ];
+
+function exportHeaders(maxFotos) {
+  return [...EXPORT_HEADERS_BASE, ...fotoHeaders(maxFotos)];
+}
 
 const EXPORT_FIELDS = [
   'gebaeude', 'geschoss', 'raumnr', 'raumbezeichnung', 'hkNr',
@@ -37,14 +57,14 @@ function formatErstelltAm(isoString) {
   return d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function hkToRow(hk) {
+function hkToRow(hk, maxFotos) {
   const row = EXPORT_FIELDS.map(f => {
     const val = hk[f];
     if (f === 'erstelltAm') return formatErstelltAm(val);
     if (typeof val === 'boolean') return val ? 'Ja' : 'Nein';
     return val != null ? String(val) : '';
   });
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < maxFotos; i++) {
     row.push(hk.fotos && hk.fotos[i] ? fotoFilename(hk, i) : '');
   }
   return row;
@@ -52,16 +72,19 @@ function hkToRow(hk) {
 
 // ── Beleuchtung Export ──
 
-const BEL_EXPORT_HEADERS = [
+const BEL_EXPORT_HEADERS_BASE = [
   'Gebäude', 'Geschoss', 'Raum-Nr.', 'Raumbezeichnung', 'Gruppen-Nr.',
   'Maßnahme',
   'Raumdecke', 'Anzahl Reihen', 'Leuchten je Reihe', 'Leuchtmittel je Leuchte',
   'Installationsart', 'Installationsart Detail', 'Leuchtenart',
   'Leuchtmittel Kategorie', 'Leuchtmittel Typ', 'Leuchtmittel Länge [mm]', 'Leuchtmittel Wattage [W]',
   'Fassung', 'Vorschaltgerät', 'Steuerung', 'LPH [m]', 'UGR 19', 'Zustand',
-  'Bemerkung', 'Erfasser', 'Erfasst am',
-  'Foto 1', 'Foto 2', 'Foto 3'
+  'Bemerkung', 'Erfasser', 'Erfasst am'
 ];
+
+function belExportHeaders(maxFotos) {
+  return [...BEL_EXPORT_HEADERS_BASE, ...fotoHeaders(maxFotos)];
+}
 
 const BEL_EXPORT_FIELDS = [
   'gebaeude', 'geschoss', 'raumnr', 'raumbezeichnung', 'gruppenNr',
@@ -83,7 +106,7 @@ function belFotoFilename(bel, index) {
   return `Fotos/${parts.join('_')}${suffix}.jpg`;
 }
 
-function belToRow(bel) {
+function belToRow(bel, maxFotos) {
   const row = BEL_EXPORT_FIELDS.map(f => {
     const val = bel[f];
     if (f === 'erstelltAm') return formatErstelltAm(val);
@@ -91,7 +114,7 @@ function belToRow(bel) {
     if (typeof val === 'boolean') return val ? 'Ja' : 'Nein';
     return val != null ? String(val) : '';
   });
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < maxFotos; i++) {
     row.push(bel.fotos && bel.fotos[i] ? belFotoFilename(bel, i) : '');
   }
   return row;
@@ -142,8 +165,18 @@ function compressForExport(dataUrl) {
 
 // ── Minimaler ZIP-Builder (Store-Methode, kein Komprimieren nötig für JPEGs) ──
 
+// DOS-Zeit/Datum aus einem JS-Date (Datei-Zeitstempel im ZIP-Header)
+function dosDateTime(input) {
+  if (input == null) return { date: 0, time: 0 };
+  const d = (input instanceof Date) ? input : new Date(input);
+  if (isNaN(d.getTime()) || d.getFullYear() < 1980) return { date: 0, time: 0 };
+  const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  return { date, time };
+}
+
 function buildZip(files) {
-  // files: Array von { name: string, data: Uint8Array }
+  // files: Array von { name: string, data: Uint8Array, mtime?: number|Date }
   const entries = [];
   let offset = 0;
 
@@ -151,21 +184,22 @@ function buildZip(files) {
   const localParts = [];
   for (const file of files) {
     const nameBytes = new TextEncoder().encode(file.name);
+    const { date: dosDate, time: dosTime } = dosDateTime(file.mtime);
     const header = new ArrayBuffer(30);
     const hv = new DataView(header);
     hv.setUint32(0, 0x04034b50, true);   // signature
     hv.setUint16(4, 20, true);            // version needed
     hv.setUint16(6, 0x0800, true);        // flags (UTF-8)
     hv.setUint16(8, 0, true);             // compression: store
-    hv.setUint16(10, 0, true);            // mod time
-    hv.setUint16(12, 0, true);            // mod date
+    hv.setUint16(10, dosTime, true);      // mod time
+    hv.setUint16(12, dosDate, true);      // mod date
     hv.setUint32(14, crc32(file.data), true);  // crc32
     hv.setUint32(18, file.data.length, true);  // compressed size
     hv.setUint32(22, file.data.length, true);  // uncompressed size
     hv.setUint16(26, nameBytes.length, true);  // name length
     hv.setUint16(28, 0, true);                 // extra length
 
-    entries.push({ offset, nameBytes, file });
+    entries.push({ offset, nameBytes, file, dosDate, dosTime });
     const localHeader = new Uint8Array(header);
     localParts.push(localHeader, nameBytes, file.data);
     offset += 30 + nameBytes.length + file.data.length;
@@ -182,8 +216,8 @@ function buildZip(files) {
     cv.setUint16(6, 20, true);            // version needed
     cv.setUint16(8, 0x0800, true);        // flags (UTF-8)
     cv.setUint16(10, 0, true);            // compression
-    cv.setUint16(12, 0, true);            // mod time
-    cv.setUint16(14, 0, true);            // mod date
+    cv.setUint16(12, entry.dosTime, true);// mod time
+    cv.setUint16(14, entry.dosDate, true);// mod date
     cv.setUint32(16, crc32(entry.file.data), true);
     cv.setUint32(20, entry.file.data.length, true);
     cv.setUint32(24, entry.file.data.length, true);

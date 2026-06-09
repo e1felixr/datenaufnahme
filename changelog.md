@@ -1,5 +1,16 @@
 # Changelog
 
+### v4.5
+
+* ~~Excel listet alle Fotos — nicht nur die ersten drei~~ **erledigt v4.5.0** (Foto-Spalten dynamisch, hartes Maximum 10 — verhinderte ZIP-Bilder ohne Excel-Vermerk ab Foto 4) (09.06.2026, 15:23 Uhr)
+* ~~Aufnahmedatum der Fotos im ZIP~~ **erledigt v4.5.0** (Timestamp wird beim Hinzufügen erfasst, als DOS-Datum in den ZIP-Header geschrieben — ersetzt 30.11.1979 00:00) (09.06.2026, 15:23 Uhr)
+* ~~Raumnummer-Pflichtprüfung beim Speichern~~ **erledigt v4.5.0** (alle sechs Speicher-Pfade — leere Raumnummer bietet „k. A." als Bestätigung an, bricht sonst zurück zum Feld) (09.06.2026, 15:23 Uhr)
+* ~~Pull-to-Refresh verwirft Eingabe~~ **erledigt v4.5.0** (`overscroll-behavior-y: none` am Body verhindert versehentlichen Reload beim nach-unten-Wischen) (09.06.2026, 15:23 Uhr)
+* ~~Raumbezeichnung-Autocomplete projektübergreifend~~ **erledigt v4.5.0** (Auto-Fill nimmt die gebäudegenaue Bezeichnung; Datalist filtert auf Gebäude ∩ Geschoss) (09.06.2026, 15:23 Uhr)
+* ~~Querformat blockiert trotz Geräte-Erlaubnis~~ **erledigt v4.5.0** (`manifest.json` auf `orientation: any`, Lock-Block in `app.js` entfernt — Tablet darf drehen) (09.06.2026, 15:23 Uhr)
+* ~~Art Thermostatkopf fehlt bei „nächster HK im Raum"~~ **erledigt v4.5.0** (`saveAndNextHk` übernimmt jetzt Thermostatkopf und Voreinstell-Felder analog zu „neuer Raum") (09.06.2026, 15:23 Uhr)
+* ~~Schriftgröße- und Padding-Skala zu eng~~ **erledigt v4.5.0** (Slider-Maxima auf 24 px Schrift / 22 px Padding gehoben — vorher 18 / 16) (09.06.2026, 15:23 Uhr)
+
 ### v4.4
 
 * ~~Versand mit angehängter ZIP-Datei (Web Share API)~~ **erledigt v4.4.0** (System-Share-Sheet öffnet sich mit ZIP bereits im Anhang — auf Android genügt Outlook auswählen, Empfänger ergänzen, abschicken; Fallback Download + mailto bleibt, falls die API fehlt oder der Share-Versuch scheitert; Abbruch im Share-Sheet erzwingt keinen Download)
