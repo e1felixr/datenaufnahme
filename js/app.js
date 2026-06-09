@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.3.0';
-const APP_BUILD_DATE = '28.04.2026 15:52'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.4.0';
+const APP_BUILD_DATE = '09.06.2026 09:18'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2142,16 +2142,28 @@ async function sendData() {
     });
     hideZipProgress();
 
-    // 1. ZIP herunterladen
-    downloadBlob(zipBlob, zipFileName);
+    // 1. Versuche System-Share (Outlook / Gmail / WhatsApp …) mit angehängtem ZIP
+    const empfaengerZeile = recipients.length > 0 ? 'An: ' + recipients.join(', ') + '\n\n' : '';
+    const shareBody = empfaengerZeile + 'Anbei die aufgenommenen Daten.';
+    const shareResult = await shareZipFile(zipBlob, zipFileName, subject, shareBody);
 
-    // 2. Mail-Programm öffnen mit Empfängern
+    if (shareResult === 'shared') {
+      closeSendDialog();
+      showInfo('Versendet', 'Die Daten wurden über das System-Teilen-Menü verschickt.');
+      return;
+    }
+    if (shareResult === 'aborted') {
+      // User hat das Share-Sheet selbst geschlossen — nichts tun, Dialog bleibt offen.
+      return;
+    }
+
+    // 2. Fallback: ZIP herunterladen + mailto öffnen (alte Lösung)
+    downloadBlob(zipBlob, zipFileName);
     if (recipients.length > 0) {
       const body = 'Bitte die heruntergeladene ZIP-Datei "' + zipFileName + '" manuell an diese E-Mail anhängen.';
       const mailto = `mailto:${recipients.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       setTimeout(() => { window.location.href = mailto; }, 500);
     }
-
     closeSendDialog();
     showInfo('ZIP heruntergeladen', 'Die ZIP-Datei wurde heruntergeladen.\n\nDas Mailprogramm wird geöffnet – bitte die ZIP-Datei manuell an die E-Mail anhängen.');
   } finally {

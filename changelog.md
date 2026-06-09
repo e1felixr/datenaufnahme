@@ -1,5 +1,9 @@
 # Changelog
 
+### v4.4
+
+* ~~Versand mit angehängter ZIP-Datei (Web Share API)~~ **erledigt v4.4.0** (System-Share-Sheet öffnet sich mit ZIP bereits im Anhang — auf Android genügt Outlook auswählen, Empfänger ergänzen, abschicken; Fallback Download + mailto bleibt, falls die API fehlt oder der Share-Versuch scheitert; Abbruch im Share-Sheet erzwingt keinen Download)
+
 ### v4.3
 
 * ~~BEL: Maßnahmen-Auswahl Leuchtmitteltausch / Neue Leuchte~~ **erledigt v4.3.0** (Mode-Toggle nach Leuchteninfo, Default Leuchtmitteltausch, K/N-Badge in Raum-Übersicht, neue Spalte "Maßnahme" im Excel-Export, Default wird zur nächsten Leuchte mitgenommen)

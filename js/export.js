@@ -255,3 +255,27 @@ function downloadBlob(blob, filename) {
 function sanitizeFilename(name) {
   return name.replace(/[\/\\:*?"<>|]/g, '').replace(/\s+/g, '_');
 }
+
+// ── Web Share API (System-Share, idR Outlook auf Android) ──
+
+function canShareZip(file) {
+  return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [file] }));
+}
+
+// Versucht, das ZIP über das System-Share-Sheet zu teilen.
+// Rückgabe:
+//   'shared'    → erfolgreich geteilt (kein Fallback nötig)
+//   'aborted'   → User hat das Share-Sheet abgebrochen (KEIN Fallback)
+//   'unsupported' → Share-API nicht verfügbar oder Dateityp abgelehnt (Fallback nötig)
+//   'failed'    → Share-Versuch warf einen anderen Fehler (Fallback nötig)
+async function shareZipFile(blob, fileName, subject, body) {
+  const file = new File([blob], fileName, { type: 'application/zip' });
+  if (!canShareZip(file)) return 'unsupported';
+  try {
+    await navigator.share({ files: [file], title: subject, text: body });
+    return 'shared';
+  } catch (err) {
+    if (err && err.name === 'AbortError') return 'aborted';
+    return 'failed';
+  }
+}
