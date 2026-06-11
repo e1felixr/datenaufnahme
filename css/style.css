@@ -595,6 +595,13 @@ body {
 .compact-toggle input { margin: 0; }
 
 /* ── Toast ── */
+/* Feld leuchtet kurz auf, wenn eine Eingabe automatisch umgerechnet wurde (m -> mm) */
+@keyframes field-flash {
+  0%   { background-color: #FFE082; }
+  100% { background-color: #fff; }
+}
+.field-flash { animation: field-flash 1.8s ease-out; }
+
 .toast {
   position: fixed;
   bottom: 80px;

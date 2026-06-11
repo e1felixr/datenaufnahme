@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.6.1';
-const APP_BUILD_DATE = '11.06.2026 14:50'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.6.2';
+const APP_BUILD_DATE = '11.06.2026 15:08'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -128,11 +128,11 @@ function closeInfo() {
 
 // ── Toast ──
 
-function showToast(msg) {
+function showToast(msg, duration = 2000) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  setTimeout(() => t.classList.remove('show'), duration);
 }
 
 // ── Theme Switching ──
@@ -630,7 +630,11 @@ function autoConvertMeters(input) {
   if (!isFinite(v) || v <= 0 || v >= 10) return;
   const mm = Math.round(v * 1000);
   input.value = mm;
-  showToast(`${txt} m → ${mm} mm`);
+  // Feld aufleuchten lassen, damit die Umwandlung beim Tippen nicht untergeht
+  input.classList.remove('field-flash');
+  void input.offsetWidth; // Reflow erzwingen, damit die Animation neu startet
+  input.classList.add('field-flash');
+  showToast(`Eingabe ${txt} m → umgerechnet in ${mm} mm`, 3500);
 }
 
 function onBauhoeheChange() {

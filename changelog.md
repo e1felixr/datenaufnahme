@@ -2,6 +2,8 @@
 
 ### v4.6
 
+* ~~Auto-Umrechnung muss dem Nutzer auffallen~~ **erledigt v4.6.2** (Maßfeld leuchtet nach der Umwandlung kurz gelb auf (`field-flash`-Animation, 1,8 s), Toast ausführlicher „Eingabe 0,8 m → umgerechnet in 800 mm" und mit 3,5 s länger sichtbar) (11.06.2026, 15:08 Uhr)
+
 * ~~Meter-Eingaben bei Maßfeldern abfangen~~ **erledigt v4.6.1** (Baulänge, Bauhöhe, Nabenabstand: Werte unter 10 werden als Meter erkannt und automatisch in mm gewandelt, Toast „0,8 m → 800 mm" — Einheit bleibt mm, Bestandsdaten unberührt) (11.06.2026, 14:50 Uhr)
 * ~~Info-Button am „HK duplizieren"-Button~~ **erledigt v4.6.1** (?-Knopf öffnet Erklär-Modal: identische Kopie aller Felder, HK-Nr. +1, Fotos bleiben beim Original, Beispiel-Ablauf für fünf gleiche HK) (11.06.2026, 14:50 Uhr)
 
