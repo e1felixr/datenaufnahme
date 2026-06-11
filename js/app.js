@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.6.0';
-const APP_BUILD_DATE = '11.06.2026 14:24'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.6.1';
+const APP_BUILD_DATE = '11.06.2026 14:50'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -622,7 +622,19 @@ function fillDatalist(id, opts) {
   dl.innerHTML = opts.map(v => `<option value="${v}">`).join('');
 }
 
+// Meter-Eingaben vergeben: Werte unter 10 sind sicher Meter (kein HK-Maß liegt unter 10 mm),
+// also stillschweigend in mm wandeln — "0,8" wird zu 800.
+function autoConvertMeters(input) {
+  const txt = input.value.trim();
+  const v = parseFloat(txt.replace(',', '.'));
+  if (!isFinite(v) || v <= 0 || v >= 10) return;
+  const mm = Math.round(v * 1000);
+  input.value = mm;
+  showToast(`${txt} m → ${mm} mm`);
+}
+
 function onBauhoeheChange() {
+  autoConvertMeters(document.getElementById('f-bauhoehe'));
   const typ = document.getElementById('f-typ').value;
   const bh = parseInt(document.getElementById('f-bauhoehe').value);
   if (!bh) return;
@@ -635,6 +647,7 @@ function onBauhoeheChange() {
 }
 
 function onNabenabstandChange() {
+  autoConvertMeters(document.getElementById('f-nabenabstand'));
   const typ = document.getElementById('f-typ').value;
   const na = parseInt(document.getElementById('f-nabenabstand').value);
   if (!na) return;

@@ -2,6 +2,9 @@
 
 ### v4.6
 
+* ~~Meter-Eingaben bei Maßfeldern abfangen~~ **erledigt v4.6.1** (Baulänge, Bauhöhe, Nabenabstand: Werte unter 10 werden als Meter erkannt und automatisch in mm gewandelt, Toast „0,8 m → 800 mm" — Einheit bleibt mm, Bestandsdaten unberührt) (11.06.2026, 14:50 Uhr)
+* ~~Info-Button am „HK duplizieren"-Button~~ **erledigt v4.6.1** (?-Knopf öffnet Erklär-Modal: identische Kopie aller Felder, HK-Nr. +1, Fotos bleiben beim Original, Beispiel-Ablauf für fünf gleiche HK) (11.06.2026, 14:50 Uhr)
+
 * ~~HK-Typ „Stahlplatte" anbieten (Rückmeldung Patrick)~~ **erledigt v4.6.0** (eigener Typ in der Auswahl, Bauart-Optionen 10/11/20/21/22/30/33 wie Kompakt-HK, Bauhöhen-Liste ebenfalls; ungenutzte Alt-Liste `subtypStahlplatte` ER/EK/… entfernt) (11.06.2026, 14:23 Uhr)
 * ~~Anz. Röhren: „1" fehlt (Rückmeldung Patrick)~~ **erledigt v4.6.0** (Auswahl beginnt jetzt bei 1 — einsäulige Röhrenradiatoren) (11.06.2026, 14:23 Uhr)
 * ~~Mehrere identische HK im Raum (Rückmeldung Patrick)~~ **erledigt v4.6.0** (neuer Button „HK duplizieren": speichert den aktuellen HK und füllt das Formular mit einer identischen Kopie, HK-Nr. +1, ohne Fotos — bewusst kein Stückzahl-Feld, das zum Schludern verführt) (11.06.2026, 14:23 Uhr)
