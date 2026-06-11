@@ -120,6 +120,41 @@ function belToRow(bel, maxFotos) {
   return row;
 }
 
+// ── LIESMICH fürs Export-ZIP (erklärt das Foto-Namensschema) ──
+
+function buildFotoReadme(hasHk, hasBel) {
+  const lines = [
+    'LIESMICH — Benennung der Foto-Dateien',
+    '=====================================',
+    '',
+    'Die Fotos im Ordner "Fotos/" sind nach diesem Schema benannt:',
+    ''
+  ];
+  if (hasHk) lines.push('  Heizkörper:   <Geschoss>_<Raum-Nr>_HK<HK-Nr>.jpg');
+  if (hasBel) lines.push('  Beleuchtung:  <Geschoss>_<Raum-Nr>_BEL<Gruppen-Nr>.jpg');
+  lines.push(
+    '',
+    'Mehrere Fotos desselben Objekts erhalten den Zusatz _2, _3, ...',
+    'Leerzeichen und Sonderzeichen sind im Dateinamen durch "_" ersetzt.',
+    '',
+    'Beispiele:'
+  );
+  if (hasHk) {
+    lines.push('  OG_2_104_HK3.jpg    = Geschoss "OG 2", Raum 104, Heizkörper Nr. 3 (1. Foto)');
+    lines.push('  OG_2_104_HK3_2.jpg  = dasselbe Objekt, 2. Foto');
+  }
+  if (hasBel) {
+    lines.push('  EG_012_BEL1.jpg     = Geschoss "EG", Raum 012, Leuchtengruppe 1');
+  }
+  lines.push(
+    '',
+    'Die Spalten "Foto 1" bis "Foto n" in der Excel-Tabelle verweisen je Zeile',
+    'auf die zugehörigen Dateien.'
+  );
+  // BOM, damit Windows-Editoren die Umlaute sicher als UTF-8 erkennen
+  return String.fromCharCode(0xFEFF) + lines.join('\r\n') + '\r\n';
+}
+
 // ── Base64 zu Uint8Array ──
 
 function base64ToBytes(dataUrl) {

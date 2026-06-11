@@ -1,5 +1,12 @@
 # Changelog
 
+### v4.6
+
+* ~~HK-Typ „Stahlplatte" anbieten (Rückmeldung Patrick)~~ **erledigt v4.6.0** (eigener Typ in der Auswahl, Bauart-Optionen 10/11/20/21/22/30/33 wie Kompakt-HK, Bauhöhen-Liste ebenfalls; ungenutzte Alt-Liste `subtypStahlplatte` ER/EK/… entfernt) (11.06.2026, 14:23 Uhr)
+* ~~Anz. Röhren: „1" fehlt (Rückmeldung Patrick)~~ **erledigt v4.6.0** (Auswahl beginnt jetzt bei 1 — einsäulige Röhrenradiatoren) (11.06.2026, 14:23 Uhr)
+* ~~Mehrere identische HK im Raum (Rückmeldung Patrick)~~ **erledigt v4.6.0** (neuer Button „HK duplizieren": speichert den aktuellen HK und füllt das Formular mit einer identischen Kopie, HK-Nr. +1, ohne Fotos — bewusst kein Stückzahl-Feld, das zum Schludern verführt) (11.06.2026, 14:23 Uhr)
+* ~~LIESMICH ins Export-ZIP (Rückmeldung Patrick)~~ **erledigt v4.6.0** (`LIESMICH.txt` erklärt das Foto-Namensschema `Geschoss_Raumnr_HKx[_n].jpg` bzw. `…_BELx[_n].jpg` mit Beispielen; UTF-8 mit BOM) (11.06.2026, 14:23 Uhr)
+
 ### v4.5
 
 * ~~Excel listet alle Fotos — nicht nur die ersten drei~~ **erledigt v4.5.0** (Foto-Spalten dynamisch, hartes Maximum 10 — verhinderte ZIP-Bilder ohne Excel-Vermerk ab Foto 4) (09.06.2026, 15:23 Uhr)

@@ -14,16 +14,15 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.5.0';
-const APP_BUILD_DATE = '09.06.2026 15:29'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.6.0';
+const APP_BUILD_DATE = '11.06.2026 14:24'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
-  typ: ['Kompakt-HK', 'Röhren-HK', 'Glieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Sonstige'],
+  typ: ['Kompakt-HK', 'Stahlplatte', 'Röhren-HK', 'Glieder-HK', 'Gussglieder-HK', 'Konvektoren', 'Sonstige'],
   subtypKompakt: ['10', '11', '20', '21', '22', '30', '33'],
   subtypKonvektoren: ['21', '22', '32', '43', '54'],
-  subtypStahlplatte: ['ER', 'EK', 'DR', 'C', 'DK', 'T', 'TK1', 'TK2', 'TK3'],
-  anzahlRoehren: [2, 3, 4, 5, 6],
+  anzahlRoehren: [1, 2, 3, 4, 5, 6],
   baulaengeOpts: ['k.A.',400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1800,2000,2200,2400,2600,2800,3000],
   bauhoeheKompakt: ['k.A.',200,300,400,500,600,700,800,900,1000],
   bauhoeheRoehren: ['k.A.',190,300,350,400,450,500,550,600,750,900,1000,1100,1200,1500,1800,2000,2500,2800],
@@ -573,7 +572,7 @@ function updateTypFields() {
   const groupBaulaenge = document.getElementById('group-baulaenge');
 
   let subtypOptions = [];
-  if (typ === 'Kompakt-HK') subtypOptions = CONFIG.subtypKompakt;
+  if (typ === 'Kompakt-HK' || typ === 'Stahlplatte') subtypOptions = CONFIG.subtypKompakt;
   else if (typ === 'Konvektoren') subtypOptions = CONFIG.subtypKonvektoren;
 
   const subtypInput = document.getElementById('f-subtyp');
@@ -606,7 +605,7 @@ function updateTypFields() {
   if (!hasBaulaenge) document.getElementById('f-baulaenge').value = '';
 
   let bauhoeheOpts;
-  if (typ === 'Kompakt-HK' || typ === 'Konvektoren') bauhoeheOpts = CONFIG.bauhoeheKompakt;
+  if (typ === 'Kompakt-HK' || typ === 'Stahlplatte' || typ === 'Konvektoren') bauhoeheOpts = CONFIG.bauhoeheKompakt;
   else if (typ === 'Röhren-HK') bauhoeheOpts = CONFIG.bauhoeheRoehren;
   else if (typ === 'Gussglieder-HK') bauhoeheOpts = CONFIG.bauhoeheGuss;
   else if (typ === 'Glieder-HK') bauhoeheOpts = CONFIG.bauhoeheStahl;
@@ -966,6 +965,32 @@ async function saveAndNextHk() {
   fillForm(nextHk);
   window.scrollTo(0, 0);
   showToast(`HK ${hk.hkNr} gespeichert → HK ${nextHk.hkNr}`);
+}
+
+async function duplicateHk() {
+  if (!ensureRaumnrOrConfirm()) return;
+  const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
+  readFormIntoHk(hk);
+  checkAndSaveStandard(hk);
+  await saveHeizkoerper(hk);
+  await renderHkList();
+
+  // Vollkopie aller Felder; Fotos bleiben beim Original, nur HK-Nr. zählt hoch
+  const dup = newHeizkoerper(currentProjektId);
+  Object.assign(dup, hk, {
+    id: dup.id,
+    erstelltAm: dup.erstelltAm,
+    hkNr: (Number(hk.hkNr) || 0) + 1,
+    fotos: [],
+    fotoTimestamps: []
+  });
+
+  currentHkId = null;
+  document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
+  document.getElementById('btn-delete-hk').style.display = 'none';
+  fillForm(dup);
+  window.scrollTo(0, 0);
+  showToast(`HK ${hk.hkNr} gespeichert → Duplikat HK ${dup.hkNr}`);
 }
 
 async function deleteCurrentHk() {
@@ -2258,6 +2283,8 @@ async function buildExportZip(hks, bels, modul, safeName, onProgress) {
   const modulLabel = modul === 'hk' ? 'HK-Aufnahme' : modul === 'beleuchtung' ? 'Beleuchtung' : 'HK-Beleuchtung';
   const now = Date.now();
   const zipFiles = [{ name: safeName + '_' + modulLabel + '.xlsx', data: new Uint8Array(xlsxBytes), mtime: now }];
+  const readme = buildFotoReadme(hks.length > 0, bels.length > 0);
+  zipFiles.push({ name: 'LIESMICH.txt', data: new TextEncoder().encode(readme), mtime: now });
 
   // Fotos sammeln
   const allFotos = [];
