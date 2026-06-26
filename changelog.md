@@ -2,6 +2,8 @@
 
 ### v4.6
 
+* ~~Auto-Füllung Raumbezeichnung funktioniert nicht mehr~~ **behoben v4.6.3** (Regression aus v4.5.0: war ein Gebäude im Feld gesetzt, aber kein gebäudegenauer Eintrag vorhanden — etwa bei Raumbüchern ganz ohne Gebäude-Spalte, wie „Polizeipräsidium Nordhessen" — griff weder der gebäudegenaue noch der globale Lookup, die Bezeichnung blieb leer. Jetzt: trägt die Liegenschaft keine Gebäude-Dimension, wird wieder global nachgeschlagen; die Schutzregel gegen fremde Bezeichnungen bleibt für mehrgebäudige Daten erhalten) (26.06.2026, 15:36 Uhr)
+
 * ~~Auto-Umrechnung muss dem Nutzer auffallen~~ **erledigt v4.6.2** (Maßfeld leuchtet nach der Umwandlung kurz gelb auf (`field-flash`-Animation, 1,8 s), Toast ausführlicher „Eingabe 0,8 m → umgerechnet in 800 mm" und mit 3,5 s länger sichtbar) (11.06.2026, 15:08 Uhr)
 
 * ~~Meter-Eingaben bei Maßfeldern abfangen~~ **erledigt v4.6.1** (Baulänge, Bauhöhe, Nabenabstand: Werte unter 10 werden als Meter erkannt und automatisch in mm gewandelt, Toast „0,8 m → 800 mm" — Einheit bleibt mm, Bestandsdaten unberührt) (11.06.2026, 14:50 Uhr)

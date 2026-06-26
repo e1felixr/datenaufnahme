@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.6.2';
-const APP_BUILD_DATE = '11.06.2026 15:50'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.6.3';
+const APP_BUILD_DATE = '26.06.2026 15:37'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2627,12 +2627,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const geb = document.getElementById('f-gebaeude').value.trim();
       const data = getActiveGebaeudeDaten();
       // Bevorzugt gebäudegenaue Details — fremde Bezeichnungen werden nicht eingeschleppt.
+      const byGeb = data.raumDetailsByGebaeude || {};
+      const hasScoped = Object.keys(byGeb).length > 0;
       let details = null;
-      if (geb && data.raumDetailsByGebaeude && data.raumDetailsByGebaeude[geb]) {
-        details = data.raumDetailsByGebaeude[geb][rNr] || null;
-      } else if (!geb && data.raumDetails) {
-        details = data.raumDetails[rNr] || null;
+      if (geb && byGeb[geb]) {
+        // Gebäude in den Daten bekannt → nur dessen Räume (kein Einschleppen fremder Bezeichnungen)
+        details = byGeb[geb][rNr] || null;
+      } else if (!hasScoped) {
+        // Daten ohne Gebäude-Dimension (z.B. einblättriges Raumbuch) → globaler Lookup ist eindeutig und sicher
+        details = (data.raumDetails && data.raumDetails[rNr]) || null;
       }
+      // Sonst: Gebäude gesetzt, aber nicht in den Daten gefunden → bewusst kein Auto-Fill (würde sonst fremde Bezeichnung ziehen)
       if (details && details.nutzung) {
         document.getElementById('f-raumbezeichnung').value = details.nutzung;
         // Auto-Skip: Raumbezeichnung wurde auto-gefüllt → direkt zum nächsten Abschnitt
