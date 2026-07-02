@@ -1,5 +1,10 @@
 # Changelog
 
+### v4.7
+
+* ~~Gebäudedaten Reichenbach (ESC Ennepetal)~~ **erledigt v4.7.0** (Raumlisten aus `251107_Aufstellung_Beleuchtung.xlsx` übernommen — getrennt nach „Reichenbach Schule" (Gebäude A–F, 289 Räume) und „Reichenbach Turnhallen" (Gymnasium-Halle T + Turnhalle Reichenbach, 87 Räume); Schätz-Zeilen ohne Raumnummer bzw. „alle" ausgelassen, Räume dedupliziert) (02.07.2026, 16:37 Uhr)
+* ~~Verborgene Excel-Sheets nicht mehr anbieten~~ **erledigt v4.7.0** (Parser überspringt in Excel ausgeblendete Sheets — Polizeipräsidium Nordhessen und Uni Mannheim sind in `gebaeudedaten.xlsx` nur verborgen, nicht gelöscht, und tauchen in der App nicht mehr als Liegenschaft auf) (02.07.2026, 16:37 Uhr)
+
 ### v4.6
 
 * ~~Hilfe-Bild Deckentypen aktualisiert~~ **erledigt v4.6.4** (überarbeitete Fassung von `hilfe/bel/deckentypen.png` lag nur lokal vor und ist jetzt deployt; SW-Cache v118) (02.07.2026, 16:27 Uhr)

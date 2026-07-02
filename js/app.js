@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.6.4';
-const APP_BUILD_DATE = '02.07.2026 16:27'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.7.0';
+const APP_BUILD_DATE = '02.07.2026 16:38'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -1908,7 +1908,13 @@ function parseGebaeudedatenXlsx(arrayBuffer) {
   const wb = XLSX.read(arrayBuffer, { type: 'array' });
   const result = {};
 
+  // In Excel verborgene Sheets (Hidden=1/2) nicht als Liegenschaft anbieten
+  const hiddenSheets = new Set(
+    ((wb.Workbook && wb.Workbook.Sheets) || []).filter(s => s.Hidden).map(s => s.name)
+  );
+
   for (const sheetName of wb.SheetNames) {
+    if (hiddenSheets.has(sheetName)) continue;
     const ws = wb.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
     if (rows.length < 2) continue;
