@@ -2,9 +2,7 @@ Oberhalb der gepunkteten Linie dürfen stets nur die offenen Aufgaben stehen!!
 
 Offene Punkte:
 
-
-
-(keine offenen Punkte)
+* Banner „Sonstiges → Foto!" anklickbar machen — Tipp aufs Banner öffnet direkt die Kamera (Rückmeldung Max 09.06.2026, bewusst zurückgestellt 02.07.2026)
 
 
 
