@@ -2,6 +2,9 @@
 
 ### v4.9
 
+* ~~„Update prüfen" wirft Fehler „showUpdateBanner is not defined"~~ **behoben v4.9.2** (Relikt aus der v4.0.5 entfernten Banner-Logik — wartet ein Update, wird es jetzt nach Klick auf „Update prüfen" direkt angewendet, Toast „Update wird angewendet...") (03.07.2026, 11:19 Uhr)
+* ~~Liegenschaft „Reichenbach Schule" → „Reichenbach-Gym"~~ **erledigt v4.9.2** (Sheet in gebaeudedaten.xlsx und PDF-Anleitung umbenannt; Geräte übernehmen den neuen Namen beim nächsten Online-Start automatisch. Achtung: Projekte, die schon unter „Reichenbach Schule" angelegt wurden, verlieren die Raumlisten-Verknüpfung — Projekt neu anlegen) (03.07.2026, 11:19 Uhr)
+
 * ~~Art Thermostatkopf: Reihenfolge der Vorschläge~~ **erledigt v4.9.1** (erst analog, dann Behörde, dann digital, danach der Rest — häufigste Fälle zuerst) (03.07.2026, 08:34 Uhr)
 
 * ~~Art Thermostatkopf: Vorschlagsfeld statt Dropdown~~ **erledigt v4.9.0** (Eingabefeld mit Vorschlagsliste wie beim Ventiltyp — freie Eingaben möglich; „Sonstiges → Foto!"-Hinweis erscheint weiterhin bei „Sonstiges") (03.07.2026, 08:31 Uhr)
