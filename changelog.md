@@ -2,6 +2,8 @@
 
 ### v4.10
 
+* ~~Misch-Versionen nach Updates (grüne Statuszeile, orangene Buttons, alte Versionsnummer)~~ **behoben v4.10.1** (GitHub Pages hält Dateien bis zu 10 Minuten im HTTP-Cache — der Service Worker holte so Dateien zweier Versionen. Jetzt: Laden mit `cache: 'no-cache'` (ETag-Rückfrage beim Server) und Vorbefüllen mit `cache: 'reload'` — alle App-Dateien stammen stets aus demselben Stand) (03.07.2026, 11:38 Uhr)
+
 * ~~HK-Modul in E1-Grün statt Orange~~ **erledigt v4.10.0** (Modulfarbe #FF6633 → E1-Grün #66B32F wie in der Anleitung, helle Fläche #F0F7E6, dunkler Ton #3F7A1A, Akzent-Buttons #5AA329; auch theme-color-Meta und FAB-Auswahl. Beleuchtung bleibt gelb, „Beides" bleibt blau) (03.07.2026, 11:34 Uhr)
 
 ### v4.9

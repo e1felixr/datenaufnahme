@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'e1-begehung-v127';
+const CACHE_NAME = 'e1-begehung-v128';
 const ASSETS = [
   './',
   './index.html',
@@ -30,7 +30,9 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
+      // 'reload' umgeht den HTTP-Cache (GitHub Pages max-age=600) — sonst landet
+      // beim Vorbefüllen ein bis zu 10 Minuten alter Datei-Mix im SW-Cache
+      .then(cache => cache.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' }))))
     // Kein skipWaiting() hier — wird vom Client via SKIP_WAITING Message gesteuert
   );
 });
@@ -60,7 +62,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   event.respondWith(
-    fetch(event.request)
+    // 'no-cache': immer beim Server rückfragen (ETag-Revalidierung) statt bis zu
+    // 10 Minuten alte Dateien aus dem HTTP-Cache zu nehmen — verhindert Misch-Versionen
+    fetch(event.request, { cache: 'no-cache' })
       .then(response => {
         const clone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));

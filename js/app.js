@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.10.0';
-const APP_BUILD_DATE = '03.07.2026 11:36'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.10.1';
+const APP_BUILD_DATE = '03.07.2026 11:39'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
