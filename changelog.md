@@ -2,6 +2,7 @@
 
 ### v4.11
 
+* ~~Kopfzeile sprang zurück auf „Erfassung"~~ **behoben v4.11.3** (das Navigations-Skript am Seitenende schrieb den Header bei jedem Screen-Wechsel mit hart verdrahtetem „Erfassung" neu — alle drei Stellen auf „Datenaufnahme" umgestellt) (03.07.2026, 11:59 Uhr)
 * ~~Kopfzeile: mehr Abstand zwischen Titel- und Datumszeile~~ **erledigt v4.11.2** (4 px Luft zwischen „Datenaufnahme vX.Y.Z" und dem Zeitstempel) (03.07.2026, 11:57 Uhr)
 * ~~Kopfzeile: „Datenaufnahme" statt „Erfassung"~~ **erledigt v4.11.1** (03.07.2026, 11:56 Uhr)
 
