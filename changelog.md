@@ -2,6 +2,8 @@
 
 ### v4.11
 
+* ~~Kopfzeile: „Datenaufnahme" statt „Erfassung"~~ **erledigt v4.11.1** (03.07.2026, 11:56 Uhr)
+
 * ~~Versand: Empfängerliste umgebaut~~ **erledigt v4.11.0** (Patrick aus der festen Liste entfernt — fest bleibt nur felix.rundel@ (vorausgewählt); weitere Adressen frei eintragbar, per Button „+ weitere Adresse" beliebig viele Zeilen; Haken setzt sich beim Tippen automatisch) (03.07.2026, 11:47 Uhr)
 * ~~Button „Gebäudedaten" (Datei-Import am Gerät) entfernt~~ **erledigt v4.11.0** (Raumlisten werden ausschließlich zentral von Felix gepflegt und vom Server geladen — der Datei-Auswahl-Dialog am Endgerät entfällt; Einstellungen-Button heißt jetzt „Gebäudedaten vom Server aktualisieren", Startseiten-Banner lädt nur noch vom Server) (03.07.2026, 11:47 Uhr)
 * ~~„Update erzwingen" holt trotzdem alte Dateien~~ **behoben v4.11.0** (der Notfall-Knopf erneuerte nur index.html mit Frische-Parameter — app.js/style.css kamen unter alter Adresse wieder aus dem HTTP-Cache des Browsers. Jetzt tragen alle Datei-Adressen in index.html einen ?v=-Parameter, der bei jedem Release mitgezogen wird: neue Adresse = garantiert frische Datei. Offline-Fallback im SW mit ignoreSearch abgesichert) (03.07.2026, 11:47 Uhr)
