@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.7.0';
-const APP_BUILD_DATE = '02.07.2026 16:38'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.7.1';
+const APP_BUILD_DATE = '03.07.2026 08:02'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2030,6 +2030,8 @@ async function importGebaeudedaten(file) {
 
   allGebaeudeDaten = parseGebaeudedatenXlsx(buf);
   localStorage.setItem('gebaeudedaten', JSON.stringify(allGebaeudeDaten));
+  // Manuell importierte Liegenschaften vor der Server-Bereinigung schützen
+  localStorage.setItem('gebaeudedaten-local-keys', JSON.stringify(Object.keys(allGebaeudeDaten)));
   localStorage.setItem('gebaeudedaten-hash', newHash);
   localStorage.setItem('gebaeudedaten-import-date', new Date().toISOString());
   renderDatalists();
@@ -2109,6 +2111,12 @@ async function fetchGebaeudedatenFromServer(silent) {
       return true;
     }
     const serverData = parseGebaeudedatenXlsx(buf);
+    // Liegenschaften entfernen, die der Server nicht mehr liefert (gelöschte/verborgene Sheets);
+    // manuell per Datei importierte bleiben erhalten
+    const localKeys = new Set(JSON.parse(localStorage.getItem('gebaeudedaten-local-keys') || '[]'));
+    for (const k of Object.keys(allGebaeudeDaten)) {
+      if (!serverData[k] && !localKeys.has(k)) delete allGebaeudeDaten[k];
+    }
     // Server-Daten mit vorhandenen lokalen Daten mergen (lokal importierte Liegenschaften bleiben erhalten)
     for (const [k, v] of Object.entries(serverData)) {
       allGebaeudeDaten[k] = v;

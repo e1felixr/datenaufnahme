@@ -2,6 +2,8 @@
 
 ### v4.7
 
+* ~~Entfernte Liegenschaften bleiben auf den Geräten sichtbar~~ **behoben v4.7.1** (der Server-Abgleich mischte neue Sheets nur hinein, entfernte aber nie verschwundene — Geräte zeigten weiter Polizeipräsidium und Uni Mannheim. Jetzt: Liegenschaften, die der Server nicht mehr liefert, werden aus dem lokalen Bestand gelöscht; manuell per Datei importierte sind über `gebaeudedaten-local-keys` geschützt. Sheet „Polizeipräsidium Nordhessen" auf Felix' Ansage endgültig aus `gebaeudedaten.xlsx` entfernt, „Uni Mannheim" bleibt verborgen) (03.07.2026, 08:01 Uhr)
+
 * ~~Gebäudedaten Reichenbach (ESC Ennepetal)~~ **erledigt v4.7.0** (Raumlisten aus `251107_Aufstellung_Beleuchtung.xlsx` übernommen — getrennt nach „Reichenbach Schule" (Gebäude A–F, 289 Räume) und „Reichenbach Turnhallen" (Gymnasium-Halle T + Turnhalle Reichenbach, 87 Räume); Schätz-Zeilen ohne Raumnummer bzw. „alle" ausgelassen, Räume dedupliziert) (02.07.2026, 16:37 Uhr)
 * ~~Verborgene Excel-Sheets nicht mehr anbieten~~ **erledigt v4.7.0** (Parser überspringt in Excel ausgeblendete Sheets — Polizeipräsidium Nordhessen und Uni Mannheim sind in `gebaeudedaten.xlsx` nur verborgen, nicht gelöscht, und tauchen in der App nicht mehr als Liegenschaft auf) (02.07.2026, 16:37 Uhr)
 
