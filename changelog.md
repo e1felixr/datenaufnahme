@@ -2,6 +2,7 @@
 
 ### v4.11
 
+* ~~Kopfzeile: mehr Abstand zwischen Titel- und Datumszeile~~ **erledigt v4.11.2** (4 px Luft zwischen „Datenaufnahme vX.Y.Z" und dem Zeitstempel) (03.07.2026, 11:57 Uhr)
 * ~~Kopfzeile: „Datenaufnahme" statt „Erfassung"~~ **erledigt v4.11.1** (03.07.2026, 11:56 Uhr)
 
 * ~~Versand: Empfängerliste umgebaut~~ **erledigt v4.11.0** (Patrick aus der festen Liste entfernt — fest bleibt nur felix.rundel@ (vorausgewählt); weitere Adressen frei eintragbar, per Button „+ weitere Adresse" beliebig viele Zeilen; Haken setzt sich beim Tippen automatisch) (03.07.2026, 11:47 Uhr)
