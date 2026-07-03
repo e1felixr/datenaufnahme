@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.8.1';
-const APP_BUILD_DATE = '03.07.2026 08:26'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.9.0';
+const APP_BUILD_DATE = '03.07.2026 08:31'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2354,7 +2354,7 @@ function populateDropdowns() {
   fillSelect('f-anzahlRoehren', CONFIG.anzahlRoehren.map(String), 'Anz. Röhren');
   fillDatalist('dl-dnVentil', CONFIG.dnVentil);
   fillDatalist('dl-ventilform', CONFIG.ventilform);
-  fillSelect('f-artThermostatkopf', CONFIG.artThermostatkopf, 'Thermostatkopf', { 'Sonstiges': 'Sonstiges → Foto!' });
+  fillDatalist('dl-artThermostatkopf', CONFIG.artThermostatkopf);
   fillDatalist('dl-baulaenge', CONFIG.baulaengeOpts);
   fillDatalist('dl-nabenabstand', CONFIG.nabenabstandOpts);
 }
@@ -2635,6 +2635,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     typInput.addEventListener('change', () => { updateTypFields(); checkSonstigeHinweis(); });
     typInput.addEventListener('input', () => { updateTypFields(); checkSonstigeHinweis(); });
     document.getElementById('f-artThermostatkopf').addEventListener('change', checkSonstigeHinweis);
+    document.getElementById('f-artThermostatkopf').addEventListener('input', checkSonstigeHinweis);
 
     // Raumnummer-Änderung: Nutzung aus Gebäudedaten als Raumbezeichnung vorschlagen
     // Bei Auto-Fill direkt zum nächsten Abschnitt springen (Montageart bei Bel, Typ bei HK)

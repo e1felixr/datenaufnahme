@@ -162,7 +162,8 @@
       </div>
       <div class="form-group">
         <label>Art Thermostatkopf <button class="btn-help-inline" onclick="event.stopPropagation();openHelpImage('hilfe/hzg/thermostatkoepfe.jpg','Thermostatköpfe')" title="Hilfe: Thermostatköpfe">?</button></label>
-        <select id="f-artThermostatkopf"></select>
+        <input type="text" id="f-artThermostatkopf" list="dl-artThermostatkopf" autocomplete="off" placeholder="Thermostatkopf wählen">
+        <datalist id="dl-artThermostatkopf"></datalist>
       </div>
     </div>
 
@@ -244,13 +245,16 @@
 
     <!-- HK Buttons -->
     <div class="form-actions" id="hk-form-actions">
-      <button class="btn btn-primary" onclick="saveForm()">Speichern</button>
-      <button class="btn btn-accent" onclick="saveAndNextHk()">+ HK im Raum</button>
-      <button class="btn btn-accent" onclick="duplicateHk()">HK duplizieren</button>
-      <button class="btn-help-inline" onclick="event.preventDefault();showInfo('HK duplizieren','Speichert den aktuellen Heizkörper und füllt das Formular mit einer identischen Kopie: alle Felder samt Maßen werden übernommen, nur die HK-Nr. zählt hoch. Fotos bleiben beim Original. Beispiel: Bei fünf gleichen Heizkörpern den ersten erfassen, dann viermal „HK duplizieren“, zuletzt „Speichern“.')" title="Was macht HK duplizieren?">?</button>
-      <button class="btn btn-accent" onclick="saveAndNextRoom()">+ Raum</button>
-      <button class="btn btn-outline" onclick="history.back()">Abbrechen</button>
-      <button class="btn btn-danger btn-sm" id="btn-delete-hk" onclick="deleteCurrentHk()" style="display:none">Löschen</button>
+      <div class="form-actions-row">
+        <button class="btn btn-primary" onclick="saveForm()">Speichern</button>
+        <button class="btn btn-accent" onclick="saveAndNextHk()">+ HK im Raum</button>
+        <button class="btn btn-accent" onclick="saveAndNextRoom()">+ Raum</button>
+      </div>
+      <div class="form-actions-row">
+        <button class="btn btn-accent" onclick="duplicateHk()">HK duplizieren <span class="btn-info-badge" onclick="event.stopPropagation();event.preventDefault();showInfo('HK duplizieren','Speichert den aktuellen Heizkörper und füllt das Formular mit einer identischen Kopie: alle Felder samt Maßen werden übernommen, nur die HK-Nr. zählt hoch. Fotos bleiben beim Original. Beispiel: Bei fünf gleichen Heizkörpern den ersten erfassen, dann viermal „HK duplizieren“, zuletzt „Speichern“.')" title="Was macht HK duplizieren?">?</span></button>
+        <button class="btn btn-outline" onclick="history.back()">Abbrechen</button>
+        <button class="btn btn-danger btn-sm" id="btn-delete-hk" onclick="deleteCurrentHk()" style="display:none">Löschen</button>
+      </div>
     </div>
   </div><!-- /hk-form-section -->
 

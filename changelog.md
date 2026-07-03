@@ -1,5 +1,10 @@
 # Changelog
 
+### v4.9
+
+* ~~Art Thermostatkopf: Vorschlagsfeld statt Dropdown~~ **erledigt v4.9.0** (Eingabefeld mit Vorschlagsliste wie beim Ventiltyp — freie Eingaben möglich; „Sonstiges → Foto!"-Hinweis erscheint weiterhin bei „Sonstiges") (03.07.2026, 08:31 Uhr)
+* ~~HK-Button-Leiste zweizeilig~~ **erledigt v4.9.0** (Reihe 1: Speichern / + HK im Raum / + Raum; Reihe 2: HK duplizieren / Abbrechen — Texte passen wieder in die Knöpfe. Der ?-Info-Knopf zum Duplizieren sitzt jetzt als kleiner Punkt IM Button statt verloren daneben) (03.07.2026, 08:31 Uhr)
+
 ### v4.8
 
 * ~~Alt-Liegenschaften trotz v4.7.1 nicht entfernt~~ **behoben v4.8.1** (die Bereinigung lief erst NACH der Hash-Abkürzung — hatte ein Gerät die neue Datei noch mit altem Code geladen, blieb der Alt-Bestand für immer liegen. Bereinigung läuft jetzt vor dem Hash-Vergleich und speichert auch bei unverändertem Hash, wenn etwas entfernt wurde. Außerdem „Uni Mannheim" auf Felix' Wunsch wieder sichtbar) (03.07.2026, 08:25 Uhr)

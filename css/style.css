@@ -397,12 +397,36 @@ body {
 /* ── Form Actions ── */
 .form-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 20px;
   padding-bottom: 20px;
 }
 
 .form-actions .btn { flex: 1; }
+
+/* Zweizeilige Button-Leiste: jede Reihe volle Breite */
+.form-actions-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Info-Punkt im Button (statt eigenem Element zwischen den Buttons) */
+.btn-info-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: bold;
+  vertical-align: middle;
+}
 
 /* ── Empty State ── */
 .empty-state {
