@@ -2,6 +2,7 @@
 
 ### v4.9
 
+* ~~Info-Text „Standard" ungenau~~ **behoben v4.9.3** (der Hilfetext verschwieg, dass DN Ventil und Nabenabstand längst übernommen werden — jetzt zählt er alle Vorlage-Felder exakt auf, samt der Liste dessen, was NICHT übernommen wird) (03.07.2026, 11:25 Uhr)
 * ~~„Update prüfen" wirft Fehler „showUpdateBanner is not defined"~~ **behoben v4.9.2** (Relikt aus der v4.0.5 entfernten Banner-Logik — wartet ein Update, wird es jetzt nach Klick auf „Update prüfen" direkt angewendet, Toast „Update wird angewendet...") (03.07.2026, 11:19 Uhr)
 * ~~Liegenschaft „Reichenbach Schule" → „Reichenbach-Gym"~~ **erledigt v4.9.2** (Sheet in gebaeudedaten.xlsx und PDF-Anleitung umbenannt; Geräte übernehmen den neuen Namen beim nächsten Online-Start automatisch. Achtung: Projekte, die schon unter „Reichenbach Schule" angelegt wurden, verlieren die Raumlisten-Verknüpfung — Projekt neu anlegen) (03.07.2026, 11:19 Uhr)
 
