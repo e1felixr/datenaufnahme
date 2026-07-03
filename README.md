@@ -4,7 +4,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v4.8.0 · **Letzte Änderung:** 03.07.2026 08:11
+**aktuelle Version:** v4.8.0 · **Letzte Änderung:** 03.07.2026 08:13
 
 ### Muss ich neu installieren?
 
@@ -121,22 +121,6 @@ Am Ende der Begehung in der Eintragsliste auf **"Daten versenden"** tippen und d
 - [ ] App einmal online öffnen, damit die aktuellen Gebäudedaten geladen werden
 - [ ] Erfasser-Name auf jedem Gerät eingetragen
 - [ ] Projekt in der App angelegt
-
-## Technischer Aufbau
-
-```
-index.html            Haupt-HTML mit allen Screens
-js/app.js             Hauptlogik, Navigation, Event-Handling
-js/db.js              IndexedDB-Wrapper (Projekte, HK & Beleuchtung)
-js/export.js          Export-Funktionen (xlsx, ZIP)
-css/style.css         Mobile-first CSS
-sw.js                 Service Worker (Offline-Cache)
-manifest.json         PWA-Manifest
-lib/xlsx.mini.min.js  SheetJS für xlsx-Import/Export
-hilfe/hzg/            Hilfe-Bilder Heizung
-hilfe/bel/            Hilfe-Bilder Beleuchtung
-icons/                PWA-Icons
-```
 
 ## Hilfe / Probleme
 
