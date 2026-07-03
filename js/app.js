@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.9.3';
-const APP_BUILD_DATE = '03.07.2026 11:26'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.10.0';
+const APP_BUILD_DATE = '03.07.2026 11:36'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -140,9 +140,9 @@ function showToast(msg, duration = 2000) {
 function applyModuleTheme(modulType) {
   const html = document.documentElement;
   if (modulType === 'hk') {
-    html.style.setProperty('--module-color', '#FF6633');
-    html.style.setProperty('--module-color-light', '#FFF3E0');
-    html.style.setProperty('--module-color-dark', '#E65100');
+    html.style.setProperty('--module-color', '#66B32F');
+    html.style.setProperty('--module-color-light', '#F0F7E6');
+    html.style.setProperty('--module-color-dark', '#3F7A1A');
     html.style.setProperty('--module-text', '#fff');
     html.dataset.theme = 'hk';
   } else if (modulType === 'beleuchtung') {
@@ -393,7 +393,7 @@ async function renderHkList() {
       html += `
         <div class="room-hk-chip" onclick="openHkForm('${hk.id}')">
           <span class="room-hk-nr">HK ${esc(String(hk.hkNr || '-'))}</span>
-          ${hk.typ ? `<span class="badge" style="background:#FFF3E0;color:#E65100">${esc(hk.typ)}</span>` : ''}
+          ${hk.typ ? `<span class="badge" style="background:#F0F7E6;color:#3F7A1A">${esc(hk.typ)}</span>` : ''}
           ${chipFotos}
           <button class="room-hk-del" onclick="event.stopPropagation();confirmDeleteHk('${hk.id}')" title="Löschen">&times;</button>
         </div>`;
@@ -845,7 +845,7 @@ function showCrossModulePrompt(savedEntry, fromModule) {
     title.textContent = 'Heizkörper für diesen Raum?';
     info.textContent = roomLabel;
     btnYes.textContent = 'Heizkörper erfassen';
-    btnYes.style.background = '#FF6633';
+    btnYes.style.background = '#66B32F';
     btnYes.style.color = '#fff';
   }
 

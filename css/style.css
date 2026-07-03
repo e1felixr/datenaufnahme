@@ -3,11 +3,11 @@
   --primary: #1565C0;
   --primary-dark: #0D47A1;
   --primary-light: #E3F2FD;
-  --module-color: #FF6633;
-  --module-color-light: #FFF3E0;
-  --module-color-dark: #E65100;
+  --module-color: #66B32F;
+  --module-color-light: #F0F7E6;
+  --module-color-dark: #3F7A1A;
   --module-text: #fff;
-  --accent: #FF6F00;
+  --accent: #5AA329;
   --danger: #C62828;
   --danger-light: #FFEBEE;
   --success: #2E7D32;
@@ -519,7 +519,7 @@ body {
   padding: 3px 7px;
   border: 1px solid var(--border);
   border-radius: 4px;
-  background: #FFF3E0;
+  background: #F0F7E6;
   cursor: pointer;
   font-size: .78rem;
   transition: border-color .15s;
@@ -527,7 +527,7 @@ body {
 }
 
 .room-hk-chip:active {
-  border-color: #FF6633;
+  border-color: #66B32F;
 }
 
 .room-bel-chip {
@@ -598,8 +598,8 @@ body {
 }
 
 .section-title-hk {
-  color: #FF6633;
-  border-bottom-color: #FFF3E0;
+  color: #66B32F;
+  border-bottom-color: #F0F7E6;
 }
 
 .section-title-bel {
@@ -946,7 +946,7 @@ body {
 
 /* ── Sonstige-Hinweis ── */
 .sonstige-hinweis {
-  background: #FFF3E0;
+  background: #F0F7E6;
   border: 2px solid var(--accent);
   border-radius: var(--radius);
   padding: 10px 14px;
@@ -1096,7 +1096,7 @@ body {
 }
 
 .modul-toggle-btn.active-hk {
-  background: #FF6633;
+  background: #66B32F;
   color: #fff;
   font-weight: 600;
 }

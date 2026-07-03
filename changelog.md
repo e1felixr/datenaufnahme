@@ -1,5 +1,9 @@
 # Changelog
 
+### v4.10
+
+* ~~HK-Modul in E1-Grün statt Orange~~ **erledigt v4.10.0** (Modulfarbe #FF6633 → E1-Grün #66B32F wie in der Anleitung, helle Fläche #F0F7E6, dunkler Ton #3F7A1A, Akzent-Buttons #5AA329; auch theme-color-Meta und FAB-Auswahl. Beleuchtung bleibt gelb, „Beides" bleibt blau) (03.07.2026, 11:34 Uhr)
+
 ### v4.9
 
 * ~~Info-Text „Standard" ungenau~~ **behoben v4.9.3** (der Hilfetext verschwieg, dass DN Ventil und Nabenabstand längst übernommen werden — jetzt zählt er alle Vorlage-Felder exakt auf, samt der Liste dessen, was NICHT übernommen wird) (03.07.2026, 11:25 Uhr)
