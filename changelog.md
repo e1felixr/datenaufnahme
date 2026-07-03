@@ -2,6 +2,8 @@
 
 ### v4.8
 
+* ~~Alt-Liegenschaften trotz v4.7.1 nicht entfernt~~ **behoben v4.8.1** (die Bereinigung lief erst NACH der Hash-Abkürzung — hatte ein Gerät die neue Datei noch mit altem Code geladen, blieb der Alt-Bestand für immer liegen. Bereinigung läuft jetzt vor dem Hash-Vergleich und speichert auch bei unverändertem Hash, wenn etwas entfernt wurde. Außerdem „Uni Mannheim" auf Felix' Wunsch wieder sichtbar) (03.07.2026, 08:25 Uhr)
+
 * ~~Erfassungsart-Default „Heizkörper" statt „Beleuchtung"~~ **erledigt v4.8.0** (beim Anlegen eines neuen Projekts ist jetzt „Heizkörper" vorausgewählt; Toggle-Beschriftung von „HK" in „Heizkörper" umbenannt) (03.07.2026, 08:06 Uhr)
 
 ### v4.7

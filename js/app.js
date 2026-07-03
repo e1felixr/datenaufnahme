@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.8.0';
-const APP_BUILD_DATE = '03.07.2026 08:19'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.8.1';
+const APP_BUILD_DATE = '03.07.2026 08:26'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2106,16 +2106,18 @@ async function fetchGebaeudedatenFromServer(silent) {
     const buf = await resp.arrayBuffer();
     const newHash = await hashArrayBuffer(buf);
     const oldHash = localStorage.getItem('gebaeudedaten-server-hash') || '';
-    if (oldHash && oldHash === newHash) {
-      if (!silent) showToast('Server-Gebäudedaten unverändert');
-      return true;
-    }
     const serverData = parseGebaeudedatenXlsx(buf);
     // Liegenschaften entfernen, die der Server nicht mehr liefert (gelöschte/verborgene Sheets);
-    // manuell per Datei importierte bleiben erhalten
+    // manuell per Datei importierte bleiben erhalten. Läuft VOR der Hash-Abkürzung, sonst bleibt
+    // ein Alt-Bestand liegen, wenn die Datei schon vor dem Code-Update geladen wurde.
     const localKeys = new Set(JSON.parse(localStorage.getItem('gebaeudedaten-local-keys') || '[]'));
+    let entfernt = 0;
     for (const k of Object.keys(allGebaeudeDaten)) {
-      if (!serverData[k] && !localKeys.has(k)) delete allGebaeudeDaten[k];
+      if (!serverData[k] && !localKeys.has(k)) { delete allGebaeudeDaten[k]; entfernt++; }
+    }
+    if (oldHash && oldHash === newHash && entfernt === 0) {
+      if (!silent) showToast('Server-Gebäudedaten unverändert');
+      return true;
     }
     // Server-Daten mit vorhandenen lokalen Daten mergen (lokal importierte Liegenschaften bleiben erhalten)
     for (const [k, v] of Object.entries(serverData)) {
