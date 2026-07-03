@@ -4,7 +4,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v4.7.1 · **Letzte Änderung:** 03.07.2026 08:02
+**aktuelle Version:** v4.7.1 · **Letzte Änderung:** 03.07.2026 08:04
 
 ### Muss ich neu installieren?
 
@@ -90,7 +90,9 @@ Unter **Einstellungen > "Alle Daten zurücksetzen"** können sämtliche Projekte
 
 ## Neue Erfassung vorbereiten
 
-Bevor ein neues Gebäude / eine neue Liegenschaft erfasst wird, sind folgende Schritte nötig:
+**Eine Raumliste ist keine Pflicht:** Es kann jederzeit eine **freie Liegenschaft** angelegt werden — einfach beim Projekt-Anlegen einen beliebigen Namen eintippen (z.B. "Grundschule Musterstadt") und loslegen. Gebäude, Geschoss und Raum-Nr. werden dann von Hand eingetragen; die App merkt sich die Eingaben und schlägt sie beim nächsten Raum wieder vor. Nur die **automatische Vervollständigung aus einem hinterlegten Raumbuch** entfällt.
+
+Wer die Raum-Vorschläge nutzen möchte, bereitet die Erfassung so vor:
 
 ### 1. Gebäudedaten-Datei anlegen
 
