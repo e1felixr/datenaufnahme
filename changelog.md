@@ -1,7 +1,12 @@
 # Changelog
 
-### v4.10
+### v4.11
 
+* ~~Versand: Empfängerliste umgebaut~~ **erledigt v4.11.0** (Patrick aus der festen Liste entfernt — fest bleibt nur felix.rundel@ (vorausgewählt); weitere Adressen frei eintragbar, per Button „+ weitere Adresse" beliebig viele Zeilen; Haken setzt sich beim Tippen automatisch) (03.07.2026, 11:47 Uhr)
+* ~~Button „Gebäudedaten" (Datei-Import am Gerät) entfernt~~ **erledigt v4.11.0** (Raumlisten werden ausschließlich zentral von Felix gepflegt und vom Server geladen — der Datei-Auswahl-Dialog am Endgerät entfällt; Einstellungen-Button heißt jetzt „Gebäudedaten vom Server aktualisieren", Startseiten-Banner lädt nur noch vom Server) (03.07.2026, 11:47 Uhr)
+* ~~„Update erzwingen" holt trotzdem alte Dateien~~ **behoben v4.11.0** (der Notfall-Knopf erneuerte nur index.html mit Frische-Parameter — app.js/style.css kamen unter alter Adresse wieder aus dem HTTP-Cache des Browsers. Jetzt tragen alle Datei-Adressen in index.html einen ?v=-Parameter, der bei jedem Release mitgezogen wird: neue Adresse = garantiert frische Datei. Offline-Fallback im SW mit ignoreSearch abgesichert) (03.07.2026, 11:47 Uhr)
+
+### v4.10
 * ~~Misch-Versionen nach Updates (grüne Statuszeile, orangene Buttons, alte Versionsnummer)~~ **behoben v4.10.1** (GitHub Pages hält Dateien bis zu 10 Minuten im HTTP-Cache — der Service Worker holte so Dateien zweier Versionen. Jetzt: Laden mit `cache: 'no-cache'` (ETag-Rückfrage beim Server) und Vorbefüllen mit `cache: 'reload'` — alle App-Dateien stammen stets aus demselben Stand) (03.07.2026, 11:38 Uhr)
 
 * ~~HK-Modul in E1-Grün statt Orange~~ **erledigt v4.10.0** (Modulfarbe #FF6633 → E1-Grün #66B32F wie in der Anleitung, helle Fläche #F0F7E6, dunkler Ton #3F7A1A, Akzent-Buttons #5AA329; auch theme-color-Meta und FAB-Auswahl. Beleuchtung bleibt gelb, „Beides" bleibt blau) (03.07.2026, 11:34 Uhr)

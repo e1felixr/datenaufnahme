@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.10.1';
-const APP_BUILD_DATE = '03.07.2026 11:39'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.11.0';
+const APP_BUILD_DATE = '03.07.2026 11:45'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2094,7 +2094,7 @@ function updateGebaeudedatenInfo() {
   if (banner && bannerText) {
     banner.style.display = '';
     bannerText.textContent = noData
-      ? 'Gebäudedaten importieren (tippen zum Auswählen)'
+      ? 'Gebäudedaten laden (tippen zum Aktualisieren)'
       : `Gebäudedaten: ${fmt} · ${keys.length} Lieg., ${totalRaeume} Räume (tippen zum Aktualisieren)`;
   }
 }
@@ -2182,6 +2182,20 @@ function renderDatalists() {
 
 // ── Versand ──
 
+function addRecipientRow() {
+  const cont = document.getElementById('send-extra-recipients');
+  const row = document.createElement('label');
+  row.className = 'send-recipient-row';
+  row.innerHTML = '<input type="checkbox" class="send-extra-check">' +
+    '<input type="email" class="send-extra-mail" placeholder="weitere E-Mail-Adresse" style="flex:1;padding:6px 8px;border:2px solid var(--border);border-radius:var(--radius);font-size:.85rem">';
+  const mail = row.querySelector('.send-extra-mail');
+  mail.addEventListener('input', () => {
+    row.querySelector('.send-extra-check').checked = !!mail.value.trim();
+  });
+  cont.appendChild(row);
+  mail.focus();
+}
+
 function showSendDialog() {
   const saved = localStorage.getItem('export-photo-size') || '2000';
   const slider = document.getElementById('send-exportsize');
@@ -2239,10 +2253,11 @@ async function sendData() {
 
   const recipients = [];
   if (document.getElementById('send-r1').checked) recipients.push(document.getElementById('send-r1').value);
-  if (document.getElementById('send-r2').checked) recipients.push(document.getElementById('send-r2').value);
-  const r3check = document.getElementById('send-r3-check');
-  const r3val = document.getElementById('send-r3').value.trim();
-  if (r3check && r3check.checked && r3val) recipients.push(r3val);
+  document.querySelectorAll('#send-extra-recipients .send-recipient-row').forEach(row => {
+    const check = row.querySelector('.send-extra-check');
+    const mail = row.querySelector('.send-extra-mail').value.trim();
+    if (check && check.checked && mail) recipients.push(mail);
+  });
 
   try {
     // Export-Fotogröße aus Send-Dialog lesen und merken

@@ -13,7 +13,8 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/style.css">
+  <!-- ?v=… bei jedem Release mitziehen: neue Adresse = garantiert frische Datei (HTTP-Cache-Buster) -->
+  <link rel="stylesheet" href="css/style.css?v=4110">
 </head>
 <body>
 
@@ -30,7 +31,7 @@
 
 <!-- ════════ SCREEN: Projektliste ════════ -->
 <div class="screen active" id="screen-projekte">
-  <div id="projekte-import-banner" class="import-banner" style="display:none" onclick="refreshGebaeudedaten()">
+  <div id="projekte-import-banner" class="import-banner" style="display:none" onclick="fetchGebaeudedatenFromServer(false)">
     <span id="projekte-import-text"></span>
   </div>
   <div id="projekt-list"></div>
@@ -50,7 +51,6 @@
   </div>
   <div class="action-bar">
     <button class="btn btn-module btn-sm" onclick="showSendDialog()">Versenden</button>
-    <button class="btn btn-outline btn-sm" onclick="refreshGebaeudedaten()">Gebäudedaten</button>
     <input type="file" id="file-gebaeudedaten" accept=".xlsx" style="display:none" onchange="importGebaeudedaten(this.files[0])">
     <span id="gebaeudedaten-info" class="import-info"></span>
     <span id="hk-count" class="count-badge" style="align-self:center;white-space:nowrap">0</span>
@@ -620,7 +620,7 @@
   <div class="settings-group">
     <label>Gebäudedaten</label>
     <div class="import-info-box" id="settings-import-info">Keine Gebäudedaten importiert</div>
-    <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="refreshGebaeudedaten()">Gebäudedaten importieren / aktualisieren</button>
+    <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="fetchGebaeudedatenFromServer(false)">Gebäudedaten vom Server aktualisieren</button>
   </div>
 
   <div class="form-actions">
@@ -672,17 +672,16 @@
     <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:12px">ZIP wird erstellt und heruntergeladen. Danach öffnet sich das Mailprogramm – bitte die ZIP-Datei manuell anhängen.</p>
     <div class="send-recipients">
       <label class="send-recipient-row">
-        <input type="checkbox" id="send-r1" value="felix.rundel@e1-energie.com">
+        <input type="checkbox" id="send-r1" value="felix.rundel@e1-energie.com" checked>
         <span>felix.rundel@e1-energie.com</span>
       </label>
-      <label class="send-recipient-row">
-        <input type="checkbox" id="send-r2" value="patrick.dimler@e1-energie.com">
-        <span>patrick.dimler@e1-energie.com</span>
-      </label>
-      <label class="send-recipient-row">
-        <input type="checkbox" id="send-r3-check">
-        <input type="email" id="send-r3" placeholder="weitere E-Mail-Adresse" style="flex:1;padding:6px 8px;border:2px solid var(--border);border-radius:var(--radius);font-size:.85rem">
-      </label>
+      <div id="send-extra-recipients">
+        <label class="send-recipient-row">
+          <input type="checkbox" class="send-extra-check">
+          <input type="email" class="send-extra-mail" placeholder="weitere E-Mail-Adresse" oninput="this.closest('.send-recipient-row').querySelector('.send-extra-check').checked = !!this.value.trim()" style="flex:1;padding:6px 8px;border:2px solid var(--border);border-radius:var(--radius);font-size:.85rem">
+        </label>
+      </div>
+      <button class="btn btn-outline btn-sm" type="button" onclick="addRecipientRow()" style="margin-top:6px">+ weitere Adresse</button>
     </div>
     <div style="margin-top:12px">
       <label style="font-size:.75rem;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.3px">Max. Fotogröße</label>
@@ -773,10 +772,10 @@
 <div class="toast" id="toast"></div>
 
 <!-- ════════ Scripts ════════ -->
-<script src="lib/xlsx.mini.min.js"></script>
-<script src="js/db.js"></script>
-<script src="js/export.js"></script>
-<script src="js/app.js"></script>
+<script src="lib/xlsx.mini.min.js?v=4110"></script>
+<script src="js/db.js?v=4110"></script>
+<script src="js/export.js?v=4110"></script>
+<script src="js/app.js?v=4110"></script>
 
 <script>
   // Header-Navigation steuern

@@ -1,5 +1,5 @@
 // sw.js - Service Worker für Offline-Fähigkeit
-const CACHE_NAME = 'e1-begehung-v128';
+const CACHE_NAME = 'e1-begehung-v130';
 const ASSETS = [
   './',
   './index.html',
@@ -70,6 +70,7 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         return response;
       })
-      .catch(() => caches.match(event.request))
+      // ignoreSearch: ?v=…-Cache-Buster der Seite darf den Offline-Treffer nicht verfehlen
+      .catch(() => caches.match(event.request, { ignoreSearch: true }))
   );
 });
