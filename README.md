@@ -108,7 +108,7 @@ In der App auf **"+"** tippen und einen Projektnamen vergeben (z.B. "Musterstra�
 
 ### 4. Erfassung starten
 
-Im Projekt auf **"+"** tippen, um den ersten Eintrag anzulegen. Bei "Beides" wird gefragt, ob Heizkörper oder Beleuchtung erfasst werden soll. Die Felder Gebäude, Geschoss und Raum-Nr. bieten Autovervollständigung aus den Gebäudedaten.
+Im Projekt auf **"+"** tippen, um den ersten Eintrag anzulegen. Bei der Erfassungsart "Beides" liegen Heizkörper und Leuchten im selben Projekt — deshalb fragt die App bei jedem neuen Eintrag kurz, welches von beiden erfasst werden soll. Die Felder Gebäude, Geschoss und Raum-Nr. bieten Autovervollständigung aus den Gebäudedaten.
 
 ### 5. Erfassung beenden & Daten versenden
 
