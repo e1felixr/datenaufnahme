@@ -650,11 +650,11 @@
     <div class="form-group">
       <label>Erfassungsart</label>
       <div class="modul-toggle" id="modul-toggle">
-        <button type="button" class="modul-toggle-btn" data-modul="hk" onclick="setModulToggle('hk')">HK</button>
-        <button type="button" class="modul-toggle-btn active-bel" data-modul="beleuchtung" onclick="setModulToggle('beleuchtung')">Beleuchtung</button>
+        <button type="button" class="modul-toggle-btn active-hk" data-modul="hk" onclick="setModulToggle('hk')">Heizkörper</button>
+        <button type="button" class="modul-toggle-btn" data-modul="beleuchtung" onclick="setModulToggle('beleuchtung')">Beleuchtung</button>
         <button type="button" class="modul-toggle-btn" data-modul="beides" onclick="setModulToggle('beides')">Beides</button>
       </div>
-      <input type="hidden" id="input-projekt-modul" value="beleuchtung">
+      <input type="hidden" id="input-projekt-modul" value="hk">
     </div>
     <button class="btn btn-primary" onclick="createNewProjekt()">Erstellen</button>
     <button class="btn btn-outline" onclick="closeNewProjektDialog()">Abbrechen</button>

@@ -4,7 +4,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v4.7.1 · **Letzte Änderung:** 03.07.2026 08:04
+**aktuelle Version:** v4.8.0 · **Letzte Änderung:** 03.07.2026 08:11
 
 ### Muss ich neu installieren?
 
@@ -94,35 +94,9 @@ Unter **Einstellungen > "Alle Daten zurücksetzen"** können sämtliche Projekte
 
 Wer die Raum-Vorschläge nutzen möchte, bereitet die Erfassung so vor:
 
-### 1. Gebäudedaten-Datei anlegen
+### 1. Raumliste hinterlegen lassen
 
-Die Datei `gebaeudedaten.xlsx` im Repository enthält die Vorschlagslisten für das Formular. Vor einer neuen Erfassung muss sie mit den passenden Daten des Objekts befüllt werden. Es werden zwei Formate unterstützt:
-
-**Neues Format (empfohlen):**
-
-| Spalte A | Spalte B | Spalte C | Spalte D |
-|----------|----------|----------|----------|
-| **Geschoss** | **Raum Nr.** | **Raumbezeichnung** | **Bodenfläche** |
-| EG | E415 | WC | 3.06 |
-| EG | E416 | Lager | 11.01 |
-| OG 1 | 1102 | Büro | 20.5 |
-
-- Geschoss steht nur in der ersten Zeile einer Gruppe (nachfolgende Zeilen können leer sein)
-- Bei Raumauswahl wird die Raumbezeichnung automatisch als Vorschlag übernommen
-
-**Altes Format:**
-
-| Spalte A | Spalte B | Spalte C | Spalte D | Spalte E | Spalte F | Spalte G | Spalte H |
-|----------|----------|----------|----------|----------|----------|----------|----------|
-| **Gebäude** | *(frei)* | **Etage** | *(frei)* | **Raum** | **Fläche** | **Nutzung** | **Barcode** |
-
-- Gebäude und Etage stehen nur in der ersten Zeile einer Gruppe
-- Spalten B und D werden ignoriert
-
-**Datei aktualisieren:**
-1. `gebaeudedaten.xlsx` bearbeiten (pro Liegenschaft ein Sheet)
-2. Änderung committen und pushen
-3. Beim nächsten Öffnen der App laden alle Geräte automatisch die aktualisierten Daten
+Wer für eine Liegenschaft die Raum-Vorschläge nutzen möchte, schickt das Raumbuch (Excel-Datei, z.B. vom Auftraggeber) einfach an **Felix Rundel** — er pflegt es zentral ein. Beim nächsten Öffnen der App laden alle Geräte die neue Raumliste automatisch, es ist nichts weiter zu tun.
 
 ### 2. Erfasser-Name eintragen
 
@@ -130,15 +104,19 @@ Beim ersten Start der App wird der **Erfasser-Name** abgefragt (Pflichtfeld). Di
 
 ### 3. Projekt anlegen
 
-In der App auf **"+"** tippen und einen Projektnamen vergeben (z.B. "Musterstraße 12" oder "Liegenschaft Nord"). Erfassungsart wählen: **HK**, **Beleuchtung** oder **Beides**. Die Gebäudedaten aus der zentralen xlsx-Datei stehen danach automatisch als Autovervollständigung zur Verfügung.
+In der App auf **"+"** tippen und einen Projektnamen vergeben (z.B. "Musterstraße 12" oder "Liegenschaft Nord"). Erfassungsart wählen: **Heizkörper** (voreingestellt), **Beleuchtung** oder **Beides**. Die Gebäudedaten aus der zentralen xlsx-Datei stehen danach automatisch als Autovervollständigung zur Verfügung.
 
 ### 4. Erfassung starten
 
 Im Projekt auf **"+"** tippen, um den ersten Eintrag anzulegen. Bei "Beides" wird gefragt, ob Heizkörper oder Beleuchtung erfasst werden soll. Die Felder Gebäude, Geschoss und Raum-Nr. bieten Autovervollständigung aus den Gebäudedaten.
 
+### 5. Erfassung beenden & Daten versenden
+
+Am Ende der Begehung in der Eintragsliste auf **"Daten versenden"** tippen und die Empfänger ankreuzen. Die App erstellt eine ZIP-Datei (Excel-Tabelle + alle Fotos) und lädt sie herunter; gleichzeitig öffnet sich das Mailprogramm mit Betreff und Empfängern — die **ZIP-Datei bitte manuell anhängen** und abschicken. Die Fotos werden erst beim Versand komprimiert; auf dem Gerät bleibt alles erhalten, bis es unter Einstellungen bewusst gelöscht wird.
+
 ### Checkliste vor der Begehung
 
-- [ ] `gebaeudedaten.xlsx` mit den Gebäude-/Etagen-/Raumdaten des Objekts befüllt und gepusht
+- [ ] Falls Raum-Vorschläge gewünscht: Raumbuch an Felix geschickt und eingepflegt
 - [ ] App auf allen beteiligten Geräten installiert (siehe [Installation](#installation-auf-dem-smartphone))
 - [ ] App einmal online öffnen, damit die aktuellen Gebäudedaten geladen werden
 - [ ] Erfasser-Name auf jedem Gerät eingetragen

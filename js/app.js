@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.7.1';
-const APP_BUILD_DATE = '03.07.2026 08:04'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.8.0';
+const APP_BUILD_DATE = '03.07.2026 08:11'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -221,7 +221,7 @@ function showNewProjektDialog() {
   const keys = Object.keys(allGebaeudeDaten);
   document.getElementById('dl-liegenschaften').innerHTML = keys.map(k => `<option value="${esc(k)}">`).join('');
   if (keys.length === 1) inp.value = keys[0];
-  setModulToggle('beleuchtung');
+  setModulToggle('hk');
   inp.focus();
 }
 
@@ -234,7 +234,7 @@ async function createNewProjekt() {
   if (!name) return;
   // Liegenschaft = Name, wenn in Gebäudedaten vorhanden; sonst leer (freie Eingabe)
   const liegenschaft = allGebaeudeDaten[name] ? name : '';
-  const modulType = document.getElementById('input-projekt-modul').value || 'beleuchtung';
+  const modulType = document.getElementById('input-projekt-modul').value || 'hk';
   await createProjekt(name, liegenschaft, modulType);
   closeNewProjektDialog();
   await renderProjekte();

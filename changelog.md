@@ -1,5 +1,9 @@
 # Changelog
 
+### v4.8
+
+* ~~Erfassungsart-Default „Heizkörper" statt „Beleuchtung"~~ **erledigt v4.8.0** (beim Anlegen eines neuen Projekts ist jetzt „Heizkörper" vorausgewählt; Toggle-Beschriftung von „HK" in „Heizkörper" umbenannt) (03.07.2026, 08:06 Uhr)
+
 ### v4.7
 
 * ~~Entfernte Liegenschaften bleiben auf den Geräten sichtbar~~ **behoben v4.7.1** (der Server-Abgleich mischte neue Sheets nur hinein, entfernte aber nie verschwundene — Geräte zeigten weiter Polizeipräsidium und Uni Mannheim. Jetzt: Liegenschaften, die der Server nicht mehr liefert, werden aus dem lokalen Bestand gelöscht; manuell per Datei importierte sind über `gebaeudedaten-local-keys` geschützt. Sheet „Polizeipräsidium Nordhessen" auf Felix' Ansage endgültig aus `gebaeudedaten.xlsx` entfernt, „Uni Mannheim" bleibt verborgen) (03.07.2026, 08:01 Uhr)
