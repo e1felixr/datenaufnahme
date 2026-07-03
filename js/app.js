@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.9.0';
-const APP_BUILD_DATE = '03.07.2026 08:31'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.9.1';
+const APP_BUILD_DATE = '03.07.2026 08:35'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -35,7 +35,7 @@ const CONFIG = {
   nabenabstandOpts: ['k.A.',100,150,200,300,350,500,600,900],
   dnVentil: ['k.A.', 'DN10', 'DN15', 'DN20', 'DN25'],
   ventilform: ['Durchgang', 'Eck', 'Axial', 'Winkeleck'],
-  artThermostatkopf: ['nur auf/zu', 'analog', 'digital', 'Behörde', 'Fernversteller', 'fehlt', 'Sonstiges'],
+  artThermostatkopf: ['analog', 'Behörde', 'digital', 'nur auf/zu', 'Fernversteller', 'fehlt', 'Sonstiges'],
   einbausituationCheckboxes: ['verkleidung', 'bruestung', 'moebel']
 };
 

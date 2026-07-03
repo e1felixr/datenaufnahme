@@ -2,6 +2,8 @@
 
 ### v4.9
 
+* ~~Art Thermostatkopf: Reihenfolge der Vorschläge~~ **erledigt v4.9.1** (erst analog, dann Behörde, dann digital, danach der Rest — häufigste Fälle zuerst) (03.07.2026, 08:34 Uhr)
+
 * ~~Art Thermostatkopf: Vorschlagsfeld statt Dropdown~~ **erledigt v4.9.0** (Eingabefeld mit Vorschlagsliste wie beim Ventiltyp — freie Eingaben möglich; „Sonstiges → Foto!"-Hinweis erscheint weiterhin bei „Sonstiges") (03.07.2026, 08:31 Uhr)
 * ~~HK-Button-Leiste zweizeilig~~ **erledigt v4.9.0** (Reihe 1: Speichern / + HK im Raum / + Raum; Reihe 2: HK duplizieren / Abbrechen — Texte passen wieder in die Knöpfe. Der ?-Info-Knopf zum Duplizieren sitzt jetzt als kleiner Punkt IM Button statt verloren daneben) (03.07.2026, 08:31 Uhr)
 
