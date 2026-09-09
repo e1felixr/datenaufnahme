@@ -28,11 +28,11 @@ const ASSETS = [
   './hilfe/bel/leuchtenarten.png'
 ];
 
-// Die App läuft hinter dem Azure Application Proxy mit Entra-ID-Vorauthentifizierung.
-// Läuft die Anmelde-Sitzung ab, beantwortet der Proxy JEDE Anfrage mit einer Umleitung
-// zur Login-Seite. Landet so eine Antwort im Cache, liegt dort HTML statt app.js —
-// die App zeigt dann dauerhaft eine weiße Seite, auch offline. Darum wird vor jedem
-// Cache-Schreibvorgang geprüft, ob die Antwort wirklich vom eigenen Server stammt.
+// Antwortet der Server einmal mit einer Fehler-, Umleitungs- oder Anmeldeseite statt
+// mit der angeforderten Datei (GitHub-Pages-404, Firmen-Proxy, WLAN-Portal), landete
+// diese HTML-Seite bisher als app.js im Cache — die App zeigte dann dauerhaft eine
+// weiße Seite, auch offline. Darum wird vor jedem Cache-Schreibvorgang geprüft, ob die
+// Antwort wirklich die erwartete Datei vom eigenen Server ist.
 function istBrauchbar(request, response) {
   if (!response || !response.ok) return false;
   // 'basic' = gleiche Herkunft; 'opaqueredirect'/'cors' schließt die Login-Seite aus

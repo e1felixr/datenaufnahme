@@ -2,11 +2,9 @@
 
 Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung bei Gebäudebegehungen. Läuft komplett im Browser, funktioniert offline und kann auf dem Smartphone wie eine native App installiert werden.
 
-**App starten:** [https://sitecapture-e1energie.msappproxy.net/](https://sitecapture-e1energie.msappproxy.net/)
+**App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-Die App liegt seit v4.12.0 auf dem E1-Firmenserver. Beim ersten Aufruf meldest du dich mit deinem gewohnten Firmenkonto an — dieselben Zugangsdaten wie bei Outlook oder Teams.
-
-**aktuelle Version:** v4.12.0 · **Letzte Änderung:** 09.09.2026 12:51
+**aktuelle Version:** v4.12.0 · **Letzte Änderung:** 09.09.2026 13:57
 
 ### Muss ich neu installieren?
 
@@ -99,6 +97,8 @@ Wer die Raum-Vorschläge nutzen möchte, bereitet die Erfassung so vor:
 ### 1. Raumliste hinterlegen lassen
 
 Wer für eine Liegenschaft die Raum-Vorschläge nutzen möchte, schickt das Raumbuch (Excel-Datei, z.B. vom Auftraggeber) einfach an **Felix Rundel** — er pflegt es zentral ein. Beim nächsten Öffnen der App laden alle Geräte die neue Raumliste automatisch, es ist nichts weiter zu tun.
+
+**Hinweis zu den Objektnamen:** Da dieses Repository öffentlich ist, erscheinen die Liegenschaften in der App unter neutralen Kennungen — „Objekt 01", „Objekt 02" und so fort. Räume, Geschosse und Raumbezeichnungen sind unverändert. Welche Kennung zu welchem Objekt gehört, steht in der Installationsanleitung, die Felix verteilt.
 
 ### 2. Erfasser-Name eintragen
 

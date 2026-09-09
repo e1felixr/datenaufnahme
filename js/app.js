@@ -15,7 +15,7 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 const APP_VERSION = 'v4.12.0';
-const APP_BUILD_DATE = '09.09.2026 12:51'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '09.09.2026 13:57'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2930,11 +2930,11 @@ async function manualUpdateCheck() {
     let serverVersion = APP_VERSION;
     try {
       const resp = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
-      // Hinter der Entra-Anmeldung kommt bei abgelaufener Sitzung HTML statt JSON
-      // zurück. Das darf nicht stumm als "App ist aktuell" durchgehen.
+      // Antwortet der Server mit einer Fehlerseite statt der Versionsdatei, kommt
+      // HTML statt JSON zurück. Das darf nicht stumm als "App ist aktuell" durchgehen.
       const ct = resp.headers.get('content-type') || '';
       if (!resp.ok || resp.redirected || !ct.includes('json')) {
-        showToast('Server nicht erreichbar — bitte Seite neu laden und anmelden');
+        showToast('Server nicht erreichbar — bitte später erneut versuchen');
         return;
       }
       const d = await resp.json();
