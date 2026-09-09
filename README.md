@@ -4,7 +4,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v4.12.1 · **Letzte Änderung:** 09.09.2026 14:06
+**aktuelle Version:** v4.12.2 · **Letzte Änderung:** 09.09.2026 14:27
 
 ### Muss ich neu installieren?
 
@@ -98,7 +98,7 @@ Wer die Raum-Vorschläge nutzen möchte, bereitet die Erfassung so vor:
 
 Wer für eine Liegenschaft die Raum-Vorschläge nutzen möchte, schickt das Raumbuch (Excel-Datei, z.B. vom Auftraggeber) einfach an **Felix Rundel** — er pflegt es zentral ein. Beim nächsten Öffnen der App laden alle Geräte die neue Raumliste automatisch, es ist nichts weiter zu tun.
 
-**Hinweis zu den Objektnamen:** Da dieses Repository öffentlich ist, erscheinen die Liegenschaften in der App unter neutralen Kennungen — etwa „Objekt 02“ oder „Objekt 03“. Räume, Geschosse und Raumbezeichnungen sind unverändert. Welche Kennung zu welchem Objekt gehört, steht in der Installationsanleitung, die Felix verteilt.
+**Hinweis zu den Objektnamen:** Da dieses Repository öffentlich ist, erscheinen die Liegenschaften in der App unter gekürzten Namen, die das Objekt nicht eindeutig benennen. Räume, Geschosse und Raumbezeichnungen sind unverändert. Welche Kennung zu welchem Objekt gehört, steht in der Installationsanleitung, die Felix verteilt.
 
 ### 2. Erfasser-Name eintragen
 

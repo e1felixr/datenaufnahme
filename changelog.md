@@ -2,6 +2,8 @@
 
 ### v4.12
 
+* ~~Nur noch die tatsächlich benötigten Liegenschaften ausliefern~~ **erledigt v4.12.2** (die Raumlisten „Objekt 02", „Objekt 03" und „Objekt 04" sind aus der veröffentlichten `gebaeudedaten.xlsx` entfernt — es bleibt „Schweden"; „Köpi" folgt, sobald das Raumbuch vorliegt. Die Geräte räumen die entfallenen Liegenschaften beim nächsten Online-Start selbsttätig ab. Achtung: Projekte, die unter einer der entfernten Kennungen angelegt wurden, verlieren die Raumlisten-Verknüpfung — die bereits erfassten Einträge bleiben erhalten, nur die Vorschläge entfallen. Im Sicherungs-Bestand sind alle Liegenschaften unverändert vorhanden) (09.09.2026, 14:10 Uhr)
+
 * ~~Liegenschaft „Objekt 01" heißt jetzt „Schweden"~~ **erledigt v4.12.1** (auf Felix' Ansage — die Kennung war zu blass. Achtung: Projekte, die in der vergangenen Stunde unter „Objekt 01" angelegt wurden, verlieren die Raumlisten-Verknüpfung; in dem Fall Projekt neu anlegen. Die übrigen Kennungen bleiben unverändert) (09.09.2026, 14:05 Uhr)
 
 * ~~Raumlisten kommen wieder vom Server — jetzt ohne Kundendaten~~ **erledigt v4.12.0** (die `gebaeudedaten.xlsx` liegt wieder zentral im Repo, aber in anonymisierter Fassung: Die **Objektnamen sind durch neutrale Kennungen ersetzt** („Schweden“, „Objekt 02“ … „Objekt 04“), Flächen- und Barcode-Spalten sind entfernt. Raumstruktur, Raumnummern und Raumbezeichnungen bleiben unverändert — die Vorschläge arbeiten wie gewohnt. Welche Kennung zu welchem Objekt gehört, steht in der Installationsanleitung, die Felix verteilt. Damit ist der in v4.11.4 angekündigte Rückbau auf den geräteseitigen Datei-Import hinfällig) (09.09.2026, 13:50 Uhr)
