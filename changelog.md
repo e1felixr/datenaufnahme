@@ -2,7 +2,9 @@
 
 ### v4.12
 
-* ~~Raumlisten kommen wieder vom Server — jetzt ohne Kundendaten~~ **erledigt v4.12.0** (die `gebaeudedaten.xlsx` liegt wieder zentral im Repo, aber in anonymisierter Fassung: Die **Objektnamen sind durch neutrale Kennungen ersetzt** („Objekt 01" … „Objekt 04"), Flächen- und Barcode-Spalten sind entfernt. Raumstruktur, Raumnummern und Raumbezeichnungen bleiben unverändert — die Vorschläge arbeiten wie gewohnt. Welche Kennung zu welchem Objekt gehört, steht in der Installationsanleitung, die Felix verteilt. Damit ist der in v4.11.4 angekündigte Rückbau auf den geräteseitigen Datei-Import hinfällig) (09.09.2026, 13:50 Uhr)
+* ~~Liegenschaft „Objekt 01" heißt jetzt „Schweden"~~ **erledigt v4.12.1** (auf Felix' Ansage — die Kennung war zu blass. Achtung: Projekte, die in der vergangenen Stunde unter „Objekt 01" angelegt wurden, verlieren die Raumlisten-Verknüpfung; in dem Fall Projekt neu anlegen. Die übrigen Kennungen bleiben unverändert) (09.09.2026, 14:05 Uhr)
+
+* ~~Raumlisten kommen wieder vom Server — jetzt ohne Kundendaten~~ **erledigt v4.12.0** (die `gebaeudedaten.xlsx` liegt wieder zentral im Repo, aber in anonymisierter Fassung: Die **Objektnamen sind durch neutrale Kennungen ersetzt** („Schweden“, „Objekt 02“ … „Objekt 04“), Flächen- und Barcode-Spalten sind entfernt. Raumstruktur, Raumnummern und Raumbezeichnungen bleiben unverändert — die Vorschläge arbeiten wie gewohnt. Welche Kennung zu welchem Objekt gehört, steht in der Installationsanleitung, die Felix verteilt. Damit ist der in v4.11.4 angekündigte Rückbau auf den geräteseitigen Datei-Import hinfällig) (09.09.2026, 13:50 Uhr)
 * ~~Anmelde- und Fehlerseiten konnten die App lahmlegen~~ **behoben v4.12.0** (der Service Worker legte bisher **jede** Server-Antwort ungeprüft im Offline-Speicher ab. Antwortet der Server einmal mit einer Fehler- oder Anmeldeseite statt mit der Datei, landete diese HTML-Seite als `app.js` im Cache — die App hätte dauerhaft eine weiße Seite gezeigt, auch offline. Jetzt wird vor jedem Ablegen geprüft, ob die Antwort wirklich die erwartete Datei ist; im Zweifel bleibt die zuletzt gültige Fassung stehen. Das Vorbefüllen läuft nach dem Alles-oder-nichts-Prinzip) (09.09.2026, 12:40 Uhr)
 * ~~„Update prüfen" meldete fälschlich „App ist aktuell"~~ **behoben v4.12.0** (kam statt der Versionsdatei eine Fehlerseite zurück, wurde das stumm verschluckt. Jetzt meldet die App „Server nicht erreichbar") (09.09.2026, 12:40 Uhr)
 * ~~Ausführliche Anleitung lud ins Leere~~ **behoben v4.12.0** (die Detail-Hilfe holte die Anleitung vom alten, längst gelöschten Repo `heizkoerper`. Sie kommt nun aus dem eigenen Bestand, wird mit ausgeliefert und steht auch offline zur Verfügung) (09.09.2026, 12:40 Uhr)
@@ -161,7 +163,7 @@
 * ~~App hängt auf Splash Screen: fehlende hilfe/bel/ Bilder im Git verursachten SW-Cache-Fehler~~ **erledigt v3.11.6** (dulux.png + montageart.png committed)
 * ~~Orientation: Querformat nur wenn Gerät es erlaubt~~ **erledigt v3.11.6** (manifest.json orientation "any"→"natural")
 * ~~Sonstiges-Bereich: 2 Spalten statt 3, Erreichbarkeit-Label entfernt, LPH unter Checkbox~~ **erledigt v3.11.5**
-* ~~Gebäudedaten-Parser: altes XLSX-Format (Objekt 01) zeigt jetzt alle Räume pro Geschoss~~ **erledigt v3.11.4** (lastGeb/lastGes über leere Zeilen merken)
+* ~~Gebäudedaten-Parser: altes XLSX-Format (Blatt „Schweden“) zeigt jetzt alle Räume pro Geschoss~~ **erledigt v3.11.4** (lastGeb/lastGes über leere Zeilen merken)
 * ~~Eingabefelder kompakter~~ **erledigt v3.11.3** (field-padding 10px→6px, form-group margin 10px→8px)
 * ~~alert() durch showInfo()-Modal ersetzt~~ **erledigt v3.11.2** (eigener Info-Dialog ohne Browser-Header "Auf e1felixr.github.io wird Folgendes angezeigt:")
 * ~~Steuerung: 5 Checkboxen in einer Zeile~~ **erledigt v3.11.1** (steuerung-grid auf repeat(5, auto))
