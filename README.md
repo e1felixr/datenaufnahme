@@ -2,9 +2,11 @@
 
 Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung bei Gebäudebegehungen. Läuft komplett im Browser, funktioniert offline und kann auf dem Smartphone wie eine native App installiert werden.
 
-**App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
+**App starten:** [https://sitecapture-e1energie.msappproxy.net/](https://sitecapture-e1energie.msappproxy.net/)
 
-**aktuelle Version:** v4.11.3 · **Letzte Änderung:** 03.07.2026 13:01
+Die App liegt seit v4.12.0 auf dem E1-Firmenserver. Beim ersten Aufruf meldest du dich mit deinem gewohnten Firmenkonto an — dieselben Zugangsdaten wie bei Outlook oder Teams.
+
+**aktuelle Version:** v4.12.0 · **Letzte Änderung:** 09.09.2026 12:51
 
 ### Muss ich neu installieren?
 

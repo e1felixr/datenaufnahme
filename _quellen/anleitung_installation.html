@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>E1 Begehung — App einrichten</title>
+<style>
+  @page { size: A4; margin: 11mm 14mm 8mm 14mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Aptos Display", "Aptos", "Segoe UI", sans-serif;
+    color: #333333; font-size: 9.8pt; line-height: 1.31; margin: 0;
+  }
+  h1 {
+    color: #3a6d1b; font-size: 18pt; margin: 0 0 2.6mm 0; font-weight: 600;
+    border-bottom: 2.5pt solid #66B32F; padding-bottom: 1.8mm;
+  }
+  .intro { margin: 0 0 3mm 0; }
+  .umzug {
+    border: 1.5pt solid #66B32F; background: #F0F7E6;
+    padding: 2.4mm 3.4mm; margin: 0 0 3.6mm 0; border-radius: 2mm;
+  }
+  .umzug b { color: #3a6d1b; }
+  .schritt { display: table; width: 100%; margin: 0 0 2.2mm 0; }
+  .nr {
+    display: table-cell; width: 8mm; vertical-align: top;
+    color: #66B32F; font-size: 14pt; font-weight: 700; line-height: 1;
+    padding-top: 0.3mm;
+  }
+  .txt { display: table-cell; vertical-align: top; }
+  .txt h2 { font-size: 11pt; color: #3a6d1b; margin: 0 0 0.9mm 0; font-weight: 600; }
+  .txt p { margin: 0 0 0.8mm 0; }
+  /* QR sitzt als eigene Spalte neben Schritt 1 — kein Float, sonst reißt die
+     Tabellen-Darstellung der Schritte eine leere Zone auf */
+  .qr {
+    display: table-cell; width: 32mm; vertical-align: top;
+    text-align: center; padding-left: 5mm;
+  }
+  .qr img { width: 27mm; height: 27mm; display: block; margin: 0 auto; }
+  .qr span { font-size: 7.6pt; color: #666; display: block; margin-top: 1mm; line-height: 1.25; }
+  .adresse {
+    display: inline-block; background: #F0F7E6; border-left: 2.5pt solid #66B32F;
+    padding: 1.3mm 3mm; margin: 0.8mm 0; font-weight: 600; color: #3a6d1b;
+    font-size: 10.4pt; text-decoration: none;
+  }
+  .tipps { border-top: 1pt solid #d5d5d5; margin-top: 3mm; padding-top: 2mm; }
+  .tipps h2 { font-size: 11pt; color: #3a6d1b; margin: 0 0 1.2mm 0; font-weight: 600; }
+  .tipps ul { margin: 0; padding-left: 5mm; }
+  .tipps li { margin-bottom: 0.8mm; }
+  .fuss {
+    margin-top: 3mm; padding-top: 1.6mm; border-top: 1pt solid #d5d5d5;
+    font-size: 8.4pt; color: #777; text-align: center;
+  }
+  a { color: #3a6d1b; }
+</style>
+</head>
+<body>
+
+<h1>Heizkörper-Aufnahme mit dem Handy</h1>
+
+<p class="intro">Mit unserer App „E1 Begehung“ nimmst du Heizkörper direkt am Handy oder Tablet auf — mit Fotos, ohne Papier. So richtest du sie einmalig ein:</p>
+
+<div class="umzug">
+<b>Neu ab September 2026: Die App liegt jetzt auf dem E1-Firmenserver.</b><br>
+Hast du die App schon auf dem Handy? Dann <b>versende zuerst alle offenen Erfassungen aus der alten App</b> — erst danach das alte Symbol entfernen und wie unten beschrieben neu einrichten. Die alte Fassung erreicht den Server nicht mehr; ihre Daten liegen allein auf deinem Gerät.
+</div>
+
+<div class="schritt">
+  <div class="nr">1</div>
+  <div class="txt">
+    <h2>Seite öffnen und anmelden</h2>
+    <p>Halte die Handy-Kamera auf den QR-Code rechts und tippe auf den Link. Oder tippe die Adresse selbst in den Browser ein:</p>
+    <p><a class="adresse" href="https://sitecapture-e1energie.msappproxy.net/">sitecapture-e1energie.msappproxy.net</a></p>
+    <p>Beim ersten Aufruf fragt die Seite nach deiner Anmeldung — nimm dein gewohntes Firmenkonto, dieselben Zugangsdaten wie bei Outlook oder Teams.</p>
+    <p>Am besten Google Chrome verwenden — damit läuft die App am flüssigsten und die Eingabe-Vorschläge erscheinen am zuverlässigsten.</p>
+  </div>
+  <div class="qr">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhwAAAIcAQMAAACHMOU/AAAABlBMVEU6bRv////mgth0AAAC6klEQVR42u2dUW7jMAxEib2A7n9L3UDbNrY4Q6tAgOzPgs8oiiS258PAA8UhKcf6/JiBCCKIIIIIIu+LxD7G9+evH+3r1wVjvf5fZ4fdsuaf+AcHIoj8XyKJxkXH+AFq5ilhRH6UW2AHkc7sXFHmhmIHnfzgsUZvgR1EYMcC0CvWLIs7ucyDHURg58jOfUrXciXcwA4isHPId4QgW7n50o58B5Hu7JRE5p0/uQV2EGnLjh47zTFTOkJd8X3BbXTzYBHpy07NYu54pODs5ZwFLOIOIu3jThZAx102fYEzTymPIAY7iPRlR4qeu23gYmdsQyBKbVRcax4sIn3ZKYEml2pr2fJsWejBZ0OkOTsZbmS1ZkVSSX/yykl9BxHYqSWepx39bDCIuy8UdhBpzU540XOmt3ZdJrmPfiXfQaR1vlNKNjO7pkspx5pFiTuIwM6yuKMeQmyP2oy1kvjwYBFp7RWkKT1l3u1OcNSsLr1tsINIX3YUImknKGOkxtQujJLvINLcKxgHcLJOupZFqJVXwg4ieAU6LqrzCOpXp6sw5XbYQaT9mq1USPUC7dVR64B8B5HWcWf7aWXIWk6VXmvqO4jAjjXhnOzoY0iykhDsINI77phdoC2gIRtM7U3hdA4OdhBpzo7mPmWp5u4BfQWIIBLuP2eas1aJRyUh0ioq7CDSmZ1sLZBuzz3I466aEQQ7iLRmx4ZxHqdWXadplzXsIMKazXoGhidBPhOn1gH5DiLEHbedZan27DqYtsaDHUQ6sxPiqunGOKX6Y1jRC4oI7JS2TxlJsKlSxcrg4sEi0pSdMhn6bNE5lEplGAF2EOnsFSQUZU822WaqjIsSdxCBHXupwd6obVgMsrcrSjyCHUTwCnS3z4j4bQn33N4QdhCBnfpunbiDzqoDcdpyADuIwI7txlaGr9VYmMQdRBA55Dv2cl7PgJ4bU8MOIq3Z2UdpMDjNJtj+h3gFiPRm59NjIoIIIogggsibIn8BXdFEUnE330MAAAAASUVORK5CYII=" alt="QR-Code zur App">
+    <span>Mit der Handy-Kamera scannen</span>
+  </div>
+</div>
+
+<div class="schritt">
+  <div class="nr">2</div>
+  <div class="txt">
+    <h2>Als App installieren</h2>
+    <p>Tippe in Google Chrome oben rechts auf die drei Punkte und wähle „App installieren“ (heißt manchmal auch „Zum Startbildschirm hinzufügen“). Kurz bestätigen — fertig.</p>
+  </div>
+</div>
+
+<div class="schritt">
+  <div class="nr">3</div>
+  <div class="txt">
+    <h2>App öffnen und Namen eintragen</h2>
+    <p>Auf deinem Startbildschirm liegt jetzt das Symbol „E1 Begehung“. Beim ersten Öffnen fragt die App nach deinem Namen — eintragen und bestätigen. So sieht man später, wer was aufgenommen hat.</p>
+  </div>
+</div>
+
+<div class="schritt">
+  <div class="nr">4</div>
+  <div class="txt">
+    <h2>Rechtzeitig vertraut machen</h2>
+    <p>Nimm dir einige Tage vorher eine halbe Stunde und spiele die App in Ruhe durch — lege ein Test-Projekt an und erfasse probeweise ein paar Heizkörper. Bitte nicht erst fünf Minuten vor der Aufnahme zum ersten Mal öffnen. Bei Fragen vorab bei Felix melden.</p>
+  </div>
+</div>
+
+<div class="schritt">
+  <div class="nr">5</div>
+  <div class="txt">
+    <h2>Projekt anlegen — mit oder ohne Raumliste</h2>
+    <p>Für die Reichenbach-Liegenschaften sind alle Räume schon hinterlegt. Lege mit „+“ ein neues Projekt an, tippe ins Namensfeld und wähle aus den Vorschlägen „Reichenbach-Gym“ oder „Reichenbach Turnhallen“ — den Namen genau so übernehmen, nicht abändern. Die Erfassungsart steht schon auf „Heizkörper“. Beim Ausfüllen schlägt dir die App dann Gebäude, Geschoss, Raumnummer und Raumbezeichnung automatisch vor.</p>
+    <p>Alle anderen Liegenschaften (ohne Raumliste): genauso vorgehen, nur tippst du den Projektnamen selbst ein — am besten Ort und Objekt, z.&nbsp;B. „Grundschule Musterstadt“. Gebäude, Geschoss und Raumnummer trägst du von Hand ein; die App merkt sie sich und schlägt sie beim nächsten Raum wieder vor.</p>
+  </div>
+</div>
+
+<div class="tipps">
+<h2>Tipps</h2>
+<ul>
+  <li>Die App funktioniert auch ohne Empfang, z.&nbsp;B. im Keller — alles bleibt auf dem Handy gespeichert.</li>
+  <li>Fragt die Seite nach längerer Zeit erneut nach der Anmeldung: kurz online gehen und anmelden — deine Daten bleiben erhalten.</li>
+  <li>Die Foto-Funktion ist nur für Sonderfälle gedacht (Ungewöhnliches, Typ „Sonstiges“) — es muss nicht jeder Heizkörper fotografiert werden.</li>
+  <li>Wenn etwas hakt: App schließen und neu öffnen. Hilft das nicht: Felix anrufen.</li>
+  <li>Schrift zu klein? Unter dem Zahnrad (oben rechts) lässt sie sich größer stellen.</li>
+  <li>Mehr Einzelheiten findest du in der App: das ⓘ-Zeichen oben rechts, dann „Ausführliche Anleitung“.</li>
+</ul>
+</div>
+
+<div class="fuss">
+E1 Energiemanagement GmbH &nbsp;·&nbsp; App-Version v4.12.0 &nbsp;·&nbsp; Stand 09.09.2026
+</div>
+
+</body>
+</html>

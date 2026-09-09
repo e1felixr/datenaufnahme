@@ -1,6 +1,15 @@
 # Changelog
 
+### v4.12
+
+* ~~App zieht auf den E1-Firmenserver um~~ **erledigt v4.12.0** (neue Adresse: `https://sitecapture-e1energie.msappproxy.net/` über den Azure Application Proxy, Anmeldung mit dem gewohnten Firmenkonto. Die alte GitHub-Adresse ist seit dem Privatstellen des Repos (v4.11.4) für niemanden mehr erreichbar. **Wichtig für Kollegen:** Der Wechsel der Adresse trennt auch die gespeicherten Daten — offene Erfassungen müssen aus der alten, noch offline laufenden App versendet werden, ehe sie gelöscht wird. Die App muss auf jedem Gerät unter der neuen Adresse neu zum Startbildschirm hinzugefügt werden) (09.09.2026, 12:40 Uhr)
+* ~~Weiße Seite nach abgelaufener Anmeldung möglich~~ **behoben v4.12.0** (hinter der Firmen-Anmeldung antwortet der Server bei abgelaufener Sitzung mit einer Umleitung zur Login-Maske. Der Service Worker legte bisher jede Antwort ungeprüft ab — im ungünstigen Fall wäre die Login-Seite als `app.js` im Offline-Speicher gelandet und die App dauerhaft leer geblieben. Jetzt wird vor jedem Ablegen geprüft, ob die Antwort wirklich vom eigenen Server stammt; im Zweifel bleibt die zuletzt gültige Fassung stehen. Das Vorbefüllen läuft nach dem Alles-oder-nichts-Prinzip) (09.09.2026, 12:40 Uhr)
+* ~~„Update prüfen" meldete fälschlich „App ist aktuell"~~ **behoben v4.12.0** (kam statt der Versionsdatei die Login-Maske zurück, wurde der Fehler stumm verschluckt. Jetzt meldet die App „Server nicht erreichbar — bitte Seite neu laden und anmelden") (09.09.2026, 12:40 Uhr)
+* ~~Ausführliche Anleitung lud ins Leere~~ **behoben v4.12.0** (die Detail-Hilfe holte die Anleitung vom alten, längst gelöschten GitHub-Repo `heizkoerper`. Sie kommt nun vom eigenen Server, wird mit ausgerollt und steht auch offline zur Verfügung) (09.09.2026, 12:40 Uhr)
+
 ### v4.11
+
+* ~~Reale Kundendaten (`gebaeudedaten.xlsx`: u. a. Polizeipräsidium Nordhessen, Uni Mannheim, Reichenbach) lagen im öffentlichen GitHub-Repo — auch in der Historie~~ **behoben v4.11.4** (Sicherheit/Datenschutz: Repo `datenaufnahme` auf **privat** gestellt; `gebaeudedaten.xlsx` samt allen Vorkommen in der **gesamten Git-Historie** (222 Commits) getilgt — `git filter-repo` + Force-Push, per Frisch-Klon von GitHub geprüft (0 Treffer); dieselbe Tilgung für die versehentlich getrackte `.claude/settings.local.json`. Reale Datei lokal gesichert unter `260807_Sicherheit\_backup_datenaufnahme\`. **Nächster Schritt:** der geräteseitige Datei-Import wird wieder aufgenommen — Raumlisten kommen künftig nicht mehr zentral vom öffentlichen Server, sondern werden im Tool importiert (Rücknahme des Server-only-Umbaus aus v4.11.0).) (07.08.2026, 20:31 Uhr)
 
 * ~~Kopfzeile sprang zurück auf „Erfassung"~~ **behoben v4.11.3** (das Navigations-Skript am Seitenende schrieb den Header bei jedem Screen-Wechsel mit hart verdrahtetem „Erfassung" neu — alle drei Stellen auf „Datenaufnahme" umgestellt) (03.07.2026, 11:59 Uhr)
 * ~~Kopfzeile: mehr Abstand zwischen Titel- und Datumszeile~~ **erledigt v4.11.2** (4 px Luft zwischen „Datenaufnahme vX.Y.Z" und dem Zeitstempel) (03.07.2026, 11:57 Uhr)

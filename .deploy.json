@@ -1,0 +1,12 @@
+{
+  "kind": "static",
+  "build_bat": "",
+  "exe_name": "",
+  "extras": [
+    {
+      "quelle": "260909_Anleitung_App-Installation.pdf",
+      "ziel": "Datenaufnahme-App Installationsanleitung.pdf"
+    }
+  ],
+  "deploy_target_override": null
+}

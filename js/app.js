@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.11.3';
-const APP_BUILD_DATE = '03.07.2026 13:01'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.12.0';
+const APP_BUILD_DATE = '09.09.2026 12:51'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -2467,7 +2467,9 @@ function closeHelpImage() {
 
 // ── Hilfe / README ──
 
-const README_URL = 'https://raw.githubusercontent.com/e1felixr/heizkoerper/main/README.md';
+// Die Anleitung kommt vom eigenen Server (wird mit ausgerollt) — kein Fremdabruf,
+// damit sie auch offline und hinter dem Firmen-Proxy verfügbar bleibt
+const README_URL = 'README.md';
 
 function openHelp() {
   navigate('screen-help');
@@ -2928,8 +2930,19 @@ async function manualUpdateCheck() {
     let serverVersion = APP_VERSION;
     try {
       const resp = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
-      if (resp.ok) { const d = await resp.json(); if (d.version) serverVersion = d.version; }
-    } catch {}
+      // Hinter der Entra-Anmeldung kommt bei abgelaufener Sitzung HTML statt JSON
+      // zurück. Das darf nicht stumm als "App ist aktuell" durchgehen.
+      const ct = resp.headers.get('content-type') || '';
+      if (!resp.ok || resp.redirected || !ct.includes('json')) {
+        showToast('Server nicht erreichbar — bitte Seite neu laden und anmelden');
+        return;
+      }
+      const d = await resp.json();
+      if (d.version) serverVersion = d.version;
+    } catch {
+      showToast('Keine Verbindung — Update später prüfen');
+      return;
+    }
     if (serverVersion !== APP_VERSION) {
       showToast('Update auf ' + serverVersion + ' wird vorbereitet...');
       sessionStorage.setItem('autoUpdate', '1');
