@@ -2,6 +2,8 @@
 
 ### v4.12
 
+* ~~Zweite Liegenschaft „Köpi" hinterlegt~~ **erledigt v4.12.3** (Raumbuch der Hausverwaltung eingepflegt: 3 Gebäude, 8 Geschosse, 130 Raumnummern mit Raumbezeichnung. Aus den 16 Spalten des Raumbuchs gehen nur vier hinaus — Gebäude, Geschoss, Raum Nr. und Raumbezeichnung; Fonds, Liegenschaftsnummer, Klarname, DIN-Schlüssel, Kostenstellen und Flächen bleiben im internen Bestand. Die gebäudegenaue Zuordnung wurde mit der echten Parser-Funktion geprüft: gleiche Raumnummer in verschiedenen Gebäuden zieht die jeweils richtige Bezeichnung) (09.09.2026, 15:46 Uhr)
+
 * ~~Nur noch die tatsächlich benötigten Liegenschaften ausliefern~~ **erledigt v4.12.2** (die Raumlisten „Objekt 02", „Objekt 03" und „Objekt 04" sind aus der veröffentlichten `gebaeudedaten.xlsx` entfernt — es bleibt „Schweden"; „Köpi" folgt, sobald das Raumbuch vorliegt. Die Geräte räumen die entfallenen Liegenschaften beim nächsten Online-Start selbsttätig ab. Achtung: Projekte, die unter einer der entfernten Kennungen angelegt wurden, verlieren die Raumlisten-Verknüpfung — die bereits erfassten Einträge bleiben erhalten, nur die Vorschläge entfallen. Im Sicherungs-Bestand sind alle Liegenschaften unverändert vorhanden) (09.09.2026, 14:10 Uhr)
 
 * ~~Liegenschaft „Objekt 01" heißt jetzt „Schweden"~~ **erledigt v4.12.1** (auf Felix' Ansage — die Kennung war zu blass. Achtung: Projekte, die in der vergangenen Stunde unter „Objekt 01" angelegt wurden, verlieren die Raumlisten-Verknüpfung; in dem Fall Projekt neu anlegen. Die übrigen Kennungen bleiben unverändert) (09.09.2026, 14:05 Uhr)
