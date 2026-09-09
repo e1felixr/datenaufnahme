@@ -4,7 +4,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v4.12.2 · **Letzte Änderung:** 09.09.2026 14:27
+**aktuelle Version:** v4.12.2 · **Letzte Änderung:** 09.09.2026 15:34
 
 ### Muss ich neu installieren?
 
