@@ -1,10 +1,10 @@
 # E1 Begehung
 
-Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung bei Gebäudebegehungen. Läuft komplett im Browser, funktioniert offline und kann auf dem Smartphone wie eine native App installiert werden.
+Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung bei Gebäudebegehungen. Läuft komplett im Browser, funktioniert offline und kann auf Smartphone oder Tablet wie eine native App installiert werden.
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v4.12.3 · **Letzte Änderung:** 09.09.2026 15:48
+**aktuelle Version:** v4.12.4 · **Letzte Änderung:** 10.09.2026 16:33
 
 ### Muss ich neu installieren?
 
@@ -21,9 +21,9 @@ Die meisten Updates (Code, Styles, Funktionen) werden **automatisch** geladen, s
 
 > App vom Startbildschirm entfernen → im Browser neu öffnen → erneut installieren
 
-## Installation auf dem Smartphone
+## Installation auf Smartphone oder Tablet
 
-Die App-URL im Browser öffnen und dann je nach Browser installieren:
+Die App-URL im Browser öffnen und dann je nach Browser installieren (die Schritte sind auf Smartphone und Tablet identisch):
 
 **Chrome (Android) — empfohlen:**
 1. Menü (drei Punkte oben rechts) antippen
@@ -32,7 +32,7 @@ Die App-URL im Browser öffnen und dann je nach Browser installieren:
 
 **Edge (Android):**
 1. Menü (drei Punkte unten mittig) antippen
-2. "Zum Smartphone hinzufügen" wählen
+2. "Zum Smartphone hinzufügen" bzw. "Zum Startbildschirm hinzufügen" wählen
 3. "Installieren" bestätigen
 
 **Samsung Internet:**
@@ -119,7 +119,7 @@ Am Ende der Begehung in der Eintragsliste auf **"Daten versenden"** tippen und d
 ### Checkliste vor der Begehung
 
 - [ ] Falls Raum-Vorschläge gewünscht: Raumbuch an Felix geschickt und eingepflegt
-- [ ] App auf allen beteiligten Geräten installiert (siehe [Installation](#installation-auf-dem-smartphone))
+- [ ] App auf allen beteiligten Geräten installiert (siehe [Installation](#installation-auf-smartphone-oder-tablet))
 - [ ] App einmal online öffnen, damit die aktuellen Gebäudedaten geladen werden
 - [ ] Erfasser-Name auf jedem Gerät eingetragen
 - [ ] Projekt in der App angelegt
