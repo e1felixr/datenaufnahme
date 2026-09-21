@@ -1,5 +1,9 @@
 # Changelog
 
+### v4.13
+
+* ~~Hinweis, wenn HK-Nr. und Raum-Nr. schon vergeben sind~~ **neu in v4.13.0** (beim Speichern prüft die App, ob im Projekt bereits ein Eintrag mit derselben Kombination aus Gebäude, Geschoss, Raum-Nr. und HK-Nr. steht. Ist das der Fall, fragt sie nach: weiterer Heizkörper im selben Raum — dann HK-Nr. hochsetzen; oder schon im nächsten Raum — dann Raum-Nr. berichtigen. „OK" speichert trotzdem, es wird also nichts erzwungen. Die App zählt die Nummer **nicht** von sich aus hoch: Wäre die Raum-Nummer die falsche, sähe das Ergebnis hinterher aus wie ein Raum mit vielen Heizkörpern und der Fehler bliebe unsichtbar. Gilt für Heizkörper und Beleuchtung. An den drei Berliner Rückläufern gegengerechnet: 7 Hinweise auf 583 Einträge, und bei Thomas hätte der erste schon beim zweiten Raum gegriffen — die vier folgenden Fehleinträge wären gar nicht entstanden) (21.09.2026, 10:55 Uhr)
+
 ### v4.12
 
 * ~~Zwei Fotos konnten denselben Dateinamen bekommen — eines ging beim Entpacken verloren~~ **erledigt v4.12.5** (der Name entsteht aus Geschoss, Raum-Nr. und HK-Nr. Trugen zwei Einträge dieselbe Kennung — etwa weil die Raum-Nummer beim Weitergehen nicht geändert wurde —, lagen zwei verschiedene Bilder unter demselben Namen im ZIP; beim Entpacken überschrieb das zweite das erste, ohne jede Warnung. Die Namen werden nun einmal zentral vergeben und Kollisionen mit `_b`, `_c` … aufgelöst; Excel-Tabelle und ZIP tragen dieselben Namen. Gilt für Heizkörper und Beleuchtung. Bei den drei Berliner Rückläufern trat der Fall je einmal auf, einmal davon mit echtem Verlust) (21.09.2026, 10:47 Uhr)

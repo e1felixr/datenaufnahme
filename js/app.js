@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.12.5';
-const APP_BUILD_DATE = '21.09.2026 10:49'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.13.0';
+const APP_BUILD_DATE = '21.09.2026 10:56'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -771,8 +771,54 @@ function ensureRaumnrOrConfirm() {
   return true;
 }
 
+// Warnt, wenn Raum-Nr. und lfd. Nummer im Projekt schon vergeben sind.
+//
+// Anlass: In der Berliner Aufnahme standen fünf verschiedene Heizkörper unter
+// „EG / 0.01 / HK 1“, weil die Raum-Nummer beim Weitergehen in den nächsten
+// Raum nicht mitgeändert wurde. Am Schreibtisch ist das nicht mehr aufzulösen —
+// vor Ort mit einem Blick.
+//
+// Bewusst wird NICHT selbsttätig hochgezählt: Ist die Raum-Nummer die falsche,
+// machte ein automatisches Hochzählen aus fünf Räumen scheinbar einen Raum mit
+// fünf Heizkörpern und verdeckte den Fehler vollends. Welcher der beiden Fälle
+// vorliegt, weiß nur der Erfasser.
+async function ensureKennungFreiOrConfirm(art) {
+  const wert = id => (document.getElementById(id)?.value || '').trim();
+  const gebaeude = wert('f-gebaeude');
+  const geschoss = wert('f-geschoss');
+  const raumnr = wert('f-raumnr');
+  const nr = art === 'hk' ? wert('f-hkNr') : wert('f-gruppenNr');
+  if (!raumnr || !nr) return true;
+
+  const eigeneId = art === 'hk' ? currentHkId : currentBelId;
+  const alle = art === 'hk'
+    ? await getHeizkoerperByProjekt(currentProjektId)
+    : await getBeleuchtungByProjekt(currentProjektId);
+
+  const gleich = (a, b) =>
+    String(a ?? '').trim().toLowerCase() === String(b ?? '').trim().toLowerCase();
+  const belegt = alle.some(e =>
+    e.id !== eigeneId &&
+    gleich(e.gebaeude, gebaeude) &&
+    gleich(e.geschoss, geschoss) &&
+    gleich(e.raumnr, raumnr) &&
+    gleich(art === 'hk' ? e.hkNr : e.gruppenNr, nr));
+  if (!belegt) return true;
+
+  const bez = art === 'hk' ? 'HK-Nr.' : 'Gruppen-Nr.';
+  const weiteres = art === 'hk' ? 'Ein weiterer Heizkörper' : 'Eine weitere Leuchtengruppe';
+  return confirm(
+    `${bez} ${nr} ist in Raum ${raumnr} schon vergeben.\n\n` +
+    `${weiteres} im selben Raum?\n` +
+    `→ Abbrechen, dann ${bez} hochsetzen.\n\n` +
+    `Schon im nächsten Raum?\n` +
+    `→ Abbrechen, dann Raum-Nr. berichtigen.\n\n` +
+    `OK = trotzdem so speichern`);
+}
+
 async function saveForm() {
   if (!ensureRaumnrOrConfirm()) return;
+  if (!await ensureKennungFreiOrConfirm('hk')) return;
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
@@ -788,6 +834,7 @@ async function saveForm() {
 
 async function saveAndNextRoom() {
   if (!ensureRaumnrOrConfirm()) return;
+  if (!await ensureKennungFreiOrConfirm('hk')) return;
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
@@ -957,6 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function saveAndNextHk() {
   if (!ensureRaumnrOrConfirm()) return;
+  if (!await ensureKennungFreiOrConfirm('hk')) return;
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
@@ -990,6 +1038,7 @@ async function saveAndNextHk() {
 
 async function duplicateHk() {
   if (!ensureRaumnrOrConfirm()) return;
+  if (!await ensureKennungFreiOrConfirm('hk')) return;
   const hk = currentHkId ? await getHeizkoerper(currentHkId) : newHeizkoerper(currentProjektId);
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
@@ -1276,6 +1325,7 @@ function readBelFormIntoObj(bel) {
 
 async function saveBelForm() {
   if (!ensureRaumnrOrConfirm()) return;
+  if (!await ensureKennungFreiOrConfirm('bel')) return;
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
   checkAndSaveBelStandard(bel);
@@ -1290,6 +1340,7 @@ async function saveBelForm() {
 
 async function saveBelAndNextGroup() {
   if (!ensureRaumnrOrConfirm()) return;
+  if (!await ensureKennungFreiOrConfirm('bel')) return;
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
   checkAndSaveBelStandard(bel);
@@ -1321,6 +1372,7 @@ async function saveBelAndNextGroup() {
 
 async function saveBelAndNextRoom() {
   if (!ensureRaumnrOrConfirm()) return;
+  if (!await ensureKennungFreiOrConfirm('bel')) return;
   const bel = currentBelId ? await getBeleuchtung(currentBelId) : newBeleuchtung(currentProjektId);
   readBelFormIntoObj(bel);
   checkAndSaveBelStandard(bel);
