@@ -8,7 +8,7 @@ Offene Punkte:
   `fotoFilename()` / `belFotoFilename()` in js/export.js bilden den Namen nur aus Geschoss + Raum-Nr. + HK-Nr.
   Tragen zwei Einträge denselben Schlüssel (gleiche Raum-Nr., gleiche HK-Nr.), landen zwei verschiedene
   Bilder unter demselben Namen im ZIP. Beim normalen Entpacken überschreibt das zweite das erste — ohne
-  jede Warnung. In beiden Berlin-Rückläufern je einmal aufgetreten.
+  jede Warnung. In allen drei Berlin-Rückläufern je einmal aufgetreten — kein Einzelfall.
   Fix: in buildExportZip() die vergebenen Namen mitführen und bei Kollision durchnummerieren
   (z. B. `_b`, `_c`), die Excel-Referenz derselben Zeile entsprechend setzen.
   Zusätzlich erwägen: beim Speichern eines Eintrags warnen, wenn Raum-Nr. + HK-Nr. schon belegt sind.
@@ -17,16 +17,6 @@ Offene Punkte:
   Zwei Zeilen vollständig deckungsgleich — gleiche Werte, gleiche Bemerkung, gleiches Foto,
   gleiche Erfassungsminute (16.09.2026, 09:32). Deutet auf einen doppelten Tipp auf „Speichern“.
   Fix: Speichern-Button nach dem ersten Tipp bis zum Abschluss sperren.
-
-* Feld „Erfasser“ klebt am Gerät, nicht an der Person (gefunden 21.09.2026)
-  Der Name wird nur beim allerersten Start abgefragt und wandert danach unverändert in jeden
-  Export. Werden Geräte verliehen, steht in den Daten der Falsche: In der Berliner Aufnahme
-  nahm Max auf Davids Gerät auf und Leander auf Stevens — die Spalte „Erfasser“ nennt aber
-  David und Steven. Wer später Rückfragen stellt, wendet sich an den Falschen; nur der von
-  Hand ergänzte Dateiname des Rückläufers verriet, wer tatsächlich vor Ort war.
-  Fix: Beim Anlegen eines Projekts den hinterlegten Namen anzeigen und bestätigen lassen
-  („Erfassung als Max?“ / „Ich bin jemand anderes“), statt ihn stillschweigend weiterzuführen.
-  README ist bereits ergänzt (Hinweis zu geliehenen Geräten), das ersetzt den Fix aber nicht.
 
 
 
