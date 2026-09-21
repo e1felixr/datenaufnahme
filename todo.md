@@ -19,13 +19,14 @@ Offene Punkte:
   Fix: Speichern-Button nach dem ersten Tipp bis zum Abschluss sperren.
 
 * Feld „Erfasser“ klebt am Gerät, nicht an der Person (gefunden 21.09.2026)
-  Der Name wird einmal im Gerät hinterlegt und wandert unverändert in jeden Export. Werden
-  Geräte verliehen, steht in den Daten der Falsche: In der Berliner Aufnahme nahm Max auf
-  Davids Gerät auf und Leander auf Stevens — die Spalte „Erfasser“ nennt aber David und Steven.
-  Wer später Rückfragen stellt, wendet sich an den Falschen; nur der von Hand ergänzte
-  Dateiname des Rückläufers verriet, wer tatsächlich vor Ort war.
-  Fix: Beim Anlegen bzw. Öffnen eines Projekts den Erfassernamen abfragen oder bestätigen
-  lassen, statt ihn still aus dem Gerät zu übernehmen.
+  Der Name wird nur beim allerersten Start abgefragt und wandert danach unverändert in jeden
+  Export. Werden Geräte verliehen, steht in den Daten der Falsche: In der Berliner Aufnahme
+  nahm Max auf Davids Gerät auf und Leander auf Stevens — die Spalte „Erfasser“ nennt aber
+  David und Steven. Wer später Rückfragen stellt, wendet sich an den Falschen; nur der von
+  Hand ergänzte Dateiname des Rückläufers verriet, wer tatsächlich vor Ort war.
+  Fix: Beim Anlegen eines Projekts den hinterlegten Namen anzeigen und bestätigen lassen
+  („Erfassung als Max?“ / „Ich bin jemand anderes“), statt ihn stillschweigend weiterzuführen.
+  README ist bereits ergänzt (Hinweis zu geliehenen Geräten), das ersetzt den Fix aber nicht.
 
 
 

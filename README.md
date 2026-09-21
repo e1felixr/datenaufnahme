@@ -4,7 +4,7 @@ Progressive Web App (PWA) zur mobilen Erfassung von Heizkörpern und Beleuchtung
 
 **App starten:** [https://e1felixr.github.io/datenaufnahme/](https://e1felixr.github.io/datenaufnahme/)
 
-**aktuelle Version:** v4.12.4 · **Letzte Änderung:** 21.09.2026 10:15
+**aktuelle Version:** v4.12.4 · **Letzte Änderung:** 21.09.2026 10:21
 
 ### Muss ich neu installieren?
 
@@ -104,6 +104,8 @@ Wer für eine Liegenschaft die Raum-Vorschläge nutzen möchte, schickt das Raum
 
 Beim ersten Start der App wird der **Erfasser-Name** abgefragt (Pflichtfeld). Dieser wird automatisch bei jedem erfassten Eintrag gespeichert. Der Name kann jederzeit unter Einstellungen geändert werden.
 
+**Wichtig bei geliehenen Geräten:** Der Name bleibt im Gerät stehen, bis er von Hand geändert wird — er wird nur beim allerersten Start abgefragt. Wer auf dem Tablet einer Kollegin oder eines Kollegen erfasst, trägt sich deshalb vor Beginn unter Einstellungen selbst ein. Sonst steht in allen Daten der Falsche, und Rückfragen landen später beim Gerätebesitzer statt bei der Person, die vor Ort war.
+
 ### 3. Projekt anlegen
 
 In der App auf **"+"** tippen und einen Projektnamen vergeben (z.B. "Musterstraße 12" oder "Liegenschaft Nord"). Erfassungsart wählen: **Heizkörper** (voreingestellt), **Beleuchtung** oder **Beides**. Die Gebäudedaten aus der zentralen xlsx-Datei stehen danach automatisch als Autovervollständigung zur Verfügung.
@@ -121,7 +123,7 @@ Am Ende der Begehung in der Eintragsliste auf **"Daten versenden"** tippen und d
 - [ ] Falls Raum-Vorschläge gewünscht: Raumbuch an Felix geschickt und eingepflegt
 - [ ] App auf allen beteiligten Geräten installiert (siehe [Installation](#installation-auf-smartphone-oder-tablet))
 - [ ] App einmal online öffnen, damit die aktuellen Gebäudedaten geladen werden
-- [ ] Erfasser-Name auf jedem Gerät eingetragen
+- [ ] Erfasser-Name auf jedem Gerät eingetragen — bei geliehenen Geräten unbedingt prüfen und auf sich selbst ändern
 - [ ] Projekt in der App angelegt
 
 ## Hilfe / Probleme
