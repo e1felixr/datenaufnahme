@@ -4,6 +4,15 @@ Offene Punkte:
 
 * Banner „Sonstiges → Foto!" anklickbar machen — Tipp aufs Banner öffnet direkt die Kamera (Rückmeldung Max 09.06.2026, bewusst zurückgestellt 02.07.2026)
 
+* Foto-Dateinamen im Export kollidieren — stiller Datenverlust (gefunden 21.09.2026 beim Zusammenführen der Berlin-Rückläufer)
+  `fotoFilename()` / `belFotoFilename()` in js/export.js bilden den Namen nur aus Geschoss + Raum-Nr. + HK-Nr.
+  Tragen zwei Einträge denselben Schlüssel (gleiche Raum-Nr., gleiche HK-Nr.), landen zwei verschiedene
+  Bilder unter demselben Namen im ZIP. Beim normalen Entpacken überschreibt das zweite das erste — ohne
+  jede Warnung. In beiden Berlin-Rückläufern je einmal aufgetreten.
+  Fix: in buildExportZip() die vergebenen Namen mitführen und bei Kollision durchnummerieren
+  (z. B. `_b`, `_c`), die Excel-Referenz derselben Zeile entsprechend setzen.
+  Zusätzlich erwägen: beim Speichern eines Eintrags warnen, wenn Raum-Nr. + HK-Nr. schon belegt sind.
+
 
 
 IMMER:
