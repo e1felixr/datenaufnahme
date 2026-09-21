@@ -85,6 +85,20 @@ async function updateProjekt(projekt) {
   await reqToPromise(tx('projekte', 'readwrite').put(projekt));
 }
 
+// Version der App, mit der ein Eintrag entstanden ist.
+//
+// Hintergrund: Die App aktualisiert sich selbsttätig, sobald das Gerät online
+// ist — eine Begehung kann also über einen Versionswechsel hinweglaufen. Ohne
+// diesen Vermerk lässt sich bei einem Rückläufer nicht mehr feststellen, unter
+// welchem Stand ein Eintrag entstand. Deshalb hängt er am einzelnen Eintrag und
+// nicht am Export.
+//
+// APP_VERSION lebt in app.js, das nach db.js geladen wird; zur Aufrufzeit steht
+// es bereit. Die Abfrage schützt den Fall, dass es das einmal nicht tut.
+function aktuelleAppVersion() {
+  return typeof APP_VERSION !== 'undefined' ? APP_VERSION : '';
+}
+
 // ── Heizkörper ──
 
 function newHeizkoerper(projektId, defaults) {
@@ -117,6 +131,7 @@ function newHeizkoerper(projektId, defaults) {
     bemerkung: '',
     erfasser: '',
     erstelltAm: new Date().toISOString(),
+    appVersion: aktuelleAppVersion(),
     fotos: []
   };
 }
@@ -182,6 +197,7 @@ function newBeleuchtung(projektId, defaults) {
     bemerkung: '',
     erfasser: '',
     erstelltAm: new Date().toISOString(),
+    appVersion: aktuelleAppVersion(),
     fotos: []
   };
 }

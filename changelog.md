@@ -1,5 +1,11 @@
 # Changelog
 
+### v4.14
+
+* ~~Jeder Eintrag vermerkt, mit welcher App-Version er erfasst wurde~~ **neu in v4.14.0** (neue Spalte „App-Version" im Export, für Heizkörper wie Beleuchtung — sie steht hinter „Erfasst am", vor den Fotospalten. Der Vermerk hängt am einzelnen Eintrag, nicht am Export: Die App aktualisiert sich selbsttätig, sobald das Gerät online ist, eine Begehung kann also über einen Versionswechsel hinweglaufen. Bei einem Rückläufer ist damit erkennbar, unter welchem Stand eine Zeile entstand. Die `LIESMICH.txt` im ZIP nennt zusätzlich den Stand, mit dem das Archiv gepackt wurde. Einträge, die vor v4.14.0 angelegt wurden, lassen die Spalte leer) (21.09.2026, 11:00 Uhr)
+
+* ~~Adressen der Programmdateien seit v4.12.3 nicht mitgezogen~~ **behoben in v4.14.0** (`index.html` hängt an CSS und Skripte einen Parameter `?v=…`, der bei jedem Release hochgesetzt werden soll, damit Geräte garantiert die frische Datei laden statt einer womöglich zwischengespeicherten. Bei v4.12.4, v4.12.5 und v4.13.0 blieb er auf dem Stand von v4.12.3 stehen. Nun auf `4140` gesetzt. Der Service Worker lädt ohnehin netzwerkseitig zuerst, die Korrekturen dieser Releases dürften also angekommen sein — sicher ist es so aber allemal) (21.09.2026, 11:00 Uhr)
+
 ### v4.13
 
 * ~~Hinweis, wenn HK-Nr. und Raum-Nr. schon vergeben sind~~ **neu in v4.13.0** (beim Speichern prüft die App, ob im Projekt bereits ein Eintrag mit derselben Kombination aus Gebäude, Geschoss, Raum-Nr. und HK-Nr. steht. Ist das der Fall, fragt sie nach: weiterer Heizkörper im selben Raum — dann HK-Nr. hochsetzen; oder schon im nächsten Raum — dann Raum-Nr. berichtigen. „OK" speichert trotzdem, es wird also nichts erzwungen. Die App zählt die Nummer **nicht** von sich aus hoch: Wäre die Raum-Nummer die falsche, sähe das Ergebnis hinterher aus wie ein Raum mit vielen Heizkörpern und der Fehler bliebe unsichtbar. Gilt für Heizkörper und Beleuchtung. An den drei Berliner Rückläufern gegengerechnet: 7 Hinweise auf 583 Einträge, und bei Thomas hätte der erste schon beim zweiten Raum gegriffen — die vier folgenden Fehleinträge wären gar nicht entstanden) (21.09.2026, 10:55 Uhr)

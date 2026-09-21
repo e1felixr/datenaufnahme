@@ -28,8 +28,11 @@ from openpyxl.utils import get_column_letter
 
 # Spalten, die den fachlichen Schlüssel eines Heizkörpers bilden
 KEY_COLS = ("Gebäude", "Geschoss", "Raum-Nr.", "HK-Nr.")
-# Spalten, die beim Doublettenvergleich nicht zählen (Metadaten, keine Fachdaten)
-IGNORE_ON_COMPARE = ("Erfasst am", "Aufgenommen von")
+# Spalten, die beim Doublettenvergleich nicht zählen (Metadaten, keine Fachdaten).
+# "App-Version" muss hier stehen: Läuft eine Begehung über ein Update hinweg,
+# tragen sonst identische Zeilen verschiedene Stände — sie gälten dann nicht
+# mehr als Doublette, sondern als zwei verschiedene Heizkörper.
+IGNORE_ON_COMPARE = ("Erfasst am", "Aufgenommen von", "App-Version")
 
 # Spalte, die das Skript ergänzt: wer die Aufnahme tatsächlich gemacht hat.
 # Die App-Spalte "Erfasser" trägt den Namen, der auf dem Gerät hinterlegt ist —

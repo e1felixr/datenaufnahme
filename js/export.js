@@ -25,7 +25,7 @@ const EXPORT_HEADERS_BASE = [
   'Nabenabstand [mm]', 'DN Ventil', 'Ventiltyp',
   'Hahnblock', 'RL-Verschraubung', 'Entlüftung', 'Entleerung',
   'Ventil voreinstellbar', 'Voreinstellwert', 'Art Thermostatkopf',
-  'Einbausituation', 'Strang-Nr.', 'Bemerkung', 'Erfasser', 'Erfasst am'
+  'Einbausituation', 'Strang-Nr.', 'Bemerkung', 'Erfasser', 'Erfasst am', 'App-Version'
 ];
 
 function exportHeaders(maxFotos) {
@@ -38,7 +38,7 @@ const EXPORT_FIELDS = [
   'nabenabstand', 'dnVentil', 'ventilform',
   'hahnblock', 'rlVerschraubung', 'entlueftung', 'entleerung',
   'ventilVoreinstellbar', 'ventilVoreinstellbarWert', 'artThermostatkopf',
-  'einbausituation', 'strang', 'bemerkung', 'erfasser', 'erstelltAm'
+  'einbausituation', 'strang', 'bemerkung', 'erfasser', 'erstelltAm', 'appVersion'
 ];
 
 function fotoFilename(hk, index) {
@@ -129,7 +129,7 @@ const BEL_EXPORT_HEADERS_BASE = [
   'Installationsart', 'Installationsart Detail', 'Leuchtenart',
   'Leuchtmittel Kategorie', 'Leuchtmittel Typ', 'Leuchtmittel Länge [mm]', 'Leuchtmittel Wattage [W]',
   'Fassung', 'Vorschaltgerät', 'Steuerung', 'LPH [m]', 'UGR 19', 'Zustand',
-  'Bemerkung', 'Erfasser', 'Erfasst am'
+  'Bemerkung', 'Erfasser', 'Erfasst am', 'App-Version'
 ];
 
 function belExportHeaders(maxFotos) {
@@ -143,7 +143,7 @@ const BEL_EXPORT_FIELDS = [
   'installationsart', 'installationsartSub', 'leuchtenart',
   'leuchtmittelKategorie', 'leuchtmittelTyp', 'leuchtmittelLaenge', 'leuchtmittelWattage',
   'fassung', 'vorschaltgeraet', 'steuerung', 'lph', 'ugr19', 'zustand',
-  'bemerkung', 'erfasser', 'erstelltAm'
+  'bemerkung', 'erfasser', 'erstelltAm', 'appVersion'
 ];
 
 function belFotoFilename(bel, index) {
@@ -202,7 +202,17 @@ function buildFotoReadme(hasHk, hasBel) {
   lines.push(
     '',
     'Die Spalten "Foto 1" bis "Foto n" in der Excel-Tabelle verweisen je Zeile',
-    'auf die zugehörigen Dateien.'
+    'auf die zugehörigen Dateien.',
+    '',
+    '---',
+    '',
+    // Die Spalte "App-Version" in der Tabelle nennt den Stand je Eintrag — eine
+    // Begehung kann über ein Update hinweglaufen. Hier steht der Stand, mit dem
+    // dieses Archiv gepackt wurde.
+    'Erstellt mit App-Version ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unbekannt') + '.',
+    'Die Spalte "App-Version" in der Tabelle nennt den Stand je Eintrag — die App',
+    'aktualisiert sich selbsttätig, eine Begehung kann also über einen',
+    'Versionswechsel hinweglaufen.'
   );
   // BOM, damit Windows-Editoren die Umlaute sicher als UTF-8 erkennen
   return String.fromCharCode(0xFEFF) + lines.join('\r\n') + '\r\n';
