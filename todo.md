@@ -4,19 +4,11 @@ Offene Punkte:
 
 * Banner „Sonstiges → Foto!" anklickbar machen — Tipp aufs Banner öffnet direkt die Kamera (Rückmeldung Max 09.06.2026, bewusst zurückgestellt 02.07.2026)
 
-* Foto-Dateinamen im Export kollidieren — stiller Datenverlust (gefunden 21.09.2026 beim Zusammenführen der Berlin-Rückläufer)
-  `fotoFilename()` / `belFotoFilename()` in js/export.js bilden den Namen nur aus Geschoss + Raum-Nr. + HK-Nr.
-  Tragen zwei Einträge denselben Schlüssel (gleiche Raum-Nr., gleiche HK-Nr.), landen zwei verschiedene
-  Bilder unter demselben Namen im ZIP. Beim normalen Entpacken überschreibt das zweite das erste — ohne
-  jede Warnung. In allen drei Berlin-Rückläufern je einmal aufgetreten — kein Einzelfall.
-  Fix: in buildExportZip() die vergebenen Namen mitführen und bei Kollision durchnummerieren
-  (z. B. `_b`, `_c`), die Excel-Referenz derselben Zeile entsprechend setzen.
-  Zusätzlich erwägen: beim Speichern eines Eintrags warnen, wenn Raum-Nr. + HK-Nr. schon belegt sind.
-
-* Doppeltes Speichern erzeugt zwei identische Einträge (gefunden 21.09.2026, Rückläufer Leander)
-  Zwei Zeilen vollständig deckungsgleich — gleiche Werte, gleiche Bemerkung, gleiches Foto,
-  gleiche Erfassungsminute (16.09.2026, 09:32). Deutet auf einen doppelten Tipp auf „Speichern“.
-  Fix: Speichern-Button nach dem ersten Tipp bis zum Abschluss sperren.
+* Beim Speichern warnen, wenn Raum-Nr. + HK-Nr. im Projekt schon belegt sind (offen seit 21.09.2026)
+  Die Namenskollision beim Foto-Export ist mit v4.12.5 entschärft, die Ursache bleibt aber bestehen:
+  In Berlin standen fünf verschiedene Heizkörper unter „EG / 0.01 / HK 1“, weil die Raum-Nummer
+  beim Weitergehen nicht mitgeändert wurde. Ein Hinweis beim Speichern („HK-Nr. 1 ist in Raum 0.01
+  schon vergeben — trotzdem speichern?“) fängt das ab, solange der Erfasser noch vor Ort ist.
 
 
 

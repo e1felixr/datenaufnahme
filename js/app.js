@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.12.4';
-const APP_BUILD_DATE = '21.09.2026 10:22'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.12.5';
+const APP_BUILD_DATE = '21.09.2026 10:49'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -777,6 +777,10 @@ async function saveForm() {
   readFormIntoHk(hk);
   checkAndSaveStandard(hk);
   await saveHeizkoerper(hk);
+  // Das Formular zeigt ab jetzt auf den gespeicherten Eintrag. Ohne das bliebe
+  // currentHkId auf null: Wer später über die Zurück-Geste erneut ins Formular
+  // gerät und nochmals speichert, legte sonst eine Dublette an.
+  currentHkId = hk.id;
   await renderHkList();
   navigate('screen-hk-list');
   showToast('Heizkörper gespeichert');
@@ -1276,6 +1280,9 @@ async function saveBelForm() {
   readBelFormIntoObj(bel);
   checkAndSaveBelStandard(bel);
   await saveBeleuchtung(bel);
+  // Siehe saveForm(): ohne diese Zeile legt ein erneutes Speichern aus dem
+  // noch stehenden Formular eine Dublette an statt zu aktualisieren.
+  currentBelId = bel.id;
   await renderHkList();
   navigate('screen-hk-list');
   showToast('Leuchte gespeichert');
@@ -2303,10 +2310,14 @@ async function sendData() {
 async function buildExportZip(hks, bels, modul, safeName, onProgress) {
   const wb = XLSX.utils.book_new();
 
+  // Foto-Namen einmal zentral vergeben — Excel-Spalten und ZIP-Dateien müssen
+  // dieselben Namen tragen, sonst verweist die Tabelle ins Leere.
+  const fotoNames = buildFotoNames(hks, bels);
+
   if (hks.length > 0) {
     const hkMaxFotos = maxFotoCount(hks);
     const hkHeaders = exportHeaders(hkMaxFotos);
-    const hkRows = hks.map(hk => hkToRow(hk, hkMaxFotos));
+    const hkRows = hks.map(hk => hkToRow(hk, hkMaxFotos, fotoNames));
     const hkData = [hkHeaders, ...hkRows];
     const wsHk = XLSX.utils.aoa_to_sheet(hkData);
     wsHk['!cols'] = hkHeaders.map((h, i) => ({
@@ -2318,7 +2329,7 @@ async function buildExportZip(hks, bels, modul, safeName, onProgress) {
   if (bels.length > 0) {
     const belMaxFotos = maxFotoCount(bels);
     const belHeaders = belExportHeaders(belMaxFotos);
-    const belRows = bels.map(b => belToRow(b, belMaxFotos));
+    const belRows = bels.map(b => belToRow(b, belMaxFotos, fotoNames));
     const belData = [belHeaders, ...belRows];
     const wsBel = XLSX.utils.aoa_to_sheet(belData);
     wsBel['!cols'] = belHeaders.map((h, i) => ({
@@ -2349,7 +2360,7 @@ async function buildExportZip(hks, bels, modul, safeName, onProgress) {
     const results = await Promise.all(batch.map(f => compressForExport(f.item.fotos[f.i])));
     results.forEach((data, j) => {
       const f = batch[j];
-      const fname = f.type === 'hk' ? fotoFilename(f.item, f.i) : belFotoFilename(f.item, f.i);
+      const fname = fotoNameOf(fotoNames, f.type, f.item, f.i);
       const ts = (f.item.fotoTimestamps && f.item.fotoTimestamps[f.i]) ||
                  (f.item.erstelltAm ? new Date(f.item.erstelltAm).getTime() : null);
       zipFiles.push({ name: fname, data, mtime: ts });
@@ -2978,6 +2989,40 @@ registerServiceWorker();
 if (location.search.includes('_update=')) {
   history.replaceState(null, '', location.pathname + location.hash);
 }
+
+// ── Schutz gegen doppeltes Anlegen ────────────────────────────────────────
+//
+// Zwischen dem Tipp auf "Speichern" und dem Verlassen des Formulars liegen ein
+// Schreibvorgang in die Datenbank und das Neuzeichnen der Liste. Wer in diesem
+// Fenster ein zweites Mal tippt, legt einen zweiten Eintrag an — currentHkId
+// ist beim neuen Heizkörper noch null, also entsteht ein weiteres Objekt mit
+// eigener ID. Das Fenster wächst mit der Zahl der Einträge, ist am Ende einer
+// Begehung also am größten.
+//
+// Diese Sperre lässt nur einen Speichervorgang zugleich zu. Die zweite Hälfte
+// des Schutzes steckt in saveForm()/saveBelForm(), die nach dem Sichern die ID
+// setzen — damit wird ein späteres erneutes Speichern zum Aktualisieren.
+let speichernLaeuft = false;
+
+function nurEinmalGleichzeitig(fn) {
+  return async function (...args) {
+    if (speichernLaeuft) return;
+    speichernLaeuft = true;
+    try {
+      return await fn.apply(this, args);
+    } finally {
+      speichernLaeuft = false;
+    }
+  };
+}
+
+saveForm = nurEinmalGleichzeitig(saveForm);
+saveAndNextHk = nurEinmalGleichzeitig(saveAndNextHk);
+saveAndNextRoom = nurEinmalGleichzeitig(saveAndNextRoom);
+duplicateHk = nurEinmalGleichzeitig(duplicateHk);
+saveBelForm = nurEinmalGleichzeitig(saveBelForm);
+saveBelAndNextGroup = nurEinmalGleichzeitig(saveBelAndNextGroup);
+saveBelAndNextRoom = nurEinmalGleichzeitig(saveBelAndNextRoom);
 
 // Nach einem Update sofort nochmal prüfen (Ketten-Update)
 if (sessionStorage.getItem('justUpdated')) {

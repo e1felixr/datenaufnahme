@@ -83,6 +83,24 @@ def num_key(v):
     return int(m.group(1)) if m else 0
 
 
+def abstand_minuten(zeiten):
+    """Spanne zwischen erstem und letztem Zeitstempel in Minuten, sonst None.
+
+    Ein großer Abstand zwischen sonst identischen Zeilen schließt einen
+    versehentlichen Doppeltipp aus — die Rückfrage muss dann anders lauten.
+    """
+    from datetime import datetime
+    stempel = []
+    for z in zeiten:
+        try:
+            stempel.append(datetime.strptime(str(z).strip(), "%d.%m.%Y, %H:%M"))
+        except ValueError:
+            return None
+    if not stempel:
+        return None
+    return int((max(stempel) - min(stempel)).total_seconds() // 60)
+
+
 # ── Einlesen ────────────────────────────────────────────────────────────────
 
 def lies_zip(pfad):
@@ -230,15 +248,25 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht):
                     L.append("   Oder gehören sie in verschiedene Räume?")
             elif b["art"] == "Doublette":
                 zeiten = b["zeiten"]
+                L.append(f"   {b['anzahl']} Zeilen mit vollständig identischen Angaben —")
                 if len(set(zeiten)) == 1:
-                    L.append(f"   {b['anzahl']} Zeilen mit vollständig identischen Angaben —")
                     L.append(f"   beide zur selben Minute erfasst ({zeiten[0]}).")
                     L.append("   Das sieht nach einem doppelten Tipp auf „Speichern“ aus.")
+                    L.append("   Frage: Derselbe Heizkörper versehentlich zweimal aufgenommen?")
+                    L.append("   Dann streiche ich die zweite Zeile.")
+                elif b["abstand_min"] is not None and b["abstand_min"] >= 60:
+                    st = b["abstand_min"] // 60
+                    L.append(f"   erfasst um {zeiten[0]} und {zeiten[-1]} —")
+                    L.append(f"   also rund {st} Stunden auseinander, mit demselben Foto.")
+                    L.append("   Ein versehentlicher Doppeltipp erklärt das nicht.")
+                    L.append(f"   Frage: Weißt du noch, was du um {zeiten[-1][-5:]} Uhr gemacht")
+                    L.append("   hast? Den Eintrag nochmal geöffnet und gespeichert, im Zug")
+                    L.append("   oder abends nachgearbeitet? Die Antwort hilft, einen Fehler")
+                    L.append("   in der App einzugrenzen — es geht nicht um einen Vorwurf.")
                 else:
-                    L.append(f"   {b['anzahl']} Zeilen mit vollständig identischen Angaben,")
-                    L.append(f"   erfasst um {' und '.join(zeiten)}.")
-                L.append("   Frage: Derselbe Heizkörper versehentlich zweimal aufgenommen?")
-                L.append("   Dann streiche ich die zweite Zeile.")
+                    L.append(f"   erfasst um {zeiten[0]} und {zeiten[-1]}.")
+                    L.append("   Frage: Derselbe Heizkörper versehentlich zweimal aufgenommen?")
+                    L.append("   Dann streiche ich die zweite Zeile.")
             else:  # Doppelaufnahme
                 L.append(f"   Diesen Heizkörper haben mehrere aufgenommen "
                          f"({', '.join(b['aufnehmer'])}).")
@@ -429,8 +457,8 @@ def main():
         befunde.append({
             "art": art, "zeilen": zeilen_nrn, "schluessel": schluessel,
             "aufnehmer": aufnehmer, "geraete": geraete, "raeume": raeume,
-            "zeiten": zeiten, "anzahl": len(gruppe),
-            "befund": befund, "empfehlung": empf,
+            "zeiten": zeiten, "abstand_min": abstand_minuten(zeiten),
+            "anzahl": len(gruppe), "befund": befund, "empfehlung": empf,
         })
 
     # ── Blatt Prüfpunkte ──

@@ -51,13 +51,63 @@ function fotoFilename(hk, index) {
   return `Fotos/${parts.join('_')}${suffix}.jpg`;
 }
 
+// Vergibt für jedes Foto einen im ZIP eindeutigen Dateinamen.
+//
+// Der Name entsteht aus Geschoss + Raum-Nr. + HK-/Gruppen-Nr. Tragen zwei
+// Einträge dieselbe Kennung — etwa weil die Raum-Nr. beim Weitergehen nicht
+// geändert wurde —, ergäbe das zweimal denselben Namen. Im ZIP überschreibt
+// die zweite Datei dann beim Entpacken die erste, ohne jede Warnung. Deshalb
+// werden die vergebenen Namen mitgeführt und Kollisionen mit _b, _c, ...
+// aufgelöst. (_2, _3 sind bereits für mehrere Fotos desselben Objekts belegt.)
+//
+// Wichtig: Diese Zuordnung entsteht EINMAL und speist sowohl die Excel-Spalten
+// als auch die Dateien im ZIP — sonst zeigen die Verweise ins Leere.
+function buildFotoNames(hks, bels) {
+  const namen = new Map();   // Schlüssel -> endgültiger Name
+  const vergeben = new Set();
+
+  const eintragen = (schluessel, basis) => {
+    let name = basis;
+    let n = 0;
+    while (vergeben.has(name)) {
+      n++;
+      // b, c, … z; danach _27, _28, … — sonst liefe die Zeichenreihe über 'z'
+      // hinaus in Zeichen wie '|', die Windows in Dateinamen nicht zulässt.
+      const marke = n < 26 ? String.fromCharCode(97 + n) : String(n + 1);
+      name = basis.replace(/\.jpg$/i, `_${marke}.jpg`);
+    }
+    vergeben.add(name);
+    namen.set(schluessel, name);
+  };
+
+  for (const hk of hks || [])
+    for (let i = 0; i < (hk.fotos || []).length; i++)
+      if (hk.fotos[i]) eintragen(fotoKey('hk', hk, i), fotoFilename(hk, i));
+  for (const bel of bels || [])
+    for (let i = 0; i < (bel.fotos || []).length; i++)
+      if (bel.fotos[i]) eintragen(fotoKey('bel', bel, i), belFotoFilename(bel, i));
+
+  return namen;
+}
+
+function fotoKey(type, item, index) {
+  return `${type}:${item.id}#${index}`;
+}
+
+// Name aus der Zuordnung; ohne Zuordnung der unveränderte Rohname.
+function fotoNameOf(namen, type, item, index) {
+  const key = fotoKey(type, item, index);
+  if (namen && namen.has(key)) return namen.get(key);
+  return type === 'hk' ? fotoFilename(item, index) : belFotoFilename(item, index);
+}
+
 function formatErstelltAm(isoString) {
   if (!isoString) return '';
   const d = new Date(isoString);
   return d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function hkToRow(hk, maxFotos) {
+function hkToRow(hk, maxFotos, fotoNames) {
   const row = EXPORT_FIELDS.map(f => {
     const val = hk[f];
     if (f === 'erstelltAm') return formatErstelltAm(val);
@@ -65,7 +115,7 @@ function hkToRow(hk, maxFotos) {
     return val != null ? String(val) : '';
   });
   for (let i = 0; i < maxFotos; i++) {
-    row.push(hk.fotos && hk.fotos[i] ? fotoFilename(hk, i) : '');
+    row.push(hk.fotos && hk.fotos[i] ? fotoNameOf(fotoNames, 'hk', hk, i) : '');
   }
   return row;
 }
@@ -106,7 +156,7 @@ function belFotoFilename(bel, index) {
   return `Fotos/${parts.join('_')}${suffix}.jpg`;
 }
 
-function belToRow(bel, maxFotos) {
+function belToRow(bel, maxFotos, fotoNames) {
   const row = BEL_EXPORT_FIELDS.map(f => {
     const val = bel[f];
     if (f === 'erstelltAm') return formatErstelltAm(val);
@@ -115,7 +165,7 @@ function belToRow(bel, maxFotos) {
     return val != null ? String(val) : '';
   });
   for (let i = 0; i < maxFotos; i++) {
-    row.push(bel.fotos && bel.fotos[i] ? belFotoFilename(bel, i) : '');
+    row.push(bel.fotos && bel.fotos[i] ? fotoNameOf(fotoNames, 'bel', bel, i) : '');
   }
   return row;
 }
@@ -135,6 +185,9 @@ function buildFotoReadme(hasHk, hasBel) {
   lines.push(
     '',
     'Mehrere Fotos desselben Objekts erhalten den Zusatz _2, _3, ...',
+    'Tragen zwei Objekte dieselbe Kennung (z.B. zweimal HK 1 im selben Raum),',
+    'bekommt das zweite den Zusatz _b, das dritte _c usw. — so geht kein Foto',
+    'verloren. Die Excel-Tabelle verweist jeweils auf die richtige Datei.',
     'Leerzeichen und Sonderzeichen sind im Dateinamen durch "_" ersetzt.',
     '',
     'Beispiele:'
