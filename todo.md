@@ -13,6 +13,11 @@ Offene Punkte:
   (z. B. `_b`, `_c`), die Excel-Referenz derselben Zeile entsprechend setzen.
   Zusätzlich erwägen: beim Speichern eines Eintrags warnen, wenn Raum-Nr. + HK-Nr. schon belegt sind.
 
+* Doppeltes Speichern erzeugt zwei identische Einträge (gefunden 21.09.2026, Rückläufer Steven)
+  Zwei Zeilen vollständig deckungsgleich — gleiche Werte, gleiche Bemerkung, gleiches Foto,
+  gleiche Erfassungsminute (16.09.2026, 09:32). Deutet auf einen doppelten Tipp auf „Speichern“.
+  Fix: Speichern-Button nach dem ersten Tipp bis zum Abschluss sperren.
+
 
 
 IMMER:
