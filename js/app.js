@@ -15,7 +15,7 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 const APP_VERSION = 'v4.14.1';
-const APP_BUILD_DATE = '24.09.2026 13:38'; // wird nach Commit aktualisiert
+const APP_BUILD_DATE = '24.09.2026 13:47'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {

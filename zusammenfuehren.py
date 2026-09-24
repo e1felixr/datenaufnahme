@@ -3,10 +3,14 @@
 Aufruf:  py -3.13 zusammenfuehren.py [ordner] [--nummern-glaetten]
 
 Liest alle *.zip im Ordner (nicht rekursiv — ein Unterordner "Archiv" bleibt
-außen vor), gruppiert sie nach Liegenschaft und legt je Liegenschaft einen
-eigenen Ausgabeordner an: Mappe, Fotos und Rückfragen liegen darin beieinander
-und lassen sich am Stück weitergeben. Das Blatt "Prüfpunkte" weist Doubletten,
+außen vor) und gruppiert sie nach Liegenschaft. Je Liegenschaft entstehen
+nebeneinander: die Mappe, "Rueckfragen_<Liegenschaft>.txt" und der Bilderordner
+"Fotos_<Liegenschaft>". Das Blatt "Prüfpunkte" weist Doubletten,
 Nummernkollisionen, Nummernsprünge und umbenannte Fotos aus.
+
+Getrennte Bilderordner sind Pflicht: Die Fotonamen bestehen aus Geschoss,
+Raum-Nr. und HK-Nr. und führen die Liegenschaft nicht mit — in einem
+gemeinsamen Ordner würden zwei Objekte einander überschreiben.
 
 Wer vor Ort aufgenommen hat, steht in "aufnehmer.txt" neben den Rückläufern;
 fehlt die Datei, legt das Skript sie als Vorlage an. Der Dateiname allein
@@ -224,7 +228,7 @@ def glaette_nummern(spruenge, foto_cols, ziel_fotos):
             for c in foto_cols:
                 ref = str(z.get(c) or "").strip()
                 if ref and Path(ref).name in umbenennen:
-                    z[c] = f"Fotos/{umbenennen[Path(ref).name]}"
+                    z[c] = f"{ziel_fotos.name}/{umbenennen[Path(ref).name]}"
 
         protokoll.append(
             f"{geb}, {gesch}, Raum {raum}: HK-Nr. "
@@ -556,11 +560,15 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
     # Die Ausgabe liegt neben den ZIPs. Beim Aufräumen darum NICHT pauschal
     # leeren, sondern ausschließlich das anfassen, was ein früherer Lauf selbst
     # erzeugt hat — die Rückläufer und dieses Skript müssen unberührt bleiben.
-    ziel = basis / name
-    ziel.mkdir(exist_ok=True)
+    # Alles auf einer Ebene neben den Rückläufern — nur der Bilderordner trägt
+    # die Liegenschaft im Namen. Ein gemeinsamer Ordner ginge nicht: Die
+    # Fotonamen bestehen aus Geschoss, Raum-Nr. und HK-Nr. und führen die
+    # Liegenschaft nicht mit, zwei Objekte würden sich gegenseitig überschreiben.
+    ziel = basis
     mappe = ziel / f"{name}_HK-Aufnahme_zusammengefuehrt.xlsx"
-    rueckfragen = ziel / "Rueckfragen.txt"
-    veraltet = [p for p in (ziel / "Fotos").glob("*") if p.is_file()]
+    rueckfragen = ziel / f"Rueckfragen_{name}.txt"
+    foto_ordner = ziel / f"Fotos_{name}"
+    veraltet = [p for p in foto_ordner.glob("*") if p.is_file()]
     veraltet += [p for p in (mappe, rueckfragen) if p.exists()]
     for p in veraltet:
         try:
@@ -571,7 +579,7 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
                 f"    {p}\n"
                 f"  Vermutlich noch in Excel oder in der Bildvorschau geöffnet.\n"
                 f"  Bitte schließen und das Skript erneut starten.")
-    zuordnung, umbenennungen = loese_fotos_auf(foto_quellen, ziel / "Fotos")
+    zuordnung, umbenennungen = loese_fotos_auf(foto_quellen, foto_ordner)
 
     # Foto-Referenzen je Zeile auf die endgültigen Namen umbiegen.
     # Instanz-Zähler pro (herkunft, zip_name) läuft in Zeilenreihenfolge mit —
@@ -586,7 +594,7 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
             idx = instanz[(herkunft, zip_name)]
             instanz[(herkunft, zip_name)] += 1
             neu = zuordnung.get((herkunft, zip_name, idx))
-            zeile[c] = f"Fotos/{neu}" if neu else ref
+            zeile[c] = f"{foto_ordner.name}/{neu}" if neu else ref
 
     # Nummernsprünge suchen — vor dem Sortieren, damit die Fotoreferenzen schon
     # auf den endgültigen Namen zeigen und mit umbenannt werden können.
@@ -595,7 +603,7 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
     offen = [s for s in spruenge if s["mehrere_aufnehmer"]]
     glaettungen = []
     if glaetten and glaettbar:
-        glaettungen = glaette_nummern(glaettbar, foto_cols, ziel / "Fotos")
+        glaettungen = glaette_nummern(glaettbar, foto_cols, foto_ordner)
         print(f"\n  {len(glaettbar)} Raum/Räume mit Nummernsprung geglättet:")
         for zeile in glaettungen:
             print(f"     {zeile}")
@@ -810,7 +818,7 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
         uebersicht[person].add(str(z.get("Erfasser") or "—"))
     schreibe_rueckfragen(rueckfragen, befunde, mappe.name, uebersicht, glaettungen)
 
-    fotos_gesamt = len(list((ziel / "Fotos").glob("*")))
+    fotos_gesamt = len(list(foto_ordner.glob("*")))
     print(f"\n  -> {mappe}")
     print(f"     {len(eintraege)} Zeilen, {fotos_gesamt} Fotos, "
           f"{pruef.max_row - 1} Prüfpunkte")
@@ -844,8 +852,8 @@ def main():
     if len(nach_liegenschaft) > 1:
         print(f"  {len(zips)} Rückläufer aus {len(nach_liegenschaft)} Liegenschaften: "
               f"{', '.join(sorted(nach_liegenschaft))}")
-        print("  Jede bekommt einen eigenen Ordner — Raum-Nummern und Fotonamen")
-        print("  wiederholen sich zwischen Objekten und dürfen nicht vermischt werden.")
+        print("  Jede bekommt eine eigene Mappe und einen eigenen Bilderordner —")
+        print("  Raum-Nummern und Fotonamen wiederholen sich zwischen Objekten.")
 
     for name in sorted(nach_liegenschaft):
         verarbeite(name, nach_liegenschaft[name], ordner, glaetten, aufnehmer_map)
