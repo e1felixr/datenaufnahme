@@ -928,12 +928,20 @@ def main():
     # ── Blatt Rückfragen ──
     # Der Text steht zeilenweise in Spalte A. Absichtlich keine Tabelle: Die
     # Fragen sind Fließtext zum Weiterreichen, nicht zum Filtern.
+    #
+    # Jede Zelle wird ausdrücklich als Text gekennzeichnet. Sonst deutet Excel
+    # alles, was mit "=" beginnt, als Formel — die Trennlinien aus
+    # Gleichheitszeichen machten die Mappe so unlesbar ("Problem bei einigen
+    # Inhalten erkannt"). Der Typ wird für alle Zeilen erzwungen, nicht nur für
+    # die Linien: Auch ein Satz, der mit "-", "+" oder "@" anfängt, träfe es.
     rueck = wb.create_sheet("Rückfragen")
-    for zeile in alle_rueckfragen:
-        rueck.append([zeile])
+    for n, zeile in enumerate(alle_rueckfragen, start=1):
+        if not zeile:
+            continue
+        c = rueck.cell(row=n, column=1, value=zeile)
+        c.data_type = "s"
+        c.alignment = Alignment(vertical="top")
     rueck.column_dimensions["A"].width = 95
-    for r in rueck.iter_rows(min_row=1):
-        r[0].alignment = Alignment(vertical="top")
 
     wb.save(mappe)
     print(f"\n  -> {mappe}")
