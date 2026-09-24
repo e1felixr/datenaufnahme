@@ -2,10 +2,15 @@
 
 Aufruf:  py -3.13 zusammenfuehren.py [ordner] [--nummern-glaetten]
 
-Liest alle *.zip im Ordner, führt die Tabellenblätter zeilenweise zusammen,
-sammelt die Fotos in einem gemeinsamen Ordner und legt ein Blatt "Prüfpunkte"
-an, das Doubletten, Nummernkollisionen, Nummernsprünge und umbenannte Fotos
-ausweist.
+Liest alle *.zip im Ordner (nicht rekursiv — ein Unterordner "Archiv" bleibt
+außen vor), gruppiert sie nach Liegenschaft und legt je Liegenschaft einen
+eigenen Ausgabeordner an: Mappe, Fotos und Rückfragen liegen darin beieinander
+und lassen sich am Stück weitergeben. Das Blatt "Prüfpunkte" weist Doubletten,
+Nummernkollisionen, Nummernsprünge und umbenannte Fotos aus.
+
+Wer vor Ort aufgenommen hat, steht in "aufnehmer.txt" neben den Rückläufern;
+fehlt die Datei, legt das Skript sie als Vorlage an. Der Dateiname allein
+taugt dafür nicht — er nennt je nach Begehung das Gerät oder die Person.
 
 --nummern-glaetten setzt die HK-Nummern der Räume zurück, die nicht bei 1
 beginnen, und benennt die zugehörigen Fotos mit um. Das geschieht bewusst nur
@@ -53,12 +58,16 @@ E1_GRUEN = "66B32F"
 def absender(zip_stem):
     """Name, der dem Export-Dateinamen manuell angehängt wurde.
 
-    Die App bildet den ZIP-Namen aus bereinigtem Projekt- und Modulnamen und
-    setzt dabei nie ein Leerzeichen. Alles ab dem ersten Leerzeichen ist also
-    von Hand ergänzt — üblicherweise der Name dessen, der die Daten schickt.
+    Die App bildet den ZIP-Namen aus bereinigtem Projekt- und Modulnamen.
+    Angehängt wird von Hand — bis 09/2026 mit Leerzeichen ("… HK-Aufnahme Max"),
+    seither mit Unterstrich ("…_HK-Aufnahme_Max"). Beide Schreibweisen werden
+    erkannt. Ob der Name das Gerät oder die Person vor Ort meint, ist damit
+    nicht gesagt — das klärt aufnehmer.txt.
     """
-    teile = zip_stem.split(" ", 1)
-    return teile[1].strip() if len(teile) > 1 else ""
+    if " " in zip_stem:
+        return zip_stem.split(" ", 1)[1].strip()
+    teile = zip_stem.split("_")
+    return teile[-1].strip() if len(teile) > 2 else ""
 
 
 # ── Sortierung ──────────────────────────────────────────────────────────────
@@ -418,33 +427,67 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht, glaettungen=()):
     pfad.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
+# ── Liegenschaften und Aufnehmende ──────────────────────────────────────────
+
+def liegenschaft(zip_stem):
+    """Name der Liegenschaft — das, was die App dem Export voranstellt.
+
+    Liegen mehrere Liegenschaften im selben Ordner, müssen sie getrennt
+    bleiben: Raum-Nummern und Gebäude-Bezeichnungen wiederholen sich
+    zwischen Objekten ("Gebäude 1" gibt es in beiden), und die Fotonamen
+    führen die Liegenschaft nicht mit.
+    """
+    return zip_stem.split("_", 1)[0].strip()
+
+
+def lies_aufnehmer(ordner, zips):
+    """Zuordnung Rückläufer -> Person, die vor Ort aufgenommen hat.
+
+    Der Dateiname nennt je nach Begehung mal das Gerät, mal den Absender,
+    mal die Person — verlässlich weiß es nur, wer die Begehung organisiert
+    hat. Darum eine Liste neben den Rückläufern statt einer Annahme im Code.
+    Fehlt sie, wird sie als Vorlage angelegt und mit dem Namen aus dem
+    Dateinamen vorbelegt.
+    """
+    pfad = ordner / "aufnehmer.txt"
+    if pfad.exists():
+        zuordnung = {}
+        for zeile in pfad.read_text(encoding="utf-8").splitlines():
+            zeile = zeile.split("#", 1)[0].strip()
+            if "=" not in zeile:
+                continue
+            datei, person = zeile.split("=", 1)
+            zuordnung[datei.strip()] = person.strip()
+        return zuordnung
+
+    vorbelegt = {p.stem: absender(p.stem) for p in zips}
+    L = ["# Wer hat vor Ort aufgenommen? Eine Zeile je Rückläufer.",
+         "# Der Dateiname nennt oft nur das Gerät oder den Absender — hier",
+         "# steht die Person, die tatsächlich erfasst hat. Vorbelegt ist der",
+         "# Name aus dem Dateinamen; bitte prüfen und berichtigen.",
+         "# Diese Datei bleibt bei weiteren Läufen unangetastet.",
+         ""]
+    L += [f"{stem} = {name}" for stem, name in sorted(vorbelegt.items())]
+    pfad.write_text("\n".join(L) + "\n", encoding="utf-8")
+    print(f"  Vorlage angelegt: {pfad.name} — bitte eintragen, wer vor Ort war.\n")
+    return vorbelegt
+
+
 # ── Hauptlauf ───────────────────────────────────────────────────────────────
 
-def main():
-    # Das Skript liegt im Projektordner, die Rückläufer in einem Unterordner.
-    # Ohne Argument wird darum im Arbeitsverzeichnis gesucht; findet sich dort
-    # nichts, werden die Unterordner mit ZIPs zur Auswahl genannt.
-    argumente = [a for a in sys.argv[1:] if not a.startswith("--")]
-    glaetten = "--nummern-glaetten" in sys.argv[1:]
-    ordner = Path(argumente[0]) if argumente else Path.cwd()
-    zips = sorted(p for p in ordner.glob("*.zip"))
-    if not zips:
-        basis = Path(__file__).parent
-        kandidaten = sorted({p.parent for p in basis.glob("*/*.zip")})
-        hinweis = ""
-        if kandidaten:
-            hinweis = "\n\n  Rückläufer liegen offenbar hier:\n" + "\n".join(
-                f'     py -3.13 "{Path(__file__).name}" "{k.name}"' for k in kandidaten)
-        raise SystemExit(f"\n  Keine ZIP-Dateien in {ordner}{hinweis}")
-
+def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
+    """Führt die Rückläufer EINER Liegenschaft zu einer Mappe zusammen."""
     blattname = "HK-Aufnahme"
     alle_kopf = []
     eintraege = []      # (herkunft, zeilendict)
     foto_quellen = []
 
+    # Nur ASCII in der Konsolenausgabe: Die Windows-Konsole laeuft unter
+    # cp1252 und bricht an Rahmenzeichen hart ab.
+    print(f"\n  --- {name} ---")
     for p in zips:
         herkunft = p.stem
-        aufnehmer = absender(herkunft)
+        aufnehmer = aufnehmer_map.get(herkunft) or absender(herkunft)
         titel, kopf, zeilen, fotos = lies_zip(p)
         blattname = titel
         for h in kopf:
@@ -471,8 +514,9 @@ def main():
     # Die Ausgabe liegt neben den ZIPs. Beim Aufräumen darum NICHT pauschal
     # leeren, sondern ausschließlich das anfassen, was ein früherer Lauf selbst
     # erzeugt hat — die Rückläufer und dieses Skript müssen unberührt bleiben.
-    ziel = ordner
-    mappe = ziel / f"{zips[0].stem.split('_')[0]}_HK-Aufnahme_zusammengefuehrt.xlsx"
+    ziel = basis / name
+    ziel.mkdir(exist_ok=True)
+    mappe = ziel / f"{name}_HK-Aufnahme_zusammengefuehrt.xlsx"
     rueckfragen = ziel / "Rueckfragen.txt"
     veraltet = [p for p in (ziel / "Fotos").glob("*") if p.is_file()]
     veraltet += [p for p in (mappe, rueckfragen) if p.exists()]
@@ -681,6 +725,40 @@ def main():
     print(f"     {len(eintraege)} Zeilen, {fotos_gesamt} Fotos, "
           f"{pruef.max_row - 1} Prüfpunkte")
     print(f"  -> {rueckfragen.name}")
+
+
+def main():
+    # Das Skript liegt im Projektordner, die Rückläufer in einem Unterordner.
+    # Ohne Argument wird darum im Arbeitsverzeichnis gesucht; findet sich dort
+    # nichts, werden die Unterordner mit ZIPs zur Auswahl genannt.
+    argumente = [a for a in sys.argv[1:] if not a.startswith("--")]
+    glaetten = "--nummern-glaetten" in sys.argv[1:]
+    ordner = Path(argumente[0]) if argumente else Path.cwd()
+    # Nicht rekursiv: Ein Unterordner "Archiv" mit früheren Rückläufern darf
+    # nicht mit eingesammelt werden.
+    zips = sorted(p for p in ordner.glob("*.zip"))
+    if not zips:
+        basis = Path(__file__).parent
+        kandidaten = sorted({p.parent for p in basis.glob("*/*.zip")})
+        hinweis = ""
+        if kandidaten:
+            hinweis = "\n\n  Rückläufer liegen offenbar hier:\n" + "\n".join(
+                f'     py -3.13 "{Path(__file__).name}" "{k.name}"' for k in kandidaten)
+        raise SystemExit(f"\n  Keine ZIP-Dateien in {ordner}{hinweis}")
+
+    aufnehmer_map = lies_aufnehmer(ordner, zips)
+
+    nach_liegenschaft = defaultdict(list)
+    for p in zips:
+        nach_liegenschaft[liegenschaft(p.stem)].append(p)
+    if len(nach_liegenschaft) > 1:
+        print(f"  {len(zips)} Rückläufer aus {len(nach_liegenschaft)} Liegenschaften: "
+              f"{', '.join(sorted(nach_liegenschaft))}")
+        print("  Jede bekommt einen eigenen Ordner — Raum-Nummern und Fotonamen")
+        print("  wiederholen sich zwischen Objekten und dürfen nicht vermischt werden.")
+
+    for name in sorted(nach_liegenschaft):
+        verarbeite(name, nach_liegenschaft[name], ordner, glaetten, aufnehmer_map)
 
 
 if __name__ == "__main__":
