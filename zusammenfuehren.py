@@ -1,10 +1,17 @@
 """Führt mehrere Rückläufer-ZIPs der Datenaufnahme-App zu einer Mappe zusammen.
 
-Aufruf:  py -3.13 zusammenfuehren.py [ordner]
+Aufruf:  py -3.13 zusammenfuehren.py [ordner] [--nummern-glaetten]
 
 Liest alle *.zip im Ordner, führt die Tabellenblätter zeilenweise zusammen,
 sammelt die Fotos in einem gemeinsamen Ordner und legt ein Blatt "Prüfpunkte"
-an, das Doubletten, Nummernkollisionen und umbenannte Fotos ausweist.
+an, das Doubletten, Nummernkollisionen, Nummernsprünge und umbenannte Fotos
+ausweist.
+
+--nummern-glaetten setzt die HK-Nummern der Räume zurück, die nicht bei 1
+beginnen, und benennt die zugehörigen Fotos mit um. Das geschieht bewusst nur
+auf Zuruf: Ein Sprung ist meist der App-Fehler bis v4.14.0, kann aber auch
+gewollt sein — und still umzunummerieren würde denselben Fehler verbergen,
+gegen den die App seit v4.13.0 beim Speichern warnt.
 
 Hintergrund zu den Foto-Kollisionen: Der App-Export bildet den Dateinamen aus
 Geschoss + Raum-Nr. + HK-Nr. Tragen zwei Einträge denselben Schlüssel, landen
@@ -84,6 +91,107 @@ def natural_key(v):
 def num_key(v):
     m = re.search(r"(\d+)", str(v or ""))
     return int(m.group(1)) if m else 0
+
+
+def finde_nummernspruenge(eintraege):
+    """Räume, deren HK-Nummern nicht bei 1 beginnen.
+
+    Ursache ist ein Fehler der App bis v4.14.0: Wurde ein Heizkörper über "+"
+    aus der Übersicht angelegt, bekam er die projektweit höchste Nummer plus
+    eins statt der nächsten freien im Raum. In den Berliner Rückläufern trug
+    Raum 0.12 dadurch HK 14-20 statt 1-7.
+
+    Es bleibt eine Deutung: Auch wer "-> nächster HK" drückt und die Raum-Nr.
+    von Hand ändert, erzeugt einen Sprung — dann ist die Nummer gewollt.
+    Darum wird nur gemeldet; geglättet wird ausschließlich auf Zuruf
+    (--nummern-glaetten).
+
+    Rückgabe: Liste von dicts mit Raumschlüssel, Versatz und Zeilen.
+    """
+    raeume = defaultdict(list)
+    for herkunft, z in eintraege:
+        schluessel = tuple(str(z.get(k) or "").strip()
+                           for k in ("Gebäude", "Geschoss", "Raum-Nr."))
+        if not schluessel[2]:
+            continue
+        raeume[schluessel].append(z)
+
+    treffer = []
+    for schluessel, zeilen in sorted(raeume.items()):
+        nrn = [str(z.get("HK-Nr.") or "").strip() for z in zeilen]
+        if not all(n.isdigit() for n in nrn):
+            continue
+        zahlen = [int(n) for n in nrn]
+        versatz = min(zahlen) - 1
+        if versatz <= 0:
+            continue
+        treffer.append({
+            "schluessel": schluessel,
+            "versatz": versatz,
+            "alt": sorted(set(zahlen)),
+            "neu": sorted({n - versatz for n in zahlen}),
+            "zeilen": zeilen,
+        })
+    return treffer
+
+
+def glaette_nummern(spruenge, foto_cols, ziel_fotos):
+    """Verschiebt die HK-Nummern der betroffenen Räume auf den Beginn bei 1.
+
+    Verschoben wird um einen festen Versatz, nicht stur auf 1..n durchgezählt:
+    Eine echte Lücke innerhalb des Raums bleibt so sichtbar, statt stillschweigend
+    zugezogen zu werden. Die Fotos tragen die HK-Nr. im Dateinamen und werden
+    mitgezogen — sonst verweist eine Zeile "HK 1" auf ein Bild "..._HK14.jpg".
+
+    Rückgabe: Liste von Protokollzeilen für das Prüfblatt.
+    """
+    protokoll = []
+    for s in spruenge:
+        versatz = s["versatz"]
+        geb, gesch, raum = s["schluessel"]
+
+        # Erst die Umbenennungen sammeln, dann ausführen: Ein Bild kann von
+        # mehreren Zeilen referenziert werden (Doubletten teilen sich eins).
+        umbenennen = {}
+        for z in s["zeilen"]:
+            for c in foto_cols:
+                ref = str(z.get(c) or "").strip()
+                if not ref:
+                    continue
+                alt = Path(ref).name
+                neu = re.sub(r"_HK(\d+)",
+                             lambda m: f"_HK{int(m.group(1)) - versatz}", alt, count=1)
+                if neu != alt:
+                    umbenennen[alt] = neu
+
+        belegt = set()
+        for alt, neu in sorted(umbenennen.items()):
+            quelle, ziel = ziel_fotos / alt, ziel_fotos / neu
+            if ziel.exists() or neu in belegt:
+                # Zielname schon vergeben (die Namen führen das Gebäude nicht
+                # mit, zwei Gebäude können dasselbe Geschoss/Raum haben).
+                # Lieber den alten Namen behalten als ein fremdes Bild stören.
+                umbenennen[alt] = alt
+                protokoll.append(
+                    f"{geb}, {gesch}, Raum {raum}: Foto „{alt}“ behält seinen Namen "
+                    f"— „{neu}“ ist bereits vergeben")
+                continue
+            if quelle.exists():
+                quelle.rename(ziel)
+                belegt.add(neu)
+
+        for z in s["zeilen"]:
+            z["HK-Nr."] = str(int(str(z["HK-Nr."]).strip()) - versatz)
+            for c in foto_cols:
+                ref = str(z.get(c) or "").strip()
+                if ref and Path(ref).name in umbenennen:
+                    z[c] = f"Fotos/{umbenennen[Path(ref).name]}"
+
+        protokoll.append(
+            f"{geb}, {gesch}, Raum {raum}: HK-Nr. "
+            f"{', '.join(str(n) for n in s['alt'])} -> "
+            f"{', '.join(str(n) for n in s['neu'])} (um {versatz} zurückgesetzt)")
+    return protokoll
 
 
 def abstand_minuten(zeiten):
@@ -184,7 +292,7 @@ def loese_fotos_auf(quellen, ziel_fotos):
 
 # ── Rückfragen an die Aufnehmenden ──────────────────────────────────────────
 
-def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht):
+def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht, glaettungen=()):
     """Textdatei mit den offenen Punkten, nach Aufnehmenden gruppiert.
 
     uebersicht: {aufnehmer: set(geraetebesitzer)} — die App-Spalte "Erfasser"
@@ -215,6 +323,18 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht):
     L.append("dem jeweiligen Gerät hinterlegt ist — also der Gerätebesitzer. Wer die")
     L.append("Aufnahme gemacht hat, steht in der Spalte „Aufgenommen von“.")
     L.append("")
+    if glaettungen:
+        L.append("Zur Kenntnis — in diesen Räumen wurden die HK-Nummern")
+        L.append("zurückgesetzt, weil sie nicht bei 1 begannen:")
+        L.append("")
+        for zeile in glaettungen:
+            L.append(f"   {zeile}")
+        L.append("")
+        L.append("Ursache war ein Fehler der App (bis v4.14.0): Wurde ein Heizkörper")
+        L.append("über „+“ aus der Übersicht angelegt, bekam er die höchste Nummer")
+        L.append("des ganzen Projekts statt der nächsten freien im Raum. Die Fotos")
+        L.append("sind mit umbenannt, ihr müsst nichts nachtragen.")
+        L.append("")
     if not nach_person:
         L.append("Keine offenen Punkte — die Aufnahmen sind in sich stimmig.")
         pfad.write_text("\n".join(L) + "\n", encoding="utf-8")
@@ -249,6 +369,15 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht):
                     L.append("   Frage: Sind das wirklich mehrere Heizkörper im selben Raum?")
                     L.append("   Dann bräuchten sie fortlaufende HK-Nummern (1, 2, 3 …).")
                     L.append("   Oder gehören sie in verschiedene Räume?")
+            elif b["art"] == "Nummernsprung":
+                L.append(f"   Die {b['anzahl']} Heizkörper dieses Raums tragen die "
+                         f"Nummern {b['schluessel'][3]} —")
+                L.append("   sie beginnen also nicht bei 1.")
+                L.append("   Das geht vermutlich auf einen Fehler der App zurück: Bis")
+                L.append("   v4.14.0 vergab sie beim Anlegen über „+“ die höchste Nummer")
+                L.append("   des ganzen Projekts statt der nächsten freien im Raum.")
+                L.append("   Frage: Hast du die Nummern bewusst so vergeben — oder")
+                L.append("   dürfen sie auf 1, 2, 3 … zurückgesetzt werden?")
             elif b["art"] == "Doublette":
                 zeiten = b["zeiten"]
                 L.append(f"   {b['anzahl']} Zeilen mit vollständig identischen Angaben —")
@@ -279,8 +408,13 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht):
 
     L.append("")
     L.append("-" * 70)
-    L.append("Solange nichts geklärt ist, bleiben alle Zeilen unverändert in der")
-    L.append("Mappe stehen — es wurde nichts gelöscht und nichts umnummeriert.")
+    if glaettungen:
+        L.append("Solange nichts geklärt ist, bleiben alle Zeilen in der Mappe stehen —")
+        L.append("gelöscht wurde nichts. Umnummeriert wurde ausschließlich in den oben")
+        L.append("genannten Räumen.")
+    else:
+        L.append("Solange nichts geklärt ist, bleiben alle Zeilen unverändert in der")
+        L.append("Mappe stehen — es wurde nichts gelöscht und nichts umnummeriert.")
     pfad.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
@@ -290,10 +424,9 @@ def main():
     # Das Skript liegt im Projektordner, die Rückläufer in einem Unterordner.
     # Ohne Argument wird darum im Arbeitsverzeichnis gesucht; findet sich dort
     # nichts, werden die Unterordner mit ZIPs zur Auswahl genannt.
-    if len(sys.argv) > 1:
-        ordner = Path(sys.argv[1])
-    else:
-        ordner = Path.cwd()
+    argumente = [a for a in sys.argv[1:] if not a.startswith("--")]
+    glaetten = "--nummern-glaetten" in sys.argv[1:]
+    ordner = Path(argumente[0]) if argumente else Path.cwd()
     zips = sorted(p for p in ordner.glob("*.zip"))
     if not zips:
         basis = Path(__file__).parent
@@ -369,6 +502,20 @@ def main():
             neu = zuordnung.get((herkunft, zip_name, idx))
             zeile[c] = f"Fotos/{neu}" if neu else ref
 
+    # Nummernsprünge suchen — vor dem Sortieren, damit die Fotoreferenzen schon
+    # auf den endgültigen Namen zeigen und mit umbenannt werden können.
+    spruenge = finde_nummernspruenge(eintraege)
+    glaettungen = []
+    if spruenge and glaetten:
+        glaettungen = glaette_nummern(spruenge, foto_cols, ziel / "Fotos")
+        print(f"\n  {len(spruenge)} Raum/Räume mit Nummernsprung geglättet:")
+        for zeile in glaettungen:
+            print(f"     {zeile}")
+    elif spruenge:
+        print(f"\n  {len(spruenge)} Raum/Räume beginnen nicht bei HK-Nr. 1 "
+              f"— siehe Prüfpunkte.")
+        print(f"     Geradeziehen mit:  --nummern-glaetten")
+
     # Sortieren
     eintraege.sort(key=lambda e: (
         natural_key(e[1].get("Gebäude")),
@@ -415,8 +562,10 @@ def main():
 
     # ── Befunde sammeln ──
     gruppen = defaultdict(list)
+    zeilennr = {}
     for nr, (herkunft, z) in enumerate(eintraege, start=2):
         gruppen[tuple(str(z.get(k) or "") for k in KEY_COLS)].append((nr, herkunft, z))
+        zeilennr[id(z)] = nr
 
     vergleichs_cols = [h for h in kopf
                        if h not in IGNORE_ON_COMPARE and not str(h).startswith("Foto")]
@@ -464,6 +613,33 @@ def main():
             "anzahl": len(gruppe), "befund": befund, "empfehlung": empf,
         })
 
+    # Nummernsprünge als Befund — nur, solange nicht geglättet wurde.
+    # Nach der Glättung ist es keine offene Frage mehr, sondern eine
+    # Mitteilung; die steht weiter unten im Prüfblatt.
+    if not glaettungen:
+        for s in spruenge:
+            zeilen = sorted(zeilennr[id(z)] for z in s["zeilen"])
+            spanne = (f"{s['alt'][0]}-{s['alt'][-1]}" if len(s["alt"]) > 1
+                      else str(s["alt"][0]))
+            personen = sorted({str(z.get(AUFNEHMER_COL) or "").strip() or "(unbekannt)"
+                               for z in s["zeilen"]})
+            befunde.append({
+                "art": "Nummernsprung",
+                "zeilen": ", ".join(str(n) for n in zeilen),
+                "schluessel": (*s["schluessel"], spanne),
+                "aufnehmer": personen,
+                "geraete": sorted({str(z.get("Erfasser") or "") for z in s["zeilen"]}),
+                "raeume": sorted({str(z.get("Raumbezeichnung") or "").strip()
+                                  or "— leer —" for z in s["zeilen"]}),
+                "zeiten": sorted(str(z.get("Erfasst am") or "") for z in s["zeilen"]),
+                "abstand_min": None,
+                "anzahl": len(s["zeilen"]),
+                "befund": (f"Die HK-Nummern dieses Raums beginnen bei {s['alt'][0]} "
+                           f"statt bei 1 ({', '.join(str(n) for n in s['alt'])})"),
+                "empfehlung": ("Vermutlich der App-Fehler bis v4.14.0. "
+                               "Geradeziehen mit --nummern-glaetten."),
+            })
+
     # ── Blatt Prüfpunkte ──
     pruef = wb.create_sheet("Prüfpunkte")
     pruef.append(["Art", "Zeile(n)", "Gebäude", "Geschoss", "Raum-Nr.",
@@ -476,6 +652,10 @@ def main():
         pruef.append(["Foto-Kollision", "", "", "", "", "", "",
                       f"{herkunft}: {befund}",
                       "Referenz in der Tabelle ist bereits angepasst."])
+
+    for zeile in glaettungen:
+        pruef.append(["Nummer geglättet", "", "", "", "", "", "", zeile,
+                      "Tabelle und Fotonamen sind bereits angepasst."])
 
     for c in pruef[1]:
         c.font = Font(bold=True, color="FFFFFF")
@@ -494,7 +674,7 @@ def main():
     for _, z in eintraege:
         person = str(z.get(AUFNEHMER_COL) or "").strip() or "(unbekannt)"
         uebersicht[person].add(str(z.get("Erfasser") or "—"))
-    schreibe_rueckfragen(rueckfragen, befunde, mappe.name, uebersicht)
+    schreibe_rueckfragen(rueckfragen, befunde, mappe.name, uebersicht, glaettungen)
 
     fotos_gesamt = len(list((ziel / "Fotos").glob("*")))
     print(f"\n  -> {mappe}")
