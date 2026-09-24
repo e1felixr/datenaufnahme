@@ -1,16 +1,26 @@
 """Führt mehrere Rückläufer-ZIPs der Datenaufnahme-App zu einer Mappe zusammen.
 
 Aufruf:  py -3.13 zusammenfuehren.py [ordner] [--nummern-glaetten]
+                                     [--rueckfragen-an=NAME]
 
 Liest alle *.zip im Ordner (nicht rekursiv — ein Unterordner "Archiv" bleibt
-außen vor) und gruppiert sie nach Liegenschaft. Je Liegenschaft entstehen
-nebeneinander: die Mappe, "Rueckfragen_<Liegenschaft>.txt" und der Bilderordner
-"Fotos_<Liegenschaft>". Das Blatt "Prüfpunkte" weist Doubletten,
-Nummernkollisionen, Nummernsprünge und umbenannte Fotos aus.
+außen vor) und gruppiert sie nach Liegenschaft. Es entsteht EINE Mappe
+"HK-Aufnahme_zusammengefuehrt.xlsx" mit einem Datenblatt je Liegenschaft,
+dem gemeinsamen Blatt "Prüfpunkte" (Doubletten, Nummernkollisionen,
+Nummernsprünge, doppelt erfasste Räume, umbenannte Fotos) und dem Blatt
+"Rückfragen". Textdateien daneben gibt es nicht.
 
-Getrennte Bilderordner sind Pflicht: Die Fotonamen bestehen aus Geschoss,
-Raum-Nr. und HK-Nr. und führen die Liegenschaft nicht mit — in einem
-gemeinsamen Ordner würden zwei Objekte einander überschreiben.
+Die Bilder liegen je Liegenschaft in "Fotos_<Liegenschaft>". Getrennte Ordner
+sind Pflicht: Die Fotonamen bestehen aus Geschoss, Raum-Nr. und HK-Nr. und
+führen die Liegenschaft nicht mit — in einem gemeinsamen Ordner würden zwei
+Objekte einander überschreiben. Zum Weitergeben Mappe und die zugehörigen
+Bilderordner gemeinsam mitnehmen; die Verweise sind relativ.
+
+--rueckfragen-an=NAME bündelt alle Rückfragen bei einer Person, statt sie nach
+Aufnehmenden zu trennen — bei jedem Punkt steht dann, wessen Aufnahme gemeint
+ist. Bewusst ein eigener Schalter und nicht über "aufnehmer.txt" geregelt: Dort
+denselben Namen einzutragen würde die Mappe verfälschen und die Erkennung
+doppelt erfasster Räume blind machen, die genau diese Namen vergleicht.
 
 Wer vor Ort aufgenommen hat, steht in "aufnehmer.txt" neben den Rückläufern;
 fehlt die Datei, legt das Skript sie als Vorlage an. Der Dateiname allein
@@ -335,25 +345,36 @@ def loese_fotos_auf(quellen, ziel_fotos):
 
 # ── Rückfragen an die Aufnehmenden ──────────────────────────────────────────
 
-def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht, glaettungen=()):
-    """Textdatei mit den offenen Punkten, nach Aufnehmenden gruppiert.
+def baue_rueckfragen(liegenschaft_name, befunde, uebersicht, glaettungen=(),
+                     empfaenger=None):
+    """Textzeilen mit den offenen Punkten, nach Aufnehmenden gruppiert.
+
+    Gibt die Zeilen zurück; geschrieben werden sie als Blatt "Rückfragen"
+    derselben Mappe — es gibt bewusst keine Textdatei daneben.
 
     uebersicht: {aufnehmer: set(geraetebesitzer)} — die App-Spalte "Erfasser"
     nennt den auf dem Gerät hinterlegten Namen, nicht die Person vor Ort.
     """
+    # Alles an eine Person, oder je Aufnehmenden getrennt. Der Empfänger wird
+    # ausdrücklich gesetzt und nicht über die Aufnehmer-Zuordnung geregelt:
+    # Sonst trüge die Mappe überall denselben Namen, und die Erkennung doppelt
+    # erfasster Räume — die genau diese Namen vergleicht — würde blind.
+    nach_person = defaultdict(list)
+    if empfaenger:
+        nach_person[empfaenger] = list(befunde)
+    else:
+        for b in befunde:
+            for e in b["aufnehmer"]:
+                nach_person[e].append(b)
+
     from datetime import datetime
 
-    nach_person = defaultdict(list)
-    for b in befunde:
-        for e in b["aufnehmer"]:
-            nach_person[e].append(b)
-
     L = []
-    L.append("RÜCKFRAGEN ZUR HEIZKÖRPER-AUFNAHME")
+    L.append(f"RÜCKFRAGEN ZUR HEIZKÖRPER-AUFNAHME — {liegenschaft_name.upper()}")
     L.append("=" * 70)
     L.append("")
     L.append(f"Stand: {datetime.now():%d.%m.%Y, %H:%M} Uhr")
-    L.append(f"Grundlage: {mappenname}, Blatt „Prüfpunkte“")
+    L.append("Grundlage: Blatt „Prüfpunkte“ dieser Mappe")
     L.append("")
     # Die Spalte "Erfasser" trägt den Namen, der auf dem Gerät hinterlegt ist.
     # Wer tatsächlich vor Ort war, steht im Namen des eingesandten Rückläufers.
@@ -380,13 +401,16 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht, glaettungen=()):
         L.append("")
     if not nach_person:
         L.append("Keine offenen Punkte — die Aufnahmen sind in sich stimmig.")
-        pfad.write_text("\n".join(L) + "\n", encoding="utf-8")
-        return
+        return L
 
     L.append("Beim Zusammenführen der Rückläufer sind ein paar Stellen aufgefallen,")
     L.append("die sich vom Schreibtisch aus nicht klären lassen. Die Zeilennummern")
-    L.append("beziehen sich auf das Blatt „HK-Aufnahme“ der zusammengeführten Mappe.")
+    L.append(f"beziehen sich auf das Blatt „{liegenschaft_name}“ dieser Mappe.")
     L.append("")
+    if empfaenger:
+        L.append("Die Fragen sind in der Du-Form an die jeweils aufnehmende Person")
+        L.append("formuliert — wer gemeint ist, steht bei jedem Punkt.")
+        L.append("")
 
     for person in sorted(nach_person):
         L.append("")
@@ -400,6 +424,8 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht, glaettungen=()):
                 ort += f", HK-Nr. {hknr}"
             L.append("")
             L.append(f"{i}. {ort}   (Zeile {b['zeilen']})")
+            if empfaenger:
+                L.append(f"   Aufgenommen von: {', '.join(b['aufnehmer'])}")
             if b["art"] == "Nummernkollision":
                 bez = [r for r in b["raeume"] if r != "— leer —"]
                 L.append(f"   Unter dieser Kennung stehen {b['anzahl']} verschiedene "
@@ -470,7 +496,7 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht, glaettungen=()):
     else:
         L.append("Solange nichts geklärt ist, bleiben alle Zeilen unverändert in der")
         L.append("Mappe stehen — es wurde nichts gelöscht und nichts umnummeriert.")
-    pfad.write_text("\n".join(L) + "\n", encoding="utf-8")
+    return L
 
 
 # ── Liegenschaften und Aufnehmende ──────────────────────────────────────────
@@ -521,8 +547,13 @@ def lies_aufnehmer(ordner, zips):
 
 # ── Hauptlauf ───────────────────────────────────────────────────────────────
 
-def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
-    """Führt die Rückläufer EINER Liegenschaft zu einer Mappe zusammen."""
+def verarbeite(wb, name, zips, basis, glaetten, aufnehmer_map, empfaenger=None):
+    """Führt die Rückläufer EINER Liegenschaft zu einem Blatt in wb zusammen.
+
+    Rückgabe: (prüfpunkt-zeilen, rückfragen-textzeilen) — beide wandern in
+    gemeinsame Blätter am Ende der Mappe, damit alle Liegenschaften in einer
+    Datei liegen.
+    """
     blattname = "HK-Aufnahme"
     alle_kopf = []
     eintraege = []      # (herkunft, zeilendict)
@@ -565,11 +596,14 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
     # Fotonamen bestehen aus Geschoss, Raum-Nr. und HK-Nr. und führen die
     # Liegenschaft nicht mit, zwei Objekte würden sich gegenseitig überschreiben.
     ziel = basis
-    mappe = ziel / f"{name}_HK-Aufnahme_zusammengefuehrt.xlsx"
-    rueckfragen = ziel / f"Rueckfragen_{name}.txt"
     foto_ordner = ziel / f"Fotos_{name}"
+    # Altlasten früherer Läufe: Bis 24.09.2026 entstand je Liegenschaft eine
+    # eigene Mappe plus Rückfragen-Textdatei. Beides ist durch die gemeinsame
+    # Mappe abgelöst und bliebe sonst veraltet liegen.
     veraltet = [p for p in foto_ordner.glob("*") if p.is_file()]
-    veraltet += [p for p in (mappe, rueckfragen) if p.exists()]
+    veraltet += [p for p in (ziel / f"{name}_HK-Aufnahme_zusammengefuehrt.xlsx",
+                             ziel / f"Rueckfragen_{name}.txt",
+                             ziel / "Rueckfragen.txt") if p.exists()]
     for p in veraltet:
         try:
             p.unlink()
@@ -625,9 +659,9 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
     ))
 
     # ── Mappe schreiben ──
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = blattname
+    # Blattname ist die Liegenschaft, nicht der Modulname aus dem ZIP: Der
+    # hieße bei jeder Liegenschaft gleich ("HK-Aufnahme") und kollidierte.
+    ws = wb.create_sheet(name[:31])
     ws.append(kopf)
     for _, z in eintraege:
         ws.append([z.get(h) for h in kopf])
@@ -782,47 +816,38 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
                            "Geradeziehen mit --nummern-glaetten."),
         })
 
-    # ── Blatt Prüfpunkte ──
-    pruef = wb.create_sheet("Prüfpunkte")
-    pruef.append(["Art", "Zeile(n)", "Gebäude", "Geschoss", "Raum-Nr.",
-                  "HK-Nr.", "Aufgenommen von", "Befund", "Empfehlung"])
-    for b in befunde:
-        pruef.append([b["art"], b["zeilen"], *b["schluessel"],
-                      ", ".join(b["aufnehmer"]), b["befund"], b["empfehlung"]])
-
-    for herkunft, befund in umbenennungen:
-        pruef.append(["Foto-Kollision", "", "", "", "", "", "",
-                      f"{herkunft}: {befund}",
-                      "Referenz in der Tabelle ist bereits angepasst."])
-
-    for zeile in glaettungen:
-        pruef.append(["Nummer geglättet", "", "", "", "", "", "", zeile,
-                      "Tabelle und Fotonamen sind bereits angepasst."])
-
-    for c in pruef[1]:
-        c.font = Font(bold=True, color="FFFFFF")
-        c.fill = kopf_fill
-        c.alignment = Alignment(vertical="center")
-    pruef.freeze_panes = "A2"
-    for i, b in enumerate([18, 14, 12, 10, 12, 8, 18, 80, 45], start=1):
-        pruef.column_dimensions[get_column_letter(i)].width = b
-    for r in pruef.iter_rows(min_row=2):
-        r[7].alignment = Alignment(wrap_text=True, vertical="top")
-        r[8].alignment = Alignment(wrap_text=True, vertical="top")
-
-    wb.save(mappe)
+    # ── Prüfpunkte sammeln ──
+    # Das Blatt entsteht erst in main(), gemeinsam für alle Liegenschaften.
+    # Die Spalten zwischen Art und Befund: Zeile(n), Gebäude, Geschoss,
+    # Raum-Nr., HK-Nr., Aufgenommen von.
+    leer = [""] * 6
+    pruefzeilen = [
+        [name, b["art"], b["zeilen"], *b["schluessel"],
+         ", ".join(b["aufnehmer"]), b["befund"], b["empfehlung"]]
+        for b in befunde
+    ]
+    pruefzeilen += [
+        [name, "Foto-Kollision", *leer, f"{herkunft}: {befund}",
+         "Referenz in der Tabelle ist bereits angepasst."]
+        for herkunft, befund in umbenennungen
+    ]
+    pruefzeilen += [
+        [name, "Nummer geglättet", *leer, zeile,
+         "Tabelle und Fotonamen sind bereits angepasst."]
+        for zeile in glaettungen
+    ]
 
     uebersicht = defaultdict(set)
     for _, z in eintraege:
         person = str(z.get(AUFNEHMER_COL) or "").strip() or "(unbekannt)"
         uebersicht[person].add(str(z.get("Erfasser") or "—"))
-    schreibe_rueckfragen(rueckfragen, befunde, mappe.name, uebersicht, glaettungen)
+    rueckfragen_zeilen = baue_rueckfragen(name, befunde, uebersicht, glaettungen,
+                                          empfaenger)
 
     fotos_gesamt = len(list(foto_ordner.glob("*")))
-    print(f"\n  -> {mappe}")
-    print(f"     {len(eintraege)} Zeilen, {fotos_gesamt} Fotos, "
-          f"{pruef.max_row - 1} Prüfpunkte")
-    print(f"  -> {rueckfragen.name}")
+    print(f"     Blatt „{name}“: {len(eintraege)} Zeilen, {fotos_gesamt} Fotos, "
+          f"{len(pruefzeilen)} Prüfpunkte")
+    return pruefzeilen, rueckfragen_zeilen
 
 
 def main():
@@ -831,6 +856,8 @@ def main():
     # nichts, werden die Unterordner mit ZIPs zur Auswahl genannt.
     argumente = [a for a in sys.argv[1:] if not a.startswith("--")]
     glaetten = "--nummern-glaetten" in sys.argv[1:]
+    empfaenger = next((a.split("=", 1)[1].strip() for a in sys.argv[1:]
+                       if a.startswith("--rueckfragen-an=")), None)
     ordner = Path(argumente[0]) if argumente else Path.cwd()
     # Nicht rekursiv: Ein Unterordner "Archiv" mit früheren Rückläufern darf
     # nicht mit eingesammelt werden.
@@ -855,8 +882,62 @@ def main():
         print("  Jede bekommt eine eigene Mappe und einen eigenen Bilderordner —")
         print("  Raum-Nummern und Fotonamen wiederholen sich zwischen Objekten.")
 
+    mappe = ordner / "HK-Aufnahme_zusammengefuehrt.xlsx"
+    if mappe.exists():
+        try:
+            mappe.unlink()
+        except PermissionError:
+            raise SystemExit(
+                f"\n  Die Mappe ist gesperrt und lässt sich nicht ersetzen:\n"
+                f"    {mappe}\n"
+                f"  Vermutlich noch in Excel geöffnet. Bitte schließen und das\n"
+                f"  Skript erneut starten.")
+
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)          # das leere Vorgabeblatt
+
+    alle_pruefzeilen, alle_rueckfragen = [], []
     for name in sorted(nach_liegenschaft):
-        verarbeite(name, nach_liegenschaft[name], ordner, glaetten, aufnehmer_map)
+        pz, rz = verarbeite(wb, name, nach_liegenschaft[name], ordner, glaetten,
+                            aufnehmer_map, empfaenger)
+        alle_pruefzeilen += pz
+        if alle_rueckfragen:
+            alle_rueckfragen += ["", "", ""]
+        alle_rueckfragen += rz
+
+    kopf_fill = PatternFill("solid", fgColor=E1_GRUEN)
+
+    # ── Blatt Prüfpunkte ──
+    pruef = wb.create_sheet("Prüfpunkte")
+    pruef.append(["Liegenschaft", "Art", "Zeile(n)", "Gebäude", "Geschoss",
+                  "Raum-Nr.", "HK-Nr.", "Aufgenommen von", "Befund", "Empfehlung"])
+    for zeile in alle_pruefzeilen:
+        pruef.append(zeile)
+    for c in pruef[1]:
+        c.font = Font(bold=True, color="FFFFFF")
+        c.fill = kopf_fill
+        c.alignment = Alignment(vertical="center")
+    pruef.freeze_panes = "A2"
+    pruef.auto_filter.ref = pruef.dimensions
+    for i, b in enumerate([14, 18, 14, 12, 12, 12, 8, 18, 80, 45], start=1):
+        pruef.column_dimensions[get_column_letter(i)].width = b
+    for r in pruef.iter_rows(min_row=2):
+        r[8].alignment = Alignment(wrap_text=True, vertical="top")
+        r[9].alignment = Alignment(wrap_text=True, vertical="top")
+
+    # ── Blatt Rückfragen ──
+    # Der Text steht zeilenweise in Spalte A. Absichtlich keine Tabelle: Die
+    # Fragen sind Fließtext zum Weiterreichen, nicht zum Filtern.
+    rueck = wb.create_sheet("Rückfragen")
+    for zeile in alle_rueckfragen:
+        rueck.append([zeile])
+    rueck.column_dimensions["A"].width = 95
+    for r in rueck.iter_rows(min_row=1):
+        r[0].alignment = Alignment(vertical="top")
+
+    wb.save(mappe)
+    print(f"\n  -> {mappe}")
+    print(f"     Blätter: {', '.join(wb.sheetnames)}")
 
 
 if __name__ == "__main__":
