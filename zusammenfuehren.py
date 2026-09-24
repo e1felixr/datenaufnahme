@@ -32,8 +32,6 @@ import sys
 import zipfile
 from collections import defaultdict
 from pathlib import Path
-from urllib.parse import quote
-
 import openpyxl
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -102,6 +100,33 @@ def num_key(v):
     return int(m.group(1)) if m else 0
 
 
+def finde_doppelt_erfasste_raeume(eintraege):
+    """Räume, an denen mehrere Personen gearbeitet haben.
+
+    Die Doppelaufnahme-Erkennung weiter unten vergleicht je Kennung
+    (Gebäude/Geschoss/Raum-Nr./HK-Nr.). Haben zwei Leute denselben Raum
+    unabhängig voneinander durchnummeriert, kollidiert keine einzige
+    Kennung und der Fall fällt durch — Schweden 09/2026, Gebäude 3,
+    Raum 0.12: Max vergab HK 1-6, Steven zeitgleich HK 14-20, vermutlich
+    für dieselben Heizkörper.
+    """
+    raeume = defaultdict(list)
+    for _, z in eintraege:
+        s = tuple(str(z.get(k) or "").strip()
+                  for k in ("Gebäude", "Geschoss", "Raum-Nr."))
+        if not s[2]:
+            continue
+        raeume[s].append(z)
+
+    treffer = []
+    for s, zeilen in sorted(raeume.items()):
+        personen = sorted({str(z.get(AUFNEHMER_COL) or "").strip() or "(unbekannt)"
+                           for z in zeilen})
+        if len(personen) > 1:
+            treffer.append({"schluessel": s, "personen": personen, "zeilen": zeilen})
+    return treffer
+
+
 def finde_nummernspruenge(eintraege):
     """Räume, deren HK-Nummern nicht bei 1 beginnen.
 
@@ -134,12 +159,17 @@ def finde_nummernspruenge(eintraege):
         versatz = min(zahlen) - 1
         if versatz <= 0:
             continue
+        # Wo zwei Leute unabhängig nummeriert haben, darf keine Automatik ran:
+        # Der Sprung ist dann kein App-Fehler, sondern die zweite Zählung.
+        personen = {str(z.get(AUFNEHMER_COL) or "").strip() or "(unbekannt)"
+                    for z in zeilen}
         treffer.append({
             "schluessel": schluessel,
             "versatz": versatz,
             "alt": sorted(set(zahlen)),
             "neu": sorted({n - versatz for n in zahlen}),
             "zeilen": zeilen,
+            "mehrere_aufnehmer": len(personen) > 1,
         })
     return treffer
 
@@ -361,7 +391,9 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht, glaettungen=()):
         L.append("-" * 70)
         for i, b in enumerate(nach_person[person], start=1):
             geb, gesch, raum, hknr = b["schluessel"]
-            ort = f"{geb}, {gesch}, Raum {raum}, HK-Nr. {hknr}"
+            ort = f"{geb}, {gesch}, Raum {raum}"
+            if hknr:
+                ort += f", HK-Nr. {hknr}"
             L.append("")
             L.append(f"{i}. {ort}   (Zeile {b['zeilen']})")
             if b["art"] == "Nummernkollision":
@@ -378,6 +410,16 @@ def schreibe_rueckfragen(pfad, befunde, mappenname, uebersicht, glaettungen=()):
                     L.append("   Frage: Sind das wirklich mehrere Heizkörper im selben Raum?")
                     L.append("   Dann bräuchten sie fortlaufende HK-Nummern (1, 2, 3 …).")
                     L.append("   Oder gehören sie in verschiedene Räume?")
+            elif b["art"] == "Raum mehrfach erfasst":
+                L.append(f"   In diesem Raum haben {len(b['aufnehmer'])} Leute "
+                         f"aufgenommen ({', '.join(b['aufnehmer'])}),")
+                L.append(f"   zusammen {b['anzahl']} Heizkörper — jeder mit eigener")
+                L.append("   Zählung, deshalb kollidiert keine Nummer.")
+                if b["zeiten"][0] and b["zeiten"][-1]:
+                    L.append(f"   Erfasst zwischen {b['zeiten'][0]} und {b['zeiten'][-1]}.")
+                L.append("   Frage: Habt ihr denselben Raum zweimal aufgenommen?")
+                L.append("   Dann streiche ich eine der beiden Zählungen — sagt mir")
+                L.append("   bitte, welche stehen bleiben soll.")
             elif b["art"] == "Nummernsprung":
                 L.append(f"   Die {b['anzahl']} Heizkörper dieses Raums tragen die "
                          f"Nummern {b['schluessel'][3]} —")
@@ -549,16 +591,21 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
     # Nummernsprünge suchen — vor dem Sortieren, damit die Fotoreferenzen schon
     # auf den endgültigen Namen zeigen und mit umbenannt werden können.
     spruenge = finde_nummernspruenge(eintraege)
+    glaettbar = [s for s in spruenge if not s["mehrere_aufnehmer"]]
+    offen = [s for s in spruenge if s["mehrere_aufnehmer"]]
     glaettungen = []
-    if spruenge and glaetten:
-        glaettungen = glaette_nummern(spruenge, foto_cols, ziel / "Fotos")
-        print(f"\n  {len(spruenge)} Raum/Räume mit Nummernsprung geglättet:")
+    if glaetten and glaettbar:
+        glaettungen = glaette_nummern(glaettbar, foto_cols, ziel / "Fotos")
+        print(f"\n  {len(glaettbar)} Raum/Räume mit Nummernsprung geglättet:")
         for zeile in glaettungen:
             print(f"     {zeile}")
     elif spruenge:
         print(f"\n  {len(spruenge)} Raum/Räume beginnen nicht bei HK-Nr. 1 "
               f"— siehe Prüfpunkte.")
         print(f"     Geradeziehen mit:  --nummern-glaetten")
+    if glaetten and offen:
+        print(f"  {len(offen)} davon nicht angetastet — dort haben mehrere "
+              f"aufgenommen, das braucht eine Klärung.")
 
     # Sortieren
     eintraege.sort(key=lambda e: (
@@ -587,13 +634,24 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
     # Foto-Zellen klickbar machen. Der Link ist relativ zur Mappe — beide
     # liegen im selben Ordner, das Verschieben des ganzen Ordners schadet also
     # nicht. Wandert die Mappe allein woandershin, brechen die Links.
+    #
+    # Maskiert wird nur, was einen Verweis wirklich zerreißt. Eine vollständige
+    # URL-Maskierung macht aus Umlauten Prozentfolgen, und der Verweis zeigt an
+    # der Datei vorbei: Köpi 09/2026 heißen die Geschosse "Erdgeschoß" statt
+    # "EG" — dort waren alle 26 Bildverweise tot, während Schweden mit seinen
+    # reinen ASCII-Namen unauffällig blieb.
+    def als_verweis(pfad):
+        s = str(pfad).replace("\\", "/")
+        for zeichen, ersatz in (("%", "%25"), (" ", "%20"), ("#", "%23")):
+            s = s.replace(zeichen, ersatz)
+        return s
+
     link_font = Font(color="0563C1", underline="single")
     for i in (kopf.index(c) + 1 for c in foto_cols):
         for zelle in ws[get_column_letter(i)][1:]:
             if not zelle.value:
                 continue
-            zelle.hyperlink = quote(str(zelle.value).replace("\\", "/"),
-                                    safe="/._-")
+            zelle.hyperlink = als_verweis(zelle.value)
             zelle.font = link_font
 
     for i, h in enumerate(kopf, start=1):
@@ -660,29 +718,61 @@ def verarbeite(name, zips, basis, glaetten, aufnehmer_map):
     # Nummernsprünge als Befund — nur, solange nicht geglättet wurde.
     # Nach der Glättung ist es keine offene Frage mehr, sondern eine
     # Mitteilung; die steht weiter unten im Prüfblatt.
-    if not glaettungen:
-        for s in spruenge:
-            zeilen = sorted(zeilennr[id(z)] for z in s["zeilen"])
-            spanne = (f"{s['alt'][0]}-{s['alt'][-1]}" if len(s["alt"]) > 1
-                      else str(s["alt"][0]))
-            personen = sorted({str(z.get(AUFNEHMER_COL) or "").strip() or "(unbekannt)"
-                               for z in s["zeilen"]})
-            befunde.append({
-                "art": "Nummernsprung",
-                "zeilen": ", ".join(str(n) for n in zeilen),
-                "schluessel": (*s["schluessel"], spanne),
-                "aufnehmer": personen,
-                "geraete": sorted({str(z.get("Erfasser") or "") for z in s["zeilen"]}),
-                "raeume": sorted({str(z.get("Raumbezeichnung") or "").strip()
-                                  or "— leer —" for z in s["zeilen"]}),
-                "zeiten": sorted(str(z.get("Erfasst am") or "") for z in s["zeilen"]),
-                "abstand_min": None,
-                "anzahl": len(s["zeilen"]),
-                "befund": (f"Die HK-Nummern dieses Raums beginnen bei {s['alt'][0]} "
-                           f"statt bei 1 ({', '.join(str(n) for n in s['alt'])})"),
-                "empfehlung": ("Vermutlich der App-Fehler bis v4.14.0. "
-                               "Geradeziehen mit --nummern-glaetten."),
-            })
+    def rahmen(zeilen_objekte):
+        """Gemeinsame Felder eines raumbezogenen Befunds."""
+        return {
+            "zeilen": ", ".join(str(n) for n in
+                                sorted(zeilennr[id(z)] for z in zeilen_objekte)),
+            "aufnehmer": sorted({str(z.get(AUFNEHMER_COL) or "").strip()
+                                 or "(unbekannt)" for z in zeilen_objekte}),
+            "geraete": sorted({str(z.get("Erfasser") or "") for z in zeilen_objekte}),
+            "raeume": sorted({str(z.get("Raumbezeichnung") or "").strip()
+                              or "— leer —" for z in zeilen_objekte}),
+            "zeiten": sorted(str(z.get("Erfasst am") or "") for z in zeilen_objekte),
+            "abstand_min": None,
+            "anzahl": len(zeilen_objekte),
+        }
+
+    # Räume, an denen mehrere gearbeitet haben. Nur melden, was die
+    # Doppelaufnahme-Erkennung je Kennung nicht ohnehin schon hat.
+    schon_gemeldet = {b["schluessel"][:3] for b in befunde
+                      if b["art"] == "Doppelaufnahme"}
+    for d in finde_doppelt_erfasste_raeume(eintraege):
+        if d["schluessel"] in schon_gemeldet:
+            continue
+        je_person = defaultdict(list)
+        for z in d["zeilen"]:
+            je_person[str(z.get(AUFNEHMER_COL) or "").strip() or "(unbekannt)"].append(
+                str(z.get("HK-Nr.") or "?").strip())
+        aufteilung = "; ".join(f"{p}: HK {', '.join(sorted(n, key=num_key))}"
+                               for p, n in sorted(je_person.items()))
+        befunde.append({
+            "art": "Raum mehrfach erfasst",
+            **rahmen(d["zeilen"]),
+            "schluessel": (*d["schluessel"], ""),
+            "befund": (f"{len(d['personen'])} Personen haben in diesem Raum "
+                       f"aufgenommen — {aufteilung}"),
+            "empfehlung": ("Klären, ob dieselben Heizkörper zweimal erfasst wurden; "
+                           "eine der beiden Zählungen entfernen."),
+        })
+
+    # Nummernsprünge: melden, was nicht geglättet wurde.
+    for s in (offen if glaetten else spruenge):
+        spanne = (f"{s['alt'][0]}-{s['alt'][-1]}" if len(s["alt"]) > 1
+                  else str(s["alt"][0]))
+        mehrere = s["mehrere_aufnehmer"]
+        befunde.append({
+            "art": "Nummernsprung",
+            **rahmen(s["zeilen"]),
+            "schluessel": (*s["schluessel"], spanne),
+            "befund": (f"Die HK-Nummern dieses Raums beginnen bei {s['alt'][0]} "
+                       f"statt bei 1 ({', '.join(str(n) for n in s['alt'])})"),
+            "empfehlung": ("In diesem Raum haben mehrere aufgenommen — erst klären, "
+                           "dann von Hand nummerieren; nicht automatisch glätten."
+                           if mehrere else
+                           "Vermutlich der App-Fehler bis v4.14.0. "
+                           "Geradeziehen mit --nummern-glaetten."),
+        })
 
     # ── Blatt Prüfpunkte ──
     pruef = wb.create_sheet("Prüfpunkte")
