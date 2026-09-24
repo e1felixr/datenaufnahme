@@ -14,8 +14,8 @@ window.addEventListener('unhandledrejection', (e) => {
   if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000); }
 });
 
-const APP_VERSION = 'v4.14.0';
-const APP_BUILD_DATE = '21.09.2026 11:00'; // wird nach Commit aktualisiert
+const APP_VERSION = 'v4.14.1';
+const APP_BUILD_DATE = '24.09.2026 08:16'; // wird nach Commit aktualisiert
 
 // ── Dropdown-Konfiguration (HK) ──
 const CONFIG = {
@@ -425,6 +425,24 @@ async function renderHkList() {
 
 // ── HK Erfassungsformular ──
 
+// Naechste Nummer INNERHALB des Raums, nicht projektweit. Frueher wurde das
+// Maximum ueber alle Eintraege des Projekts gebildet — dadurch erbte jeder neu
+// aus der Uebersicht angelegte Eintrag die hoechste Nummer des ganzen Projekts
+// (Berlin: Raum 0.12 trug HK 14-20 statt 1-7). Der Raumvergleich ist derselbe
+// wie in ensureKennungFreiOrConfirm(), sonst warnt die App vor einer Nummer,
+// die sie selbst vorgeschlagen hat.
+function gleicherWert(a, b) {
+  return String(a ?? '').trim().toLowerCase() === String(b ?? '').trim().toLowerCase();
+}
+
+function naechsteNrImRaum(eintraege, raum, feld) {
+  const imRaum = eintraege.filter(e =>
+    gleicherWert(e.gebaeude, raum.gebaeude) &&
+    gleicherWert(e.geschoss, raum.geschoss) &&
+    gleicherWert(e.raumnr, raum.raumnr));
+  return imRaum.reduce((max, e) => Math.max(max, Number(e[feld]) || 0), 0) + 1;
+}
+
 async function openHkForm(hkId) {
   currentHkId = hkId || null;
   currentBelId = null;
@@ -456,15 +474,15 @@ async function openHkForm(hkId) {
       }
     }
     const all = await getHeizkoerperByProjekt(currentProjektId);
-    const maxNr = all.reduce((max, h) => Math.max(max, Number(h.hkNr) || 0), 0);
-    hk.hkNr = maxNr + 1;
+    const naechsteNr = naechsteNrImRaum(all, hk, 'hkNr');
+    hk.hkNr = naechsteNr;
     document.getElementById('header-form-title').textContent = 'Neuer Heizkörper';
     document.getElementById('btn-delete-hk').style.display = 'none';
 
     newHkBaseData = {
       lastRaumnr: last ? (last.raumnr || '') : '',
       lastRaumbezeichnung: last ? (last.raumbezeichnung || '') : '',
-      nextHkNr: maxNr + 1
+      nextHkNr: naechsteNr
     };
     const toggle = document.getElementById('new-hk-mode-toggle');
     toggle.style.display = last ? 'block' : 'none';
@@ -476,18 +494,27 @@ async function openHkForm(hkId) {
   navigate('screen-form');
 }
 
+// Ein Umschalter, zwei Formulare: Der Knopf im Beleuchtungs-Formular rief
+// frueher ebenfalls die HK-Daten ab und schrieb in das HK-Nummernfeld. Dort
+// blieb er wirkungslos (nur die Einfaerbung wechselte) — wer auf "Neuer Raum"
+// tippte, behielt unbemerkt die alte Raum-Nr. und erzeugte Doppel-Kennungen.
 function setNewHkMode(mode) {
   document.getElementById('btn-mode-same-room').classList.toggle('active', mode === 'same-room');
   document.getElementById('btn-mode-new-room').classList.toggle('active', mode === 'new-room');
-  if (!newHkBaseData) return;
+
+  const istBel = document.getElementById('bel-form-section').style.display !== 'none';
+  const basis = istBel ? newBelBaseData : newHkBaseData;
+  const nrFeld = istBel ? 'f-gruppenNr' : 'f-hkNr';
+  if (!basis) return;
+
   if (mode === 'same-room') {
-    document.getElementById('f-raumnr').value = newHkBaseData.lastRaumnr;
-    document.getElementById('f-raumbezeichnung').value = newHkBaseData.lastRaumbezeichnung;
-    document.getElementById('f-hkNr').value = newHkBaseData.nextHkNr;
+    document.getElementById('f-raumnr').value = basis.lastRaumnr;
+    document.getElementById('f-raumbezeichnung').value = basis.lastRaumbezeichnung;
+    document.getElementById(nrFeld).value = istBel ? basis.nextGruppenNr : basis.nextHkNr;
   } else {
     document.getElementById('f-raumnr').value = '';
     document.getElementById('f-raumbezeichnung').value = '';
-    document.getElementById('f-hkNr').value = 1;
+    document.getElementById(nrFeld).value = 1;
   }
 }
 
@@ -1113,15 +1140,15 @@ async function openBelForm(belId) {
     }
 
     const all = await getBeleuchtungByProjekt(currentProjektId);
-    const maxNr = all.reduce((max, b) => Math.max(max, Number(b.gruppenNr) || 0), 0);
-    bel.gruppenNr = maxNr + 1;
+    const naechsteNr = naechsteNrImRaum(all, bel, 'gruppenNr');
+    bel.gruppenNr = naechsteNr;
     document.getElementById('header-form-title').textContent = 'Neue Leuchte';
     document.getElementById('btn-delete-bel').style.display = 'none';
 
     newBelBaseData = {
       lastRaumnr: last ? (last.raumnr || '') : '',
       lastRaumbezeichnung: last ? (last.raumbezeichnung || '') : '',
-      nextGruppenNr: maxNr + 1
+      nextGruppenNr: naechsteNr
     };
     const toggle = document.getElementById('new-hk-mode-toggle');
     toggle.style.display = last ? 'block' : 'none';
